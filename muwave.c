@@ -21,6 +21,7 @@
 TODOs:
     Create header file
     Document
+    Check for failed mallocs (malloc will return null.)
     Remove TODOs
  */
 
@@ -107,14 +108,14 @@ void update_affinities() {
     /* TODO: Exponential decay */
     uint16_t i = 0;
     if (affinities == NULL) {
-        // allocate affinities.
+        /* allocate affinities. */
         affinities = malloc(sizeof(int32_t)*recording_length);
         for (i=recording_length; i>0; --i) {
-            // MAX value
-            affinities[i] = ~0;
+            /* TODO: This is somewhere around int32_t MAX_SIZE... Figure it out */
+            affinities[i] = 1000000000;
         }
     }
-    // Advance the DTW algorithm
+    /* Advance the DTW algorithm */
     affinities[0] = 0;
     for (i=recording_length; i>0; --i) {
         uint16_t cost = tabulate_cost(i);
@@ -126,12 +127,21 @@ void update_affinities() {
     }
 }
 
-void append_to_recording() {
+/**
+ * Append normalized_data[recording_length] to the recording array, growing the
+ * recording array dynamically.
+ * @return true if successful, false otherwise
+ */
+bool append_to_recording() {
     if (!is_recording || completed_recording) {
-        // TODO: actually complain about this
-        return;
+        /* TODO: actually complain about this */
+        return false;
     }
     if (recording_length >= recording_arr_length) {
+        /* TODO: prevent and check overflowing 2*recording_arr_length */
+        if (recording_arr_length*2 > MUWAVE_RECORD_MAX_LENGTH) {
+            return false;
+        }
         int32_t **old_rec = recording;
         recording = malloc(sizeof(int32_t*) * recording_arr_length*2);
         uint16_t i=0;
@@ -142,19 +152,19 @@ void append_to_recording() {
         old_rec = NULL;
         for (; i<recording_arr_length*2; ++i) {
             recording[i] = malloc(sizeof(int32_t)*MUWAVE_DIMENSION);
-            recording[i] = NULL;
         }
         recording_arr_length *= 2;
     }
-    ++recording_length;
     for (uint16_t d=0; d<MUWAVE_DIMENSION; ++d) {
         recording[recording_length][d] = normalized_data[d];
     }
+    ++recording_length;
+    return true;
 }
 
 void begin_recording() {
     uint16_t i=0;
-    // TODO: Reset the affinities array?
+    /* TODO: Reset the affinities array? */
     is_recording = true;
     recording_arr_length = 10;
     recording_length = 0;
@@ -165,7 +175,7 @@ void begin_recording() {
 }
 
 void complete_recording() {
-    // TODO: Reset the affinities array?
+    /* TODO: Reset the affinities array? */
     is_recording = false;
     completed_recording = true;
     for (uint16_t rec_idx = recording_length; rec_idx < recording_arr_length; ++rec_idx) {
@@ -183,7 +193,7 @@ void complete_recording() {
 }
 
 void handle_accel_tick() {
-    // TODO: setup the acc_data
+    /* TODO: setup the acc_data */
     bool end_of_summation = normalize();
     if (end_of_summation) {
         if (is_recording) {

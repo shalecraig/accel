@@ -18,7 +18,9 @@
  * At 100Hz, this should be 20s
  */
 /* TODO: move this to the top of the file. */
-#define RECORD_MAX_LENGTH 2000
+#ifndef MUWAVE_RECORD_MAX_LENGTH
+#define MUWAVE_RECORD_MAX_LENGTH MUWAVE_FREQUENCY_HZ*MUWAVE_RECORDING_S
+#endif
 
 void complete_recording(void);
 void begin_recording(void);

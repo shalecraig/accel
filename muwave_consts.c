@@ -13,4 +13,8 @@
 #define MUWAVE_FREQUENCY_HZ 100
 #endif
 
+#ifndef MUWAVE_RECORDING_S
+#define MUWAVE_RECORDING_S 20
+#endif
+
 #endif
