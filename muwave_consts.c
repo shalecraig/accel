@@ -1,17 +1,16 @@
 #ifndef MUWAVE_CONSTS
 #define MUWAVE_CONSTS
 
+/*
+    Feel free to change any of these.
+ */
 
-
-
-
-#ifndef DIMENSION
-#define DIMENSION 3
+#ifndef MUWAVE_DIMENSION
+#define MUWAVE_DIMENSION 3
 #endif
 
-#ifndef QUAN_MOV_STEP
-#define QUAN_MOV_STEP 4
+#ifndef MUWAVE_FREQUENCY_HZ
+#define MUWAVE_FREQUENCY_HZ 100
 #endif
-
 
 #endif

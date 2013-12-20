@@ -4,10 +4,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-#ifndef QUAN_WIN_STEP
-#define QUAN_WIN_STEP 2*QUAN_MOV_STEP
-#endif
-
+#include "muwave.h"
 /*
     http://stackoverflow.com/questions/3437404/min-and-MAX-in-c
  */
@@ -31,7 +28,7 @@ TODOs:
 int32_t *normalized_data = NULL;
 int32_t *acc_data = NULL;
 
-/* Internal sums of the normalized data. 2xDIMENSION */
+/* Internal sums of the normalized data. MUWAVE_QUAN_MOVING_AVG_SIZE x DIMENSION */
 uint32_t i_sum_index = 0;
 uint32_t i_num_summed = 0;
 int32_t **i_sums = NULL;
@@ -54,23 +51,26 @@ bool normalize() {
     if (normalized_data == NULL && i_sums == NULL) {
         /* Setup for the first time. */
         /* TODO: write cleanup routine. */
-        normalized_data = malloc(DIMENSION*sizeof(int32_t));
-        i_sums = malloc(sizeof(int32_t*)*2);
-        for (uint8_t i=0; i<2; ++i) {
-            i_sums[i] = malloc(DIMENSION*sizeof(int32_t));
+        normalized_data = malloc(MUWAVE_DIMENSION*sizeof(int32_t));
+        i_sums = malloc(sizeof(int32_t*)*MUWAVE_QUAN_MOVING_AVG_SIZE);
+        for (uint8_t i=0; i<MUWAVE_QUAN_MOVING_AVG_SIZE; ++i) {
+            i_sums[i] = malloc(MUWAVE_DIMENSION*sizeof(int32_t));
         }
     } else if (normalized_data == NULL || i_sums == NULL) {
         return false;
     }
-    for (uint16_t i=0; i<DIMENSION; ++i) {
+    for (uint16_t i=0; i<MUWAVE_DIMENSION; ++i) {
         i_sums[i_sum_index][i] += acc_data[i];
     }
 
     ++i_num_summed;
-    if (i_num_summed >= QUAN_MOV_STEP) {
+    if (i_num_summed >= MUWAVE_QUAN_POINT_SIZE) {
         i_num_summed = 0;
-        for (uint16_t i=0; i<DIMENSION; ++i) {
-            uint32_t super_smooth = i_sums[0][i] + i_sums[1][i];
+        for (uint16_t i=0; i<MUWAVE_DIMENSION; ++i) {
+            uint32_t super_smooth = 0;
+            for (uint16_t j=0; j<MUWAVE_QUAN_MOVING_AVG_SIZE; ++j) {
+                super_smooth += i_sums[j][i];
+            }
             /* TODO: Clean up the math. */
             if (super_smooth > 20) {
                 normalized_data[i] = 16;
@@ -88,30 +88,23 @@ bool normalize() {
             }
         }
         /* Deal with moving around this circular buffer. */
-        i_sum_index = (i_sum_index + 1) % 2;
+        i_sum_index = (i_sum_index + 1) % MUWAVE_QUAN_MOVING_AVG_SIZE;
         return true;
     }
     return false;
 }
 
-
-/*
- * At 100Hz, this should be 20s
- */
-/* TODO: move this to the top of the file. */
-#define RECORD_MAX_LENGTH 2000
-
 uint16_t tabulate_cost(uint16_t i) {
     uint16_t cost = 0;
-    for (uint16_t d=0; d<DIMENSION; ++d) {
+    for (uint16_t d=0; d<MUWAVE_DIMENSION; ++d) {
         cost += abs(recording[i][d] - normalized_data[d]);
     }
     return cost;
 }
 
 void update_affinities() {
-    // TODO: verify the recording length is set.
-    // TODO: Exponential decay
+    /* TODO: verify the recording length is set. */
+    /* TODO: Exponential decay */
     uint16_t i = 0;
     if (affinities == NULL) {
         // allocate affinities.
@@ -148,13 +141,13 @@ void append_to_recording() {
         free(old_rec);
         old_rec = NULL;
         for (; i<recording_arr_length*2; ++i) {
-            recording[i] = malloc(sizeof(int32_t)*DIMENSION);
+            recording[i] = malloc(sizeof(int32_t)*MUWAVE_DIMENSION);
             recording[i] = NULL;
         }
         recording_arr_length *= 2;
     }
     ++recording_length;
-    for (uint16_t d=0; d<DIMENSION; ++d) {
+    for (uint16_t d=0; d<MUWAVE_DIMENSION; ++d) {
         recording[recording_length][d] = normalized_data[d];
     }
 }
@@ -167,7 +160,7 @@ void begin_recording() {
     recording_length = 0;
     recording = malloc(sizeof(int32_t*) * recording_arr_length);
     for (i=0; i<recording_arr_length; ++i) {
-        recording[i] = malloc(sizeof(int32_t)*DIMENSION);
+        recording[i] = malloc(sizeof(int32_t)*MUWAVE_DIMENSION);
     }
 }
 
@@ -207,7 +200,7 @@ void cleanup() {
         normalized_data = NULL;
     }
     if (i_sums != NULL) {
-        for (uint8_t i=0; i<2; ++i) {
+        for (uint8_t i=0; i<MUWAVE_QUAN_MOVING_AVG_SIZE; ++i) {
             free(i_sums[i]);
             i_sums[i] = NULL;
         }

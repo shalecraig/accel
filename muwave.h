@@ -5,12 +5,20 @@
 
 #include "muwave_consts.c"
 
-/* QUAN_WIN_STEP QUAN_MOV_STEP, but not QUAN_WIN_STEP */
-#ifdef QUAN_WIN_STEP
-#ifndef QUAN_MOV_STEP
-#error should_define_both_QUAN_MOV_STEP_and_QUAN_WIN_STEP
+#ifndef MUWAVE_QUAN_POINT_SIZE
+#define MUWAVE_QUAN_POINT_SIZE ((uint32_t)MUWAVE_FREQUENCY_HZ/25)
 #endif
+
+/* TODO: where am I doing this wrong? I should theoretically be using this... */
+#ifndef MUWAVE_QUAN_MOVING_AVG_SIZE
+#define MUWAVE_QUAN_MOVING_AVG_SIZE 2
 #endif
+
+/*
+ * At 100Hz, this should be 20s
+ */
+/* TODO: move this to the top of the file. */
+#define RECORD_MAX_LENGTH 2000
 
 void complete_recording(void);
 void begin_recording(void);
