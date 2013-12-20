@@ -4,6 +4,10 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
+#ifndef QUAN_WIN_STEP
+#define QUAN_WIN_STEP 2*QUAN_MOV_STEP
+#endif
+
 /*
     http://stackoverflow.com/questions/3437404/min-and-MAX-in-c
  */
@@ -23,26 +27,7 @@ TODOs:
     Remove TODOs
  */
 
-#ifndef DIMENSION
-#define DIMENSION 3
-#endif
-
-/* Optionally define QUAN_MOV_STEP, but not QUAN_WIN_STEP */
-#ifdef QUAN_WIN_STEP
-#ifndef QUAN_MOV_STEP
-#error should_define_both_QUAN_MOV_STEP_and_QUAN_WIN_STEP
-#endif
-#endif
-
-#ifndef QUAN_MOV_STEP
-#define QUAN_MOV_STEP 4
-#endif
-
-#ifndef QUAN_WIN_STEP
-#define QUAN_WIN_STEP 2*QUAN_MOV_STEP
-#endif
-
-/* DIMENSION-d arrays */
+/* d-DIMENSION arrays */
 int32_t *normalized_data = NULL;
 int32_t *acc_data = NULL;
 
