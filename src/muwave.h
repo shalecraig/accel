@@ -1,5 +1,5 @@
-#ifndef MUWAVE_HEADER
-#define MUWAVE_HEADER
+#ifndef MUWAVE_H
+#define MUWAVE_H
 
 #include <stdbool.h>
 
@@ -17,9 +17,8 @@
 /*
  * At 100Hz, this should be 20s
  */
-/* TODO: move this to the top of the file. */
 #ifndef MUWAVE_RECORD_MAX_LENGTH
-#define MUWAVE_RECORD_MAX_LENGTH MUWAVE_FREQUENCY_HZ*MUWAVE_RECORDING_S
+#define MUWAVE_RECORD_MAX_LENGTH MUWAVE_FREQUENCY_HZ*MUWAVE_MAX_RECORDING_TIME_S
 #endif
 
 void complete_recording(void);
