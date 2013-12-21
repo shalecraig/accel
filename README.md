@@ -3,6 +3,15 @@ accel
 
 [not-even-alpha] C gesture recognition library from accelerometers, written with the Pebble in mind.
 
+
+### TODO:
+
+- Change comments to //'s.
+- Create tests.
+- Clean up Headers.
+- Move global variables into a struct.
+- Record and find multiple movements, not just one.
+
 Attribution
 =====
 
