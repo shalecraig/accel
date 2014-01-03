@@ -41,29 +41,29 @@ typedef struct {
 } muwave_state;
 
 // Creation and deletion of muwave state objects.
-muwave_state* muwave_generate_state(int dimensions, int window_size);
-void muwave_destroy_state(muwave_state* state);
+muwave_state *muwave_generate_state(int dimensions, int window_size);
+void muwave_destroy_state(muwave_state *state);
 
 /**
  * Starts recording a muwave gesture
  * @param  state state being recorded
  * @return       id the gesture corresponds to
  */
-int muwave_start_record_gesture(muwave_state* state);
+int muwave_start_record_gesture(muwave_state *state);
 
 /**
  * Ends recording a muwave gesture
  * @param state      state being recorded
  * @param gesture_id id the gesture corresponds to
  */
-void muwave_end_record_gesture(muwave_state* state, int gesture_id);
+void muwave_end_record_gesture(muwave_state *state, int gesture_id);
 
 /**
  * Updates the uWave algorithm's DTW-compare step across all gestures.
  * @param state    state being recorded
  * @param accel_data a array with accelerometer data
  */
-void muwave_process_timer_tick(muwave_state* state, int* accel_data);
+void muwave_process_timer_tick(muwave_state *state, int *accel_data);
 
 /**
  * At a given state, returns the most likely gesture and its affinity.
@@ -71,6 +71,6 @@ void muwave_process_timer_tick(muwave_state* state, int* accel_data);
  * @param gesture_id id the gesture corresponds to
  * @param affinity   affinity of the gesture to the accelerometer input.
  */
-void muwave_find_most_likely_gesture(muwave_state* state, int *gesture_id, int *affinity);
+void muwave_find_most_likely_gesture(muwave_state *state, int *gesture_id, int *affinity);
 
 #endif

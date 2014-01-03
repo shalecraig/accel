@@ -35,7 +35,7 @@ void muwave_destroy_state(muwave_state *state) {
     state = NULL;
 }
 
-int muwave_start_record_gesture(muwave_state* state) {
+int muwave_start_record_gesture(muwave_state *state) {
     if (state->num_gestures_saved != 0) {
         state->gestures = (muwave_gesture **)realloc(state->gestures, (state->num_gestures_saved + 1)*sizeof(muwave_gesture *));
     } else {
@@ -67,7 +67,7 @@ int normalize(int sum) {
 }
 
 // TODO: does this work for zero recorded timestamps?
-void muwave_end_record_gesture(muwave_state* state, int gesture_id) {
+void muwave_end_record_gesture(muwave_state *state, int gesture_id) {
     // TODO: Check with a macro for error bit, nullity with error logging.
     if (state == NULL) {return;}
     // TODO: use specific types in c instead of this stuff.
@@ -145,7 +145,7 @@ void handle_evaluation_tick(muwave_gesture *gesture, int *accel_data, int dimens
  * @param state    state being recorded
  * @param accel_data a array with accelerometer data
  */
-void muwave_process_timer_tick(muwave_state* state, int *accel_data) {
+void muwave_process_timer_tick(muwave_state *state, int *accel_data) {
     if (state == NULL) { return; }
     if (accel_data == NULL) { return; }
     // TODO: conditionally define an ARRAY_LENGTH macro?
