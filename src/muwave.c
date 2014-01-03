@@ -3,6 +3,16 @@
 
 #include "muwave.h"
 
+// TODO: include these from a header file?
+#define MAX(a,b) \
+   ({ __typeof__ (a) _a = (a); \
+       __typeof__ (b) _b = (b); \
+     _a > _b ? _a : _b; })
+#define MIN(a,b) \
+   ({ __typeof__ (a) _a = (a); \
+       __typeof__ (b) _b = (b); \
+     _a < _b ? _a : _b; })
+
 // TODO: only define the ARRAY_LENGTH macro conditionally
 #define ARRAY_LENGTH(array) (sizeof((array))/sizeof((array)[0]))
 
@@ -96,19 +106,21 @@ void muwave_end_record_gesture(muwave_state *state, int gesture_id) {
     gesture->normalized_recording = calloc(normalized_recording_len, sizeof(int*));
 
     // convert from raw to normalized
-    for (int i=0; i<normalized_recording_len; ++i) {
-        int16_t *sum = calloc(state->dimensions, sizeof(int16_t));
-        int j_end = (i+1)*state->window_size;
-        for (int j=i*state->window_size; j<=j_end; ++j) {
-            for (int d=0; d<state->dimensions; ++d) {
-                sum[d] += gesture->raw_recording[j][d];
-            }
-        }
-
-        gesture->normalized_recording[i] = malloc(state->dimensions * sizeof(int));
+    // TODO: this can be done much more efficiently, re-implement once testing is up.
+    for (int i=0; i<gesture->recording_size; ++i) {
+        if (i%state->window_size != state->window_size-1) { continue; }
+        int *sum = malloc(state->dimensions * sizeof(int));
         for (int d=0; d<state->dimensions; ++d) {
-            gesture->normalized_recording[i][d] = normalize(sum[d]);
+            int num_counted = 0;
+            for (int j=MAX(0, i-state->window_size); j<i; ++j) {
+                sum[d] += gesture->raw_recording[j][d];
+                ++num_counted;
+            }
+            sum[d] /= num_counted;
+            sum[d] = normalize(sum[d]);
         }
+        int normalized_id = (i+1)/state->window_size;
+        gesture->normalized_recording[normalized_id] = sum;
     }
 
     // free raw
