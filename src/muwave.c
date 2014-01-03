@@ -3,6 +3,9 @@
 
 #include "muwave.h"
 
+// TODO: only define the ARRAY_LENGTH macro conditionally?
+#define ARRAY_LENGTH(array) (sizeof((array))/sizeof((array)[0]))
+
 /* Creation and deletion of muwave state objects. */
 muwave_state *muwave_generatestate(int dimensions, int window_size) {
 
@@ -137,6 +140,10 @@ void handle_recording_tick(muwave_gesture *gesture, int *accel_data, int dimensi
 }
 
 void handle_evaluation_tick(muwave_gesture *gesture, int *accel_data, int dimensions) {
+    // TODO: actually complain.
+    if (gesture == NULL) { return; }
+    if (accel_data == NULL) { return; }
+    if (ARRAY_LENGTH(accel_data) != dimensions) { return; }
     // TODO: implement DTW algoritm
 }
 
@@ -148,8 +155,6 @@ void handle_evaluation_tick(muwave_gesture *gesture, int *accel_data, int dimens
 void muwave_process_timer_tick(muwave_state *state, int *accel_data) {
     if (state == NULL) { return; }
     if (accel_data == NULL) { return; }
-    // TODO: conditionally define an ARRAY_LENGTH macro?
-    // #define ARRAY_LENGTH(array) (sizeof((array))/sizeof((array)[0]))
     if (ARRAY_LENGTH(accel_data) != state->dimensions) { return; }
 
     for (int gesture_iter = 0; gesture_iter < state->num_gestures_saved; ++gesture_iter) {
