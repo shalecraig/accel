@@ -16,6 +16,44 @@
 // TODO: only define the ARRAY_LENGTH macro conditionally
 #define ARRAY_LENGTH(array) (sizeof((array))/sizeof((array)[0]))
 
+moving_avg_values *allocate_moving_avg_struct(int num_wbuf, int subtotal_sizes) {
+    size_t size = sizeof(moving_avg_values);
+    moving_avg_values *returned = (moving_avg_values *) malloc(size);
+    memset(returned, 0, size);
+    returned->max_subtotal_size = subtotal_sizes;
+
+    int *wbuf = calloc(num_wbuf, sizeof(int));
+    returned->wbuf = wbuf;
+    returned->wbuf_len = num_wbuf;
+    return returned;
+}
+
+bool append_to_moving_avg(moving_avg_values *value, int appended) {
+    // TODO: complain about the error
+    if (value == NULL) { return false; }
+    ++value->subtotal_size;
+    value->subtotal += appended;
+    if (value->subtotal_size != value->max_subtotal_size) {
+        return false;
+    }
+    value->wbuf_end = (value->wbuf_end + 1) % value->wbuf_len;
+    value->wbuf[value->wbuf_end] = value->subtotal;
+
+    value->subtotal = 0;
+    value->subtotal_size = 0;
+    return true;
+}
+
+int get_latest_frame_moving_avg(moving_avg_values *value) {
+    // TODO: complain about the invalid input.
+    if (value == NULL) { return 0; }
+    int sum = 0;
+    for (int i=0; i<value->wbuf_len; ++i) {
+        sum += value->wbuf[i];
+    }
+    return sum / value->wbuf_len;
+}
+
 /* Creation and deletion of muwave state objects. */
 muwave_state *muwave_generatestate(int dimensions, int window_size) {
 

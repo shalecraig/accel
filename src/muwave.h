@@ -16,7 +16,19 @@
 #define MUWAVE_RECORD_MAX_LENGTH MUWAVE_FREQUENCY_HZ*MUWAVE_MAX_RECORDING_TIME_S
 #endif
 
-/* TODO: hide this in the implementation */
+/* TODO: hide these in the implementation */
+typedef struct {
+    // Circular buffer
+    int *wbuf;
+    int wbuf_end;
+    int wbuf_len;
+
+    int subtotal;
+    int subtotal_size;
+    int max_subtotal_size;
+} moving_avg_values;
+
+/* TODO: hide these in the implementation */
 typedef struct {
     bool is_recording;
     bool is_recorded;
