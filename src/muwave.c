@@ -3,7 +3,7 @@
 
 #include "muwave.h"
 
-// TODO: only define the ARRAY_LENGTH macro conditionally?
+// TODO: only define the ARRAY_LENGTH macro conditionally
 #define ARRAY_LENGTH(array) (sizeof((array))/sizeof((array)[0]))
 
 /* Creation and deletion of muwave state objects. */
@@ -54,7 +54,7 @@ int muwave_start_record_gesture(muwave_state *state) {
     return gesture_id;
 }
 
-// hand-tuned utility function
+// TODO: adjust the hand-tuned utility function using params from the uWave algorithm
 int normalize(int sum) {
     if (sum > 20) {
         return 15;
@@ -140,10 +140,11 @@ void handle_recording_tick(muwave_gesture *gesture, int *accel_data, int dimensi
 }
 
 void handle_evaluation_tick(muwave_gesture *gesture, int *accel_data, int dimensions) {
-    // TODO: actually complain.
+    // TODO: actually complain about these issues.
     if (gesture == NULL) { return; }
     if (accel_data == NULL) { return; }
     if (ARRAY_LENGTH(accel_data) != dimensions) { return; }
+
     // TODO: implement DTW algoritm
 }
 
