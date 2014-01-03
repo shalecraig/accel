@@ -22,8 +22,10 @@ typedef struct {
     bool is_recorded;
 
     int recording_size;
-    int** raw_recording;
-    int** normalized_recording;
+    int **raw_recording;
+    int **normalized_recording;
+
+    int **affinities;
 } muwave_gesture;
 
 // TODO: forward declare the implementation-based state so it is not exposed.
