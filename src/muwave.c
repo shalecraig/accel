@@ -156,14 +156,11 @@ void handle_recording_tick(muwave_gesture *gesture, int dimensions) {
     if (gesture->recording_size != 0) {
         gesture->raw_recording = (int **) realloc(gesture->raw_recording, (gesture->recording_size + 1) * sizeof(int *));
     } else {
-        // TODO:
-        //  It's not expected that this will be triggered, unless we messed up allocation of the gesture.
-        //  Complain if this happens, fail if raw_recording is not NULL.
         gesture->raw_recording = (int **) malloc(sizeof(int *));
     }
     gesture->raw_recording[gesture->recording_size] = malloc(sizeof(int) * dimensions);
     for (int i=0; i<dimensions; ++i) {
-        gesture->raw_recording[gesture->recording_size][i] = accel_data[i];
+        gesture->raw_recording[gesture->recording_size][i] = get_latest_frame_moving_avg(gesture->moving_avg_values[i]);
     }
     ++gesture->recording_size;
 }
@@ -171,8 +168,7 @@ void handle_recording_tick(muwave_gesture *gesture, int dimensions) {
 void handle_evaluation_tick(muwave_gesture *gesture, int dimensions) {
     // TODO: actually complain about these issues.
     if (gesture == NULL) { return; }
-    if (accel_data == NULL) { return; }
-    if (ARRAY_LENGTH(accel_data) != dimensions) { return; }
+    if (gesture->moving_avg_values == NULL) { return; }
 
     // TODO: implement DTW algoritm
 }
