@@ -66,7 +66,7 @@ int get_latest_frame_moving_avg(moving_avg_values *value) {
 }
 
 /* Creation and deletion of muwave state objects. */
-muwave_state *muwave_generatestate(int dimensions, int window_size) {
+muwave_state *muwave_generate_state(int dimensions, int window_size) {
 
     size_t internal_size = sizeof(muwave_state);
 
