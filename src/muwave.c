@@ -65,6 +65,29 @@ int get_latest_frame_moving_avg(moving_avg_values *value) {
     return sum / value->wbuf_len;
 }
 
+muwave_gesture *muwave_generate_gesture(muwave_state *state) {
+    size_t gesture_size = sizeof(muwave_gesture);
+    muwave_gesture *g = malloc(gesture_size);
+    memset(g, 0, gesture_size);
+    g->is_recording = false;
+    g->is_recorded = false;
+    g->raw_recording = (int **) malloc(sizeof(int *));
+    g->normalized_recording = NULL;
+
+    // TODO: these shouldn't both be the same....
+    g->moving_avg_values = allocate_moving_avg_struct(state->window_size, state->window_size);
+    return g;
+}
+
+void muwave_destroy_gesture(muwave_gesture *gesture) {
+    if (gesture == NULL) {
+        return;
+    }
+    // TODO: free more than just this.
+    free(gesture);
+    gesture = NULL;
+}
+
 /* Creation and deletion of muwave state objects. */
 muwave_state *muwave_generate_state(int dimensions, int window_size) {
 
@@ -76,15 +99,6 @@ muwave_state *muwave_generate_state(int dimensions, int window_size) {
     state->dimensions = dimensions;
     state->window_size = window_size > 0 ? window_size : 2;
     return state;
-}
-
-void muwave_destroy_gesture(muwave_gesture *gesture) {
-    if (gesture == NULL) {
-        return;
-    }
-    // TODO: free more than just this.
-    free(gesture);
-    gesture = NULL;
 }
 
 void muwave_destroy_state(muwave_state *state) {
@@ -105,11 +119,8 @@ int muwave_start_record_gesture(muwave_state *state) {
     }
     int gesture_id = ++state->num_gestures_saved;
 
-    size_t gesture_size = sizeof(muwave_gesture);
-    state->gestures[gesture_id] = malloc(gesture_size);
-    memset(state->gestures[gesture_id], 0, gesture_size);
+    state->gestures[gesture_id] = muwave_generate_gesture();
     state->gestures[gesture_id]->is_recording = true;
-    state->gestures[gesture_id]->is_recorded = false;
     return gesture_id;
 }
 

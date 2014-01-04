@@ -37,6 +37,7 @@ typedef struct {
     int **raw_recording;
     int **normalized_recording;
 
+    moving_avg_values *moving_avg_values;
     int **affinities;
 } muwave_gesture;
 
