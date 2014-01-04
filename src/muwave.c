@@ -2,6 +2,7 @@
 #include <string.h>
 
 #include "muwave.h"
+#include "moving_avg_ticker.h"
 
 // TODO: include these from a header file?
 #define MAX(a,b) \
@@ -16,66 +17,19 @@
 // TODO: only define the ARRAY_LENGTH macro conditionally
 #define ARRAY_LENGTH(array) (sizeof((array))/sizeof((array)[0]))
 
-moving_avg_values *allocate_moving_avg_struct(int num_wbuf, int subtotal_sizes) {
-    size_t size = sizeof(moving_avg_values);
-    moving_avg_values *returned = (moving_avg_values *) malloc(size);
-    memset(returned, 0, size);
-    returned->max_subtotal_size = subtotal_sizes;
-
-    int *wbuf = (int *) calloc(num_wbuf, sizeof(int));
-    returned->wbuf = wbuf;
-    returned->wbuf_len = num_wbuf;
-    return returned;
-}
-
-void reset_moving_avg(moving_avg_values * reset) {
-    // TODO: complain about invalid input.
-    if (reset == NULL) { return; }
-    if (reset->wbuf != NULL) {
-        memset(reset->wbuf, 0, reset->wbuf_len);
-    }
-    reset->wbuf_end = 0;
-    reset->subtotal = 0;
-    reset->subtotal_size = 0;
-}
-
-bool append_to_moving_avg(moving_avg_values *value, int appended) {
-    // TODO: complain about the error
-    if (value == NULL) { return false; }
-    ++value->subtotal_size;
-    value->subtotal += appended;
-    if (value->subtotal_size != value->max_subtotal_size) {
-        return false;
-    }
-    value->wbuf_end = (value->wbuf_end + 1) % value->wbuf_len;
-    value->wbuf[value->wbuf_end] = value->subtotal;
-
-    value->subtotal = 0;
-    value->subtotal_size = 0;
-    return true;
-}
-
-int get_latest_frame_moving_avg(moving_avg_values *value) {
-    // TODO: complain about the invalid input.
-    if (value == NULL) { return 0; }
-    int sum = 0;
-    for (int i=0; i<value->wbuf_len; ++i) {
-        sum += value->wbuf[i];
-    }
-    return sum / value->wbuf_len;
-}
-
 muwave_gesture *muwave_generate_gesture(muwave_state *state) {
     size_t gesture_size = sizeof(muwave_gesture);
     muwave_gesture *g = malloc(gesture_size);
     memset(g, 0, gesture_size);
     g->is_recording = false;
     g->is_recorded = false;
-    g->raw_recording = (int **) malloc(sizeof(int *));
     g->normalized_recording = NULL;
 
-    // TODO: these shouldn't both be the same....
-    g->moving_avg_values = allocate_moving_avg_struct(state->window_size, state->window_size);
+    g->moving_avg_values = (moving_avg_values **) calloc(state->dimensions, sizeof(moving_avg_values *));
+    for (int i=0; i<state->dimensions; ++i) {
+        // TODO: these two shouldn't both be the same....
+        g->moving_avg_values[i] = allocate_moving_avg(state->window_size, state->window_size);
+    }
     return g;
 }
 
@@ -119,7 +73,7 @@ int muwave_start_record_gesture(muwave_state *state) {
     }
     int gesture_id = ++state->num_gestures_saved;
 
-    state->gestures[gesture_id] = muwave_generate_gesture();
+    state->gestures[gesture_id] = muwave_generate_gesture(state);
     state->gestures[gesture_id]->is_recording = true;
     return gesture_id;
 }
@@ -196,12 +150,15 @@ void muwave_end_record_gesture(muwave_state *state, int gesture_id) {
     state->gestures[gesture_id]->is_recorded = true;
 }
 
-void handle_recording_tick(muwave_gesture *gesture, int *accel_data, int dimensions) {
+void handle_recording_tick(muwave_gesture *gesture, int dimensions) {
     if (gesture == NULL) { return; }
-    // TODO: grow exponentially, not linearly. Linearlly sucks.
+    // TODO: grow exponentially, not linearly. Linear growth has a bad running profile.
     if (gesture->recording_size != 0) {
         gesture->raw_recording = (int **) realloc(gesture->raw_recording, (gesture->recording_size + 1) * sizeof(int *));
     } else {
+        // TODO:
+        //  It's not expected that this will be triggered, unless we messed up allocation of the gesture.
+        //  Complain if this happens, fail if raw_recording is not NULL.
         gesture->raw_recording = (int **) malloc(sizeof(int *));
     }
     gesture->raw_recording[gesture->recording_size] = malloc(sizeof(int) * dimensions);
@@ -211,7 +168,7 @@ void handle_recording_tick(muwave_gesture *gesture, int *accel_data, int dimensi
     ++gesture->recording_size;
 }
 
-void handle_evaluation_tick(muwave_gesture *gesture, int *accel_data, int dimensions) {
+void handle_evaluation_tick(muwave_gesture *gesture, int dimensions) {
     // TODO: actually complain about these issues.
     if (gesture == NULL) { return; }
     if (accel_data == NULL) { return; }
@@ -236,11 +193,21 @@ void muwave_process_timer_tick(muwave_state *state, int *accel_data) {
         if (gesture == NULL) { continue; }
         // TODO: complain about struct integrity issues.
         if (!gesture->is_recording && !gesture->is_recorded) { continue; }
+        // TODO: complain about struct integrity issues.
+        if (gesture->moving_avg_values == NULL) { continue; }
+
+        // If the moving average is at a final line.
+        bool avg_line = false;
+        for (int d=0; d<state->dimensions; ++d) {
+            avg_line = append_to_moving_avg(gesture->moving_avg_values[d], accel_data[d]);
+        }
+
+        if (!avg_line) { continue; }
 
         if (gesture->is_recording) {
-            handle_recording_tick(gesture, accel_data, state->dimensions);
+            handle_recording_tick(gesture, state->dimensions);
         } else if (gesture->is_recorded) {
-            handle_evaluation_tick(gesture, accel_data, state->dimensions);
+            handle_evaluation_tick(gesture, state->dimensions);
         } else {
             // TODO: complain that we need to have one of these two categories.
             continue;
