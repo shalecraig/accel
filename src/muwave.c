@@ -4,6 +4,9 @@
 #include "muwave.h"
 #include "moving_avg_ticker.h"
 
+// TODO: set the error bit when things are wrong.
+// TODO: check for failed allocation.
+
 // TODO: include these from a header file?
 #define MAX(a,b) \
    ({ __typeof__ (a) _a = (a); \
@@ -78,7 +81,8 @@ int muwave_start_record_gesture(muwave_state *state) {
     return gesture_id;
 }
 
-// TODO: adjust the hand-tuned utility function using params from the uWave algorithm
+// TODO: These arbitrarily chosen constants are from the uWave algorithm's paper, and have nothing to do with my implementation.
+// Find better numbers that'll do instead.
 int normalize(int sum) {
     if (sum > 20) {
         return 15;
@@ -97,21 +101,19 @@ int normalize(int sum) {
 void muwave_end_record_gesture(muwave_state *state, int gesture_id) {
     // TODO: Check with a macro for error bit, nullity with error logging.
     if (state == NULL) {return;}
-    // TODO: use specific types in c instead of this stuff.
+    // TODO: use an unsigned int instead so we don't need to check for this type of error.
     if (gesture_id < 0) {return;}
-    // TODO: complain about an invalid value.
+    // TODO: log the user's error.
     if (state->num_gestures_saved <= gesture_id) {return;}
-    // TODO: use the assert library instead. This should never happen unless muwave doesn't have integrity.
+    // TODO: log muwave's error.
     if (state->gestures[gesture_id] == NULL) {return;}
-    // TODO: complain about this with a message.
+    // TODO: log the user's error.
     if (state->gestures[gesture_id]->is_recording) {return;}
-    // TODO: use the assert library instead. This should never happen unless muwave doesn't have integrity.
+    // TODO: log muwave's error.
     if (state->gestures[gesture_id]->is_recorded) {return;}
 
     muwave_gesture *gesture = state->gestures[gesture_id];
     gesture->is_recording = false;
-
-    // allocate normalized array
 
     // TODO: verify if safe to divide and assume a round-down.
     int normalized_recording_len = gesture->recording_size - gesture->recording_size%state->window_size;
@@ -226,38 +228,32 @@ void muwave_process_timer_tick(muwave_state *state, int *accel_data) {
 void muwave_find_most_likely_gesture(muwave_state *state, int *gesture_id, int *affinity) {
     // TODO: complain about these, do them more formally
     if (state == NULL) {
-        *gesture_id = MUWAVE_ERROR_GESTURE;
-        *affinity = MUWAVE_ERROR_AFFINITY;
+        // TODO: Set error bit.
         return;
     }
     if (gesture_id == NULL) {
-        *gesture_id = MUWAVE_ERROR_GESTURE;
-        *affinity = MUWAVE_ERROR_AFFINITY;
+        // TODO: Set error bit.
         return;
     }
     if (affinity == NULL) {
-        *gesture_id = MUWAVE_ERROR_GESTURE;
-        *affinity = MUWAVE_ERROR_AFFINITY;
+        // TODO: Set error bit.
         return;
     }
 
     // TODO: info.log
     if (state->num_gestures_saved == 0) {
-        *gesture_id = MUWAVE_ERROR_GESTURE;
-        *affinity = MUWAVE_ERROR_AFFINITY;
+        // TODO: Set error bit.
         return;
     }
     // TODO: error.log
     if (state->num_gestures_saved < 0) {
-        *gesture_id = MUWAVE_ERROR_GESTURE;
-        *affinity = MUWAVE_ERROR_AFFINITY;
+        // TODO: Set error bit.
         return;
     }
 
     // TODO: error.log
     if (state->gestures == NULL) {
-        *gesture_id = MUWAVE_ERROR_GESTURE;
-        *affinity = MUWAVE_ERROR_AFFINITY;
+        // TODO: Set error bit.
         return;
     }
 
@@ -284,5 +280,9 @@ void muwave_find_most_likely_gesture(muwave_state *state, int *gesture_id, int *
             *affinity = gesture->affinities[gesture->recording_size-1];
             *gesture_id = i;
         }
+    }
+    if (*gesture_id == MUWAVE_ERROR_GESTURE ||
+        *affinity == MUWAVE_ERROR_AFFINITY) {
+        // TODO: set error bit. Should I have used a local variable to prevent changing the value instead?
     }
 }
