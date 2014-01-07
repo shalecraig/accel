@@ -190,11 +190,6 @@ void handle_evaluation_tick(muwave_gesture *gesture, int dimensions) {
     }
 }
 
-/**
- * Updates the uWave algorithm's DTW-compare step across all gestures.
- * @param state    state being recorded
- * @param accel_data a array with accelerometer data
- */
 void muwave_process_timer_tick(muwave_state *state, int *accel_data) {
     if (state == NULL) { return; }
     if (accel_data == NULL) { return; }
@@ -224,6 +219,76 @@ void muwave_process_timer_tick(muwave_state *state, int *accel_data) {
         } else {
             // TODO: complain that we need to have one of these two categories.
             continue;
+        }
+    }
+}
+
+/**
+ * At a given state, returns the most likely gesture and its affinity.
+ * @param state      state being recorded
+ * @param gesture_id id the gesture corresponds to
+ * @param affinity   affinity of the gesture to the accelerometer input.
+ */
+void muwave_find_most_likely_gesture(muwave_state *state, int *gesture_id, int *affinity) {
+    // TODO: complain about these, do them more formally
+    if (state == NULL) {
+        *gesture_id = MUWAVE_ERROR_GESTURE;
+        *affinity = MUWAVE_ERROR_AFFINITY;
+        return;
+    }
+    if (gesture_id == NULL) {
+        *gesture_id = MUWAVE_ERROR_GESTURE;
+        *affinity = MUWAVE_ERROR_AFFINITY;
+        return;
+    }
+    if (affinity == NULL) {
+        *gesture_id = MUWAVE_ERROR_GESTURE;
+        *affinity = MUWAVE_ERROR_AFFINITY;
+        return;
+    }
+
+    // TODO: info.log
+    if (state->num_gestures_saved == 0) {
+        *gesture_id = MUWAVE_ERROR_GESTURE;
+        *affinity = MUWAVE_ERROR_AFFINITY;
+        return;
+    }
+    // TODO: error.log
+    if (state->num_gestures_saved < 0) {
+        *gesture_id = MUWAVE_ERROR_GESTURE;
+        *affinity = MUWAVE_ERROR_AFFINITY;
+        return;
+    }
+
+    // TODO: error.log
+    if (state->gestures == NULL) {
+        *gesture_id = MUWAVE_ERROR_GESTURE;
+        *affinity = MUWAVE_ERROR_AFFINITY;
+        return;
+    }
+
+    // TODO: there's a cleaner way to do some of the state->num_gestures_saved precondition stuff. Should it be explicit?
+    *gesture_id = MUWAVE_ERROR_GESTURE;
+    *affinity = MUWAVE_ERROR_AFFINITY;
+    for (int i=0; i<state->num_gestures_saved; ++i) {
+        muwave_gesture *gesture = state->gestures[i];
+        // TODO: log error about integrity of the gestures.
+        if (gesture == NULL) { continue; }
+        if (gesture->recording_size < 0) { continue; }
+        if (!gesture->is_recorded) { continue; }
+        if (gesture->recording_size == 0) { continue; }
+
+        if ((*gesture_id == MUWAVE_ERROR_GESTURE && *affinity != MUWAVE_ERROR_AFFINITY) ||
+           (*gesture_id != MUWAVE_ERROR_GESTURE && *affinity == MUWAVE_ERROR_AFFINITY)) {
+            // TODO: debug/complain about internal consistency.
+            continue;
+        }
+
+
+        if (*affinity == MUWAVE_ERROR_AFFINITY ||
+            gesture->affinities[gesture->recording_size-1] < *affinity) {
+            *affinity = gesture->affinities[gesture->recording_size-1];
+            *gesture_id = i;
         }
     }
 }
