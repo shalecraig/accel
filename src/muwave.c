@@ -171,6 +171,23 @@ void handle_evaluation_tick(muwave_gesture *gesture, int dimensions) {
     if (gesture->moving_avg_values == NULL) { return; }
 
     // TODO: implement DTW algoritm
+    int i = gesture->recording_size;
+    while (i != 0) {
+        --i;
+        int cost = 0;
+        // TODO: tabulate the cost.
+        if (i == 0) {
+            // TODO: should this have the cost in
+            gesture->affinities[i] = MIN(cost, gesture->affinities[i]);
+        } else {
+            gesture->affinities[i] = MIN(gesture->affinities[i], gesture->affinities[i-1]) + cost;
+        }
+    }
+    for (i=1; i<gesture->recording_size; ++i) {
+        // TODO: actually tabulate the cost.
+        int cost = 0;
+        gesture->affinities[i] = MIN(gesture->affinities[i], gesture->affinities[i-1] + cost);
+    }
 }
 
 /**
