@@ -16,6 +16,9 @@
 #define MUWAVE_RECORD_MAX_LENGTH MUWAVE_FREQUENCY_HZ*MUWAVE_MAX_RECORDING_TIME_S
 #endif
 
+#define MUWAVE_ERROR_AFFINITY -1
+#define MUWAVE_ERROR_GESTURE -1
+
 /* TODO: hide these in the implementation */
 typedef struct {
     // Circular buffer
@@ -38,7 +41,7 @@ typedef struct {
     int **normalized_recording;
 
     moving_avg_values **moving_avg_values;
-    int **affinities;
+    int *affinities;
 } muwave_gesture;
 
 // TODO: forward declare the implementation-based state so it is not exposed.
