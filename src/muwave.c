@@ -223,12 +223,6 @@ void muwave_process_timer_tick(muwave_state *state, int *accel_data) {
     }
 }
 
-/**
- * At a given state, returns the most likely gesture and its affinity.
- * @param state      state being recorded
- * @param gesture_id id the gesture corresponds to
- * @param affinity   affinity of the gesture to the accelerometer input.
- */
 void muwave_find_most_likely_gesture(muwave_state *state, int *gesture_id, int *affinity) {
     // TODO: complain about these, do them more formally
     if (state == NULL) {
