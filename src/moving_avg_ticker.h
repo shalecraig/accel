@@ -1,7 +1,7 @@
-#ifndef MUWAVE_AVG_TICKER
-#define MUWAVE_AVG_TICKER
+#ifndef ACCEL_AVG_TICKER
+#define ACCEL_AVG_TICKER
 
-#include "muwave.h"
+#include "accel.h"
 
 moving_avg_values *allocate_moving_avg(int num_wbuf, int subtotal_sizes);
 

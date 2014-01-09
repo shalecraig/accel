@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "muwave.h"
+#include "accel.h"
 #include "moving_avg_ticker.h"
 
 // TODO: set the error bit when things are wrong.
@@ -20,9 +20,9 @@
 // TODO: only define the ARRAY_LENGTH macro conditionally
 #define ARRAY_LENGTH(array) (sizeof((array))/sizeof((array)[0]))
 
-muwave_gesture *muwave_generate_gesture(muwave_state *state) {
-    size_t gesture_size = sizeof(muwave_gesture);
-    muwave_gesture *g = malloc(gesture_size);
+accel_gesture *accel_generate_gesture(accel_state *state) {
+    size_t gesture_size = sizeof(accel_gesture);
+    accel_gesture *g = malloc(gesture_size);
     memset(g, 0, gesture_size);
     g->is_recording = false;
     g->is_recorded = false;
@@ -36,7 +36,7 @@ muwave_gesture *muwave_generate_gesture(muwave_state *state) {
     return g;
 }
 
-void muwave_destroy_gesture(muwave_gesture *gesture) {
+void accel_destroy_gesture(accel_gesture *gesture) {
     if (gesture == NULL) {
         return;
     }
@@ -45,12 +45,12 @@ void muwave_destroy_gesture(muwave_gesture *gesture) {
     gesture = NULL;
 }
 
-/* Creation and deletion of muwave state objects. */
-muwave_state *muwave_generate_state(int dimensions, int window_size) {
+/* Creation and deletion of accel state objects. */
+accel_state *accel_generate_state(int dimensions, int window_size) {
 
-    size_t internal_size = sizeof(muwave_state);
+    size_t internal_size = sizeof(accel_state);
 
-    muwave_state *state = (muwave_state *) malloc(internal_size);
+    accel_state *state = (accel_state *) malloc(internal_size);
     memset(state, 0, internal_size);
     state->error_bit = false;
     state->dimensions = dimensions;
@@ -58,25 +58,25 @@ muwave_state *muwave_generate_state(int dimensions, int window_size) {
     return state;
 }
 
-void muwave_destroy_state(muwave_state *state) {
+void accel_destroy_state(accel_state *state) {
     if (state == NULL) { return; }
-    /* TODO: remove all additional fields inside the muwave_state variable */
+    /* TODO: remove all additional fields inside the accel_state variable */
     for (int i=0; i<state->num_gestures_saved; ++i) {
-        muwave_destroy_gesture(state->gestures[i]);
+        accel_destroy_gesture(state->gestures[i]);
     }
     free(state);
     state = NULL;
 }
 
-int muwave_start_record_gesture(muwave_state *state) {
+int accel_start_record_gesture(accel_state *state) {
     if (state->num_gestures_saved != 0) {
-        state->gestures = (muwave_gesture **)realloc(state->gestures, (state->num_gestures_saved + 1)*sizeof(muwave_gesture *));
+        state->gestures = (accel_gesture **)realloc(state->gestures, (state->num_gestures_saved + 1)*sizeof(accel_gesture *));
     } else {
-        state->gestures = (muwave_gesture **)malloc(sizeof(muwave_gesture *));
+        state->gestures = (accel_gesture **)malloc(sizeof(accel_gesture *));
     }
     int gesture_id = ++state->num_gestures_saved;
 
-    state->gestures[gesture_id] = muwave_generate_gesture(state);
+    state->gestures[gesture_id] = accel_generate_gesture(state);
     state->gestures[gesture_id]->is_recording = true;
     return gesture_id;
 }
@@ -98,21 +98,21 @@ int normalize(int sum) {
 }
 
 // TODO: does this work for zero recorded timestamps?
-void muwave_end_record_gesture(muwave_state *state, int gesture_id) {
+void accel_end_record_gesture(accel_state *state, int gesture_id) {
     // TODO: Check with a macro for error bit, nullity with error logging.
     if (state == NULL) {return;}
     // TODO: use an unsigned int instead so we don't need to check for this type of error.
     if (gesture_id < 0) {return;}
     // TODO: log the user's error.
     if (state->num_gestures_saved <= gesture_id) {return;}
-    // TODO: log muwave's error.
+    // TODO: log accel's error.
     if (state->gestures[gesture_id] == NULL) {return;}
     // TODO: log the user's error.
     if (state->gestures[gesture_id]->is_recording) {return;}
-    // TODO: log muwave's error.
+    // TODO: log accel's error.
     if (state->gestures[gesture_id]->is_recorded) {return;}
 
-    muwave_gesture *gesture = state->gestures[gesture_id];
+    accel_gesture *gesture = state->gestures[gesture_id];
     gesture->is_recording = false;
 
     // TODO: verify if safe to divide and assume a round-down.
@@ -152,7 +152,7 @@ void muwave_end_record_gesture(muwave_state *state, int gesture_id) {
     state->gestures[gesture_id]->is_recorded = true;
 }
 
-void handle_recording_tick(muwave_gesture *gesture, int dimensions) {
+void handle_recording_tick(accel_gesture *gesture, int dimensions) {
     if (gesture == NULL) { return; }
     // TODO: grow exponentially, not linearly. Linear growth has a bad running profile.
     if (gesture->recording_size != 0) {
@@ -167,7 +167,7 @@ void handle_recording_tick(muwave_gesture *gesture, int dimensions) {
     ++gesture->recording_size;
 }
 
-void handle_evaluation_tick(muwave_gesture *gesture, int dimensions) {
+void handle_evaluation_tick(accel_gesture *gesture, int dimensions) {
     // TODO: actually complain about these issues.
     if (gesture == NULL) { return; }
     if (gesture->moving_avg_values == NULL) { return; }
@@ -192,13 +192,13 @@ void handle_evaluation_tick(muwave_gesture *gesture, int dimensions) {
     }
 }
 
-void muwave_process_timer_tick(muwave_state *state, int *accel_data) {
+void accel_process_timer_tick(accel_state *state, int *accel_data) {
     if (state == NULL) { return; }
     if (accel_data == NULL) { return; }
     if (ARRAY_LENGTH(accel_data) != state->dimensions) { return; }
 
     for (int gesture_iter = 0; gesture_iter < state->num_gestures_saved; ++gesture_iter) {
-        muwave_gesture *gesture = state->gestures[gesture_iter];
+        accel_gesture *gesture = state->gestures[gesture_iter];
         // TODO: complain about struct integrity issues.
         if (gesture == NULL) { continue; }
         // TODO: complain about struct integrity issues.
@@ -225,7 +225,7 @@ void muwave_process_timer_tick(muwave_state *state, int *accel_data) {
     }
 }
 
-void muwave_find_most_likely_gesture(muwave_state *state, int *gesture_id, int *affinity) {
+void accel_find_most_likely_gesture(accel_state *state, int *gesture_id, int *affinity) {
     // TODO: complain about these, do them more formally
     if (state == NULL) {
         // TODO: Set error bit.
@@ -258,31 +258,31 @@ void muwave_find_most_likely_gesture(muwave_state *state, int *gesture_id, int *
     }
 
     // TODO: there's a cleaner way to do some of the state->num_gestures_saved precondition stuff. Should it be explicit?
-    *gesture_id = MUWAVE_ERROR_GESTURE;
-    *affinity = MUWAVE_ERROR_AFFINITY;
+    *gesture_id = ACCEL_ERROR_GESTURE;
+    *affinity = ACCEL_ERROR_AFFINITY;
     for (int i=0; i<state->num_gestures_saved; ++i) {
-        muwave_gesture *gesture = state->gestures[i];
+        accel_gesture *gesture = state->gestures[i];
         // TODO: log error about integrity of the gestures.
         if (gesture == NULL) { continue; }
         if (gesture->recording_size < 0) { continue; }
         if (!gesture->is_recorded) { continue; }
         if (gesture->recording_size == 0) { continue; }
 
-        if ((*gesture_id == MUWAVE_ERROR_GESTURE && *affinity != MUWAVE_ERROR_AFFINITY) ||
-           (*gesture_id != MUWAVE_ERROR_GESTURE && *affinity == MUWAVE_ERROR_AFFINITY)) {
+        if ((*gesture_id == ACCEL_ERROR_GESTURE && *affinity != ACCEL_ERROR_AFFINITY) ||
+           (*gesture_id != ACCEL_ERROR_GESTURE && *affinity == ACCEL_ERROR_AFFINITY)) {
             // TODO: debug/complain about internal consistency.
             continue;
         }
 
 
-        if (*affinity == MUWAVE_ERROR_AFFINITY ||
+        if (*affinity == ACCEL_ERROR_AFFINITY ||
             gesture->affinities[gesture->recording_size-1] < *affinity) {
             *affinity = gesture->affinities[gesture->recording_size-1];
             *gesture_id = i;
         }
     }
-    if (*gesture_id == MUWAVE_ERROR_GESTURE ||
-        *affinity == MUWAVE_ERROR_AFFINITY) {
+    if (*gesture_id == ACCEL_ERROR_GESTURE ||
+        *affinity == ACCEL_ERROR_AFFINITY) {
         // TODO: set error bit. Should I have used a local variable to prevent changing the value instead?
     }
 }
