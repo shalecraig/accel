@@ -12,6 +12,8 @@
 //     EXPECT_EQ (50.3321, square_root (2533.310224));
 // }
 
+const moving_avg_values * null_avg_values = NULL;
+
 TEST(MovingAvgTicker, InvalidInputValues) {
 
     moving_avg_values *allocated = NULL;
@@ -33,6 +35,8 @@ TEST(MovingAvgTicker, InvalidInputValues) {
 
 TEST(MovingAvgTicker, ValigInputValuesAllocatesObjects) {
     moving_avg_values *allocated = NULL;
+    int retval = allocate_moving_avg(1, 1, &allocated);
+    EXPECT_NE((moving_avg_values *) NULL, allocated);
 }
 
 int main (int argc, char** argv) {

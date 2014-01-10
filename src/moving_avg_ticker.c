@@ -28,7 +28,7 @@ int allocate_moving_avg(int num_wbuf, int subtotal_sizes, moving_avg_values **al
         // TODO: info log
         return MOVING_AVG_MALLOC_ERROR;
     }
-    memset(allocated, 0, size);
+    memset(*allocated, 0, size);
     (*allocated)->max_subtotal_size = subtotal_sizes;
 
     int *wbuf = (int *) calloc(num_wbuf, sizeof(int));
@@ -42,15 +42,28 @@ int allocate_moving_avg(int num_wbuf, int subtotal_sizes, moving_avg_values **al
     return 0;
 }
 
-void reset_moving_avg(moving_avg_values * reset) {
+int reset_moving_avg(moving_avg_values *reset) {
     // TODO: complain about invalid input.
-    if (reset == NULL) { return; }
-    if (reset->wbuf != NULL) {
-        memset(reset->wbuf, 0, reset->wbuf_len);
+    if (reset == NULL) {
+        // TODO: complain about invalid input.
+        return MOVING_AVG_PARAM_ERROR;
     }
-    reset->wbuf_end = 0;
+    if (reset->wbuf == NULL) {
+        // TODO: complain about the lack of struct integrity.
+        return MOVING_AVG_INTERNAL_ERROR;
+    }
+
+    // TODO: use unsigned ints instead so we only need to check for equality with 0.
+    if (reset->wbuf_len <= 0) {
+        // TODO: complain about the lack of struct integrity.
+        return MOVING_AVG_INTERNAL_ERROR;
+    }
+
+    memset(reset->wbuf, 0, reset->wbuf_len);
+    reset->wbuf_end = reset->wbuf_len - 1;
     reset->subtotal = 0;
     reset->subtotal_size = 0;
+    return 0;
 }
 
 bool append_to_moving_avg(moving_avg_values *value, int appended) {
