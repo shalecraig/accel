@@ -66,20 +66,48 @@ int reset_moving_avg(moving_avg_values *reset) {
     return 0;
 }
 
-bool append_to_moving_avg(moving_avg_values *value, int appended) {
-    // TODO: complain about the error
-    if (value == NULL) { return false; }
+int append_to_moving_avg(moving_avg_values *value, int appended, bool* is_at_end) {
+    // TODO: make an isInvalid inline'd method that checks for structural integrity/etc.
+    if (value == NULL) {
+        // TODO: debug-log these errors.
+        return MOVING_AVG_PARAM_ERROR;
+    }
+    if (is_at_end == NULL) {
+        // TODO: debug-log these errors.
+        return MOVING_AVG_PARAM_ERROR;
+    }
+    if (value->wbuf == NULL) {
+        // TODO: error about invalid internal state.
+        return MOVING_AVG_INTERNAL_ERROR;
+    }
+    if (value->subtotal_size < 0) {
+        // TODO: error about invalid internal state.
+        // TODO: use unsigned ints instead
+        return MOVING_AVG_INTERNAL_ERROR;
+    }
+    if (value->max_subtotal_size < 0) {
+        // TODO: error about invalid internal state.
+        // TODO: use unsigned ints instead
+        return MOVING_AVG_INTERNAL_ERROR;
+    }
+    if (value->subtotal_size >= value->max_subtotal_size) {
+        // TODO: error about invalid internal state.
+        return MOVING_AVG_INTERNAL_ERROR;
+    }
+
     ++value->subtotal_size;
     value->subtotal += appended;
     if (value->subtotal_size != value->max_subtotal_size) {
-        return false;
+        *is_at_end = false;
+        return 0;
     }
     value->wbuf_end = (value->wbuf_end + 1) % value->wbuf_len;
     value->wbuf[value->wbuf_end] = value->subtotal;
 
     value->subtotal = 0;
     value->subtotal_size = 0;
-    return true;
+    *is_at_end = true;
+    return 0;
 }
 
 int get_latest_frame_moving_avg(moving_avg_values *value) {
@@ -92,3 +120,20 @@ int get_latest_frame_moving_avg(moving_avg_values *value) {
     return sum / value->wbuf_len;
 }
 
+int free_moving_avg(moving_avg_values **value) {
+    if (*value == NULL) {
+        // TODO: complain about bad input.
+        return MOVING_AVG_PARAM_ERROR;
+    }
+    if ((*value)->wbuf == NULL) {
+        // TODO: is this the best way to do this? (complain but do the right thing?)
+        free (*value);
+        *value = NULL;
+        return MOVING_AVG_INTERNAL_ERROR;
+    }
+    free((*value)->wbuf);
+    (*value)->wbuf = NULL;
+    free(*value);
+    *value = NULL;
+    return 0;
+}

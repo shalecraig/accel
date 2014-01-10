@@ -11,8 +11,10 @@ int allocate_moving_avg(int num_wbuf, int subtotal_sizes, moving_avg_values **al
 
 int reset_moving_avg(moving_avg_values * reset);
 
-bool append_to_moving_avg(moving_avg_values *value, int appended);
+int append_to_moving_avg(moving_avg_values *value, int appended, bool *isAtEnd);
 
 int get_latest_frame_moving_avg(moving_avg_values *value);
+
+int free_moving_avg(moving_avg_values **value);
 
 #endif
