@@ -3,7 +3,11 @@
 
 #include "accel.h"
 
-moving_avg_values *allocate_moving_avg(int num_wbuf, int subtotal_sizes);
+#define MOVING_AVG_PARAM_ERROR -1
+#define MOVING_AVG_INTERNAL_ERROR -2
+#define MOVING_AVG_MALLOC_ERROR -2
+
+int allocate_moving_avg(int num_wbuf, int subtotal_sizes, moving_avg_values **allocated);
 
 void reset_moving_avg(moving_avg_values * reset);
 

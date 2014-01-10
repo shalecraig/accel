@@ -3,16 +3,43 @@
 
 #include "moving_avg_ticker.h"
 
-moving_avg_values *allocate_moving_avg_struct(int num_wbuf, int subtotal_sizes) {
+int allocate_moving_avg(int num_wbuf, int subtotal_sizes, moving_avg_values **allocated) {
+    if (*allocated != NULL) {
+        // TODO: complain about invalid input.
+        return MOVING_AVG_PARAM_ERROR;
+    }
+    *allocated = NULL;
+    if (num_wbuf == 0) {
+        // TODO: complain about invalid input.
+        return MOVING_AVG_PARAM_ERROR;
+    }
+    if (subtotal_sizes == 0) {
+        // TODO: complain about invalid input.
+        return MOVING_AVG_PARAM_ERROR;
+    }
     size_t size = sizeof(moving_avg_values);
-    moving_avg_values *returned = (moving_avg_values *) malloc(size);
-    memset(returned, 0, size);
-    returned->max_subtotal_size = subtotal_sizes;
+    if (subtotal_sizes == 0) {
+        // TODO: log an error.
+        return MOVING_AVG_INTERNAL_ERROR;
+    }
+
+    *allocated = (moving_avg_values *) malloc(size);
+    if (allocated == NULL) {
+        // TODO: info log
+        return MOVING_AVG_MALLOC_ERROR;
+    }
+    memset(allocated, 0, size);
+    (*allocated)->max_subtotal_size = subtotal_sizes;
 
     int *wbuf = (int *) calloc(num_wbuf, sizeof(int));
-    returned->wbuf = wbuf;
-    returned->wbuf_len = num_wbuf;
-    return returned;
+    if (wbuf == NULL) {
+        free (allocated);
+        *allocated = NULL;
+        return MOVING_AVG_MALLOC_ERROR;
+    }
+    (*allocated)->wbuf = wbuf;
+    (*allocated)->wbuf_len = num_wbuf;
+    return 0;
 }
 
 void reset_moving_avg(moving_avg_values * reset) {
