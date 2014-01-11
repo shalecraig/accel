@@ -127,13 +127,13 @@ void accel_end_record_gesture(accel_state *state, int gesture_id) {
     int normalized_recording_len = gesture->recording_size - gesture->recording_size%state->window_size;
     normalized_recording_len = normalized_recording_len / state->window_size;
 
-    gesture->normalized_recording = calloc(normalized_recording_len, sizeof(int*));
+    gesture->normalized_recording = (int **) calloc(normalized_recording_len, sizeof(int*));
 
     // convert from raw to normalized
     // TODO: this can be done much more efficiently, re-implement once testing is up.
     for (int i=0; i<gesture->recording_size; ++i) {
         if (i%state->window_size != state->window_size-1) { continue; }
-        int *sum = malloc(state->dimensions * sizeof(int));
+        int *sum = (int *) malloc(state->dimensions * sizeof(int));
         for (int d=0; d<state->dimensions; ++d) {
             int num_counted = 0;
             for (int j=MAX(0, i-state->window_size); j<i; ++j) {
@@ -148,9 +148,9 @@ void accel_end_record_gesture(accel_state *state, int gesture_id) {
     }
 
     // free raw
-    for(i=0; i<gesture->recording_size; ++i) {
-        free(gesture->raw_recording[i]);
-        gesture->raw_recording[i] = NULL;
+    for(int j=0; j<gesture->recording_size; ++j) {
+        free(gesture->raw_recording[j]);
+        gesture->raw_recording[j] = NULL;
     }
     free(gesture->raw_recording);
 
@@ -168,9 +168,11 @@ void handle_recording_tick(accel_gesture *gesture, int dimensions) {
     } else {
         gesture->raw_recording = (int **) malloc(sizeof(int *));
     }
-    gesture->raw_recording[gesture->recording_size] = malloc(sizeof(int) * dimensions);
+    gesture->raw_recording[gesture->recording_size] = (int *) malloc(sizeof(int) * dimensions);
     for (int i=0; i<dimensions; ++i) {
-        gesture->raw_recording[gesture->recording_size][i] = get_latest_frame_moving_avg(gesture->moving_avg_values[i]);
+        // TODO: fix this int/float business.
+        // TODO: check resultant output.
+        get_latest_frame_moving_avg(gesture->moving_avg_values[i], &(gesture->raw_recording[gesture->recording_size][i]));
     }
     ++gesture->recording_size;
 }
@@ -217,7 +219,8 @@ void accel_process_timer_tick(accel_state *state, int *accel_data) {
         // If the moving average is at a final line.
         bool avg_line = false;
         for (int d=0; d<state->dimensions; ++d) {
-            avg_line = append_to_moving_avg(gesture->moving_avg_values[d], accel_data[d]);
+            // TODO: verify that the return code isn't an error.
+            append_to_moving_avg(gesture->moving_avg_values[d], accel_data[d], &avg_line);
         }
 
         if (!avg_line) { continue; }
