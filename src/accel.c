@@ -72,7 +72,6 @@ void accel_destroy_gesture(accel_gesture **gesture) {
     *gesture = NULL;
 }
 
-/* Creation and deletion of accel state objects. */
 int accel_generate_state(accel_state **state, int dimensions, int window_size) {
     PRECONDITION_NOT_NULL(state);
     if (dimensions <= 0) {
@@ -85,6 +84,9 @@ int accel_generate_state(accel_state **state, int dimensions, int window_size) {
     size_t internal_size = sizeof(accel_state);
 
     *state = (accel_state *) malloc(internal_size);
+    if (state == NULL) {
+        return ACCEL_MALLOC_ERROR;
+    }
 
     memset((*state), 0, internal_size);
     (*state)->dimensions = dimensions;
