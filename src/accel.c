@@ -201,9 +201,10 @@ int accel_end_record_gesture(accel_state *state, int gesture_id) {
     return 0;
 }
 
+// TOOD: check for malloc failure in this function.
 void handle_recording_tick(accel_gesture *gesture, int dimensions) {
     if (gesture == NULL) { return; }
-    // TODO: grow exponentially, not linearly. Linear growth has a bad running profile.
+    // TODO: grow exponentially, not linearly. Linear growth allocates too frequently.
     if (gesture->recording_size != 0) {
         gesture->normalized_recording = (int **) realloc(gesture->normalized_recording, (gesture->recording_size + 1) * sizeof(int *));
     } else {
