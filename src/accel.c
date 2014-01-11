@@ -288,7 +288,7 @@ int accel_find_most_likely_gesture(accel_state *state, int *gesture_id, int *aff
 
     if (state->num_gestures_saved == 0) {
         *gesture_id = ACCEL_NO_VALID_GESTURE;
-        *affinity = ACCEL_NO_VALID_AFFINITY;
+        *affinity = ACCEL_NO_VALID_GESTURE;
 
         return ACCEL_NO_VALID_GESTURE;
     }
@@ -309,20 +309,20 @@ int accel_find_most_likely_gesture(accel_state *state, int *gesture_id, int *aff
         if (!gesture->is_recorded) { continue; }
         if (gesture->recording_size == 0) { continue; }
 
-        if ((*gesture_id == ACCEL_NO_VALID_GESTURE && *affinity != ACCEL_NO_VALID_AFFINITY) ||
-           (*gesture_id != ACCEL_NO_VALID_GESTURE && *affinity == ACCEL_NO_VALID_AFFINITY)) {
+        if ((*gesture_id == ACCEL_NO_VALID_GESTURE && *affinity != ACCEL_NO_VALID_GESTURE) ||
+           (*gesture_id != ACCEL_NO_VALID_GESTURE && *affinity == ACCEL_NO_VALID_GESTURE)) {
             // TODO: debug/complain about internal consistency.
             continue;
         }
 
-        if (*affinity == ACCEL_NO_VALID_AFFINITY ||
+        if (*affinity == ACCEL_NO_VALID_GESTURE ||
             gesture->affinities[i] < *affinity) {
             *affinity = gesture->affinities[i];
             *gesture_id = i;
         }
     }
     if (*gesture_id == ACCEL_NO_VALID_GESTURE ||
-        *affinity == ACCEL_NO_VALID_AFFINITY) {
+        *affinity == ACCEL_NO_VALID_GESTURE) {
         return ACCEL_NO_VALID_GESTURE;
     }
     return 0;

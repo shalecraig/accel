@@ -174,7 +174,7 @@ TEST(AccelFuzzTest, accel_find_most_likely_gesture_invalid_input) {
     state = test_fabricate_1d_state();
     result = accel_find_most_likely_gesture(state, &gesture_id, &affinity);
     EXPECT_EQ(ACCEL_NO_VALID_GESTURE, gesture_id);
-    EXPECT_EQ(ACCEL_NO_VALID_AFFINITY, affinity);
+    EXPECT_EQ(ACCEL_NO_VALID_GESTURE, affinity);
     EXPECT_EQ(ACCEL_NO_VALID_GESTURE, result);
 }
 

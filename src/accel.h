@@ -21,7 +21,6 @@
 #define ACCEL_MALLOC_ERROR -3
 
 #define ACCEL_NO_VALID_GESTURE -4
-#define ACCEL_NO_VALID_AFFINITY -5
 
 /* TODO: hide these in the implementation */
 typedef struct {
