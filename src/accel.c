@@ -4,6 +4,9 @@
 #include "accel.h"
 #include "moving_avg_ticker.h"
 
+#define PRECONDITION_NOT_NULL(foo) \
+    if (foo == NULL) { return ACCEL_PARAM_ERROR; }
+
 // TODO: set the error bit when things are wrong.
 // TODO: check for failed allocation.
 
@@ -46,16 +49,18 @@ void accel_destroy_gesture(accel_gesture *gesture) {
 }
 
 /* Creation and deletion of accel state objects. */
-accel_state *accel_generate_state(int dimensions, int window_size) {
+int accel_generate_state(accel_gesture **state, int dimensions, int window_size) {
+    PRECONDITION_NOT_NULL(state);
 
     size_t internal_size = sizeof(accel_state);
 
     accel_state *state = (accel_state *) malloc(internal_size);
+
     memset(state, 0, internal_size);
     state->error_bit = false;
     state->dimensions = dimensions;
     state->window_size = window_size > 0 ? window_size : 2;
-    return state;
+    return 0;
 }
 
 void accel_destroy_state(accel_state *state) {

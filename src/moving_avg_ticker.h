@@ -3,9 +3,9 @@
 
 #include "accel.h"
 
-#define MOVING_AVG_PARAM_ERROR -1
-#define MOVING_AVG_INTERNAL_ERROR -2
-#define MOVING_AVG_MALLOC_ERROR -2
+#define MOVING_AVG_PARAM_ERROR ACCEL_PARAM_ERROR
+#define MOVING_AVG_INTERNAL_ERROR ACCEL_INTERNAL_ERROR
+#define MOVING_AVG_MALLOC_ERROR ACCEL_MALLOC_ERROR
 
 int allocate_moving_avg(int num_wbuf, int subtotal_sizes, moving_avg_values **allocated);
 

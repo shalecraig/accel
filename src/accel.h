@@ -16,8 +16,12 @@
 #define ACCEL_RECORD_MAX_LENGTH ACCEL_FREQUENCY_HZ*ACCEL_MAX_RECORDING_TIME_S
 #endif
 
-#define ACCEL_ERROR_AFFINITY -1
-#define ACCEL_ERROR_GESTURE -1
+#define ACCEL_PARAM_ERROR -1
+#define ACCEL_INTERNAL_ERROR -2
+#define ACCEL_MALLOC_ERROR -3
+
+#define ACCEL_ERROR_GESTURE -3
+#define ACCEL_ERROR_AFFINITY -4
 
 /* TODO: hide these in the implementation */
 typedef struct {
@@ -57,7 +61,7 @@ typedef struct {
 } accel_state;
 
 // Creation and deletion of accel state objects.
-accel_state *accel_generate_state(int dimensions, int window_size);
+int accel_generate_state(accel_state ** state, int dimensions, int window_size);
 void accel_destroy_state(accel_state *state);
 
 /**
