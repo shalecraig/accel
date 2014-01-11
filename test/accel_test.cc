@@ -258,6 +258,49 @@ TEST(AccelTest, end_to_end_test_single_recording) {
     test_burn_state(&state);
 }
 
+TEST(AccelTest, end_to_end_test_multiple_recordings) {
+    // g_1(x) = x, g_2(x) = x. Sample data is f(x) = 2x, we want to ensure that g_1 is chosen.
+    int result = 0;
+    accel_state *state = NULL;
+    state = test_fabricate_1d_state();
+
+    int first_gesture = 0;
+    EXPECT_EQ(0, accel_start_record_gesture(state, &first_gesture));
+    EXPECT_EQ(0, first_gesture);
+
+    int data[] = {1};
+    for (int i=0; i<10; ++i) {
+        data[0] = i;
+        EXPECT_EQ(0, accel_process_timer_tick(state, data));
+    }
+
+    EXPECT_EQ(0, accel_end_record_gesture(state, first_gesture));
+
+    int second_gesture = 0;
+    EXPECT_EQ(0, accel_start_record_gesture(state, &second_gesture));
+    EXPECT_NE(first_gesture, second_gesture);
+
+    for (int i=0; i<10; ++i) {
+        data[0] = i*i;
+        EXPECT_EQ(0, accel_process_timer_tick(state, data));
+    }
+
+    EXPECT_EQ(0, accel_end_record_gesture(state, second_gesture));
+
+    int prev_affinity = 0;
+    for (int i=0; i<10; ++i) {
+        data[0] = i*2;
+        int gesture_found = 1;
+        int affinity_of_gesture = 1;
+        ASSERT_EQ(0, accel_process_timer_tick(state, data));
+        ASSERT_EQ(0, accel_find_most_likely_gesture(state, &gesture_found, &affinity_of_gesture));
+        ASSERT_EQ(first_gesture, gesture_found);
+        prev_affinity = affinity_of_gesture;
+    }
+
+    test_burn_state(&state);
+}
+
 int main (int argc, char** argv) {
     ::testing::InitGoogleTest(&argc, argv);
 
