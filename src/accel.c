@@ -54,6 +54,12 @@ void accel_destroy_gesture(accel_gesture *gesture) {
 /* Creation and deletion of accel state objects. */
 int accel_generate_state(accel_state **state, int dimensions, int window_size) {
     PRECONDITION_NOT_NULL(state);
+    if (dimensions <= 0) {
+        return ACCEL_PARAM_ERROR;
+    }
+    if (window_size <= 0) {
+        return ACCEL_PARAM_ERROR;
+    }
 
     size_t internal_size = sizeof(accel_state);
 
@@ -66,27 +72,33 @@ int accel_generate_state(accel_state **state, int dimensions, int window_size) {
     return 0;
 }
 
-void accel_destroy_state(accel_state *state) {
-    if (state == NULL) { return; }
+int accel_destroy_state(accel_state **state) {
+    PRECONDITION_NOT_NULL(state);
+    PRECONDITION_NOT_NULL(*state);
+
     /* TODO: remove all additional fields inside the accel_state variable */
-    for (int i=0; i<state->num_gestures_saved; ++i) {
-        accel_destroy_gesture(state->gestures[i]);
+    for (int i=0; i<(*state)->num_gestures_saved; ++i) {
+        accel_destroy_gesture((*state)->gestures[i]);
     }
-    free(state);
-    state = NULL;
+    free((*state));
+    *state = NULL;
+    return 0;
 }
 
-int accel_start_record_gesture(accel_state *state) {
+int accel_start_record_gesture(accel_state *state, int *gesture) {
+    PRECONDITION_NOT_NULL(state);
+    PRECONDITION_NOT_NULL(gesture);
+
     if (state->num_gestures_saved != 0) {
         state->gestures = (accel_gesture **)realloc(state->gestures, (state->num_gestures_saved + 1)*sizeof(accel_gesture *));
     } else {
         state->gestures = (accel_gesture **)malloc(sizeof(accel_gesture *));
     }
-    int gesture_id = ++state->num_gestures_saved;
+    *gesture = (state->num_gestures_saved)++;
 
-    state->gestures[gesture_id] = accel_generate_gesture(state);
-    state->gestures[gesture_id]->is_recording = true;
-    return gesture_id;
+    state->gestures[*gesture] = accel_generate_gesture(state);
+    state->gestures[*gesture]->is_recording = true;
+    return 0;
 }
 
 // TODO: These arbitrarily chosen constants are from the uWave algorithm's paper, and have nothing to do with my implementation.
@@ -106,19 +118,31 @@ int normalize(int sum) {
 }
 
 // TODO: does this work for zero recorded timestamps?
-void accel_end_record_gesture(accel_state *state, int gesture_id) {
+int accel_end_record_gesture(accel_state *state, int gesture_id) {
     // TODO: Check with a macro for error bit, nullity with error logging.
-    if (state == NULL) {return;}
+    if (state == NULL) {
+        return ACCEL_PARAM_ERROR;
+    }
     // TODO: use an unsigned int instead so we don't need to check for this type of error.
-    if (gesture_id < 0) {return;}
+    if (gesture_id < 0) {
+        return ACCEL_PARAM_ERROR;
+    }
     // TODO: log the user's error.
-    if (state->num_gestures_saved <= gesture_id) {return;}
+    if (gesture_id > state->num_gestures_saved) {
+        return ACCEL_PARAM_ERROR;
+    }
     // TODO: log accel's error.
-    if (state->gestures[gesture_id] == NULL) {return;}
+    if (state->gestures[gesture_id] == NULL) {
+        return ACCEL_INTERNAL_ERROR;
+    }
     // TODO: log the user's error.
-    if (state->gestures[gesture_id]->is_recording) {return;}
+    if (!(state->gestures[gesture_id]->is_recording)) {
+        return ACCEL_PARAM_ERROR;
+    }
     // TODO: log accel's error.
-    if (state->gestures[gesture_id]->is_recorded) {return;}
+    if (state->gestures[gesture_id]->is_recorded) {
+        return ACCEL_INTERNAL_ERROR;
+    }
 
     accel_gesture *gesture = state->gestures[gesture_id];
     gesture->is_recording = false;
@@ -158,6 +182,7 @@ void accel_end_record_gesture(accel_state *state, int gesture_id) {
     gesture->recording_size = normalized_recording_len;
 
     state->gestures[gesture_id]->is_recorded = true;
+    return 0;
 }
 
 void handle_recording_tick(accel_gesture *gesture, int dimensions) {
@@ -202,10 +227,11 @@ void handle_evaluation_tick(accel_gesture *gesture, int dimensions) {
     }
 }
 
-void accel_process_timer_tick(accel_state *state, int *accel_data) {
-    if (state == NULL) { return; }
-    if (accel_data == NULL) { return; }
-    if (ARRAY_LENGTH(accel_data) != state->dimensions) { return; }
+int accel_process_timer_tick(accel_state *state, int *accel_data) {
+    if (state == NULL) { return ACCEL_PARAM_ERROR; }
+    if (accel_data == NULL) { return ACCEL_PARAM_ERROR; }
+    // TODO: verify this later.
+    // if (ARRAY_LENGTH(accel_data) != state->dimensions) { return ACCEL_PARAM_ERROR; }
 
     for (int gesture_iter = 0; gesture_iter < state->num_gestures_saved; ++gesture_iter) {
         accel_gesture *gesture = state->gestures[gesture_iter];
@@ -234,38 +260,39 @@ void accel_process_timer_tick(accel_state *state, int *accel_data) {
             continue;
         }
     }
+    return 0;
 }
 
-void accel_find_most_likely_gesture(accel_state *state, int *gesture_id, int *affinity) {
+int accel_find_most_likely_gesture(accel_state *state, int *gesture_id, int *affinity) {
     // TODO: complain about these, do them more formally
     if (state == NULL) {
-        // TODO: Set error bit.
-        return;
+        // TODO: Remove the error bit from the struct.
+        return ACCEL_PARAM_ERROR;
     }
     if (gesture_id == NULL) {
-        // TODO: Set error bit.
-        return;
+        // TODO: Remove the error bit from the struct.
+        return ACCEL_PARAM_ERROR;
     }
     if (affinity == NULL) {
-        // TODO: Set error bit.
-        return;
+        // TODO: Remove the error bit from the struct.
+        return ACCEL_PARAM_ERROR;
     }
 
     // TODO: info.log
     if (state->num_gestures_saved == 0) {
-        // TODO: Set error bit.
-        return;
+        // TODO: Remove the error bit from the struct.
+        return ACCEL_INTERNAL_ERROR;
     }
     // TODO: error.log
     if (state->num_gestures_saved < 0) {
-        // TODO: Set error bit.
-        return;
+        // TODO: Remove the error bit from the struct.
+        return ACCEL_INTERNAL_ERROR;
     }
 
     // TODO: error.log
     if (state->gestures == NULL) {
-        // TODO: Set error bit.
-        return;
+        // TODO: Remove the error bit from the struct.
+        return ACCEL_INTERNAL_ERROR;
     }
 
     // TODO: there's a cleaner way to do some of the state->num_gestures_saved precondition stuff. Should it be explicit?
@@ -296,4 +323,5 @@ void accel_find_most_likely_gesture(accel_state *state, int *gesture_id, int *af
         *affinity == ACCEL_ERROR_AFFINITY) {
         // TODO: set error bit. Should I have used a local variable to prevent changing the value instead?
     }
+    return 0;
 }
