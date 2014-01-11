@@ -103,7 +103,6 @@ TEST(AccelFuzzTest, accel_start_record_gesture_invalid_input) {
 
 TEST(AccelFuzzTest, accel_end_record_gesture_invalid_input) {
     int result = 0;
-    int gesture_id = 0;
     accel_state *state = NULL;
 
     // Null state:
@@ -180,7 +179,6 @@ TEST(AccelFuzzTest, accel_find_most_likely_gesture_invalid_input) {
 }
 
 TEST(AccelTest, accel_generate_and_destroy) {
-    int result = 0;
     accel_state *state = NULL;
     for (int i=1; i<10; ++i) {
         EXPECT_EQ(void_null, state) << "i = " << i;
@@ -191,7 +189,6 @@ TEST(AccelTest, accel_generate_and_destroy) {
 }
 
 TEST(AccelTest, start_recording_and_close_many_gestures) {
-    int result = 0;
     accel_state *state = NULL;
     state = test_fabricate_1d_state();
 
@@ -207,7 +204,6 @@ TEST(AccelTest, start_recording_and_close_many_gestures) {
 }
 
 TEST(AccelTest, record_incredibly_long_sequence) {
-    int result = 0;
     accel_state *state = NULL;
     state = test_fabricate_1d_state();
 
@@ -225,7 +221,6 @@ TEST(AccelTest, record_incredibly_long_sequence) {
 }
 
 TEST(AccelTest, end_to_end_test_single_recording) {
-    int result = 0;
     accel_state *state = NULL;
     state = test_fabricate_1d_state();
 
@@ -260,7 +255,6 @@ TEST(AccelTest, end_to_end_test_single_recording) {
 
 TEST(AccelTest, end_to_end_test_multiple_recordings) {
     // g_1(x) = x, g_2(x) = x*x. Sample data is f(x) = 2x, we want to verify that g_1 is chosen over g_2.
-    int result = 0;
     accel_state *state = NULL;
     state = test_fabricate_1d_state();
 
