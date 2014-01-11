@@ -163,9 +163,8 @@ int normalize(int sum) {
 
 // TODO: does this work for zero recorded timestamps?
 int accel_end_record_gesture(accel_state *state, int gesture_id) {
-    if (state == NULL) {
-        return ACCEL_PARAM_ERROR;
-    }
+    PRECONDITION_NOT_NULL(state);
+
     // TODO: use an unsigned int instead so we don't need to check for this type of error.
     if (gesture_id < 0) {
         return ACCEL_PARAM_ERROR;
@@ -188,10 +187,14 @@ int accel_end_record_gesture(accel_state *state, int gesture_id) {
     }
 
     accel_gesture *gesture = state->gestures[gesture_id];
+    gesture->affinities = (int *) malloc(gesture->recording_size * sizeof(int));
+    if (gesture->affinities == NULL) {
+        return ACCEL_MALLOC_ERROR;
+    }
+
     gesture->is_recording = false;
     gesture->is_recorded = true;
 
-    gesture->affinities = (int *) malloc(gesture->recording_size * sizeof(int));
     for (int i=0; i<gesture->recording_size; ++i) {
         gesture->affinities[i] = INT16_MAX;
     }
