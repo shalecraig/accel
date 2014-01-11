@@ -183,8 +183,9 @@ int accel_end_record_gesture(accel_state *state, int gesture_id) {
 
     // Set the new recording length
     gesture->recording_size = normalized_recording_len;
+    gesture->is_recorded = true;
 
-    state->gestures[gesture_id]->is_recorded = true;
+    gesture->affinities = (int *) calloc(normalized_recording_len, sizeof(int));
     return 0;
 }
 
@@ -205,10 +206,21 @@ void handle_recording_tick(accel_gesture *gesture, int dimensions) {
     ++gesture->recording_size;
 }
 
-void handle_evaluation_tick(accel_gesture *gesture, int dimensions) {
+int handle_evaluation_tick(accel_gesture *gesture, int dimensions) {
     // TODO: actually complain about these issues.
-    if (gesture == NULL) { return; }
-    if (gesture->moving_avg_values == NULL) { return; }
+    if (gesture == NULL) {
+        // Internal because the gesture shouldn't be touched by end users.
+        return ACCEL_INTERNAL_ERROR;
+    }
+    if (gesture->moving_avg_values == NULL) {
+        // Internal because the gesture's avg values shouldn't be touched by end users.
+        return ACCEL_INTERNAL_ERROR;
+    }
+
+    if (gesture->affinities == NULL) {
+        // Internal because the gesture's affinities shouldn't be touched by end users.
+        return ACCEL_INTERNAL_ERROR;
+    }
 
     // TODO: implement DTW algoritm
     int i = gesture->recording_size;
@@ -217,8 +229,7 @@ void handle_evaluation_tick(accel_gesture *gesture, int dimensions) {
         int cost = 0;
         // TODO: tabulate the cost.
         if (i == 0) {
-            // TODO: should this have the cost in
-            gesture->affinities[i] = MIN(cost, gesture->affinities[i]);
+            gesture->affinities[i] = MIN(0, gesture->affinities[i]) + cost;
         } else {
             gesture->affinities[i] = MIN(gesture->affinities[i], gesture->affinities[i-1]) + cost;
         }
@@ -228,6 +239,7 @@ void handle_evaluation_tick(accel_gesture *gesture, int dimensions) {
         int cost = 0;
         gesture->affinities[i] = MIN(gesture->affinities[i], gesture->affinities[i-1] + cost);
     }
+    return 0;
 }
 
 int accel_process_timer_tick(accel_state *state, int *accel_data) {
@@ -244,7 +256,6 @@ int accel_process_timer_tick(accel_state *state, int *accel_data) {
         if (!gesture->is_recording && !gesture->is_recorded) { continue; }
         // TODO: complain about struct integrity issues.
         if (gesture->moving_avg_values == NULL) { continue; }
-
         // If the moving average is at a final line.
         bool avg_line = false;
         for (int d=0; d<state->dimensions; ++d) {
@@ -257,6 +268,7 @@ int accel_process_timer_tick(accel_state *state, int *accel_data) {
         if (gesture->is_recording) {
             handle_recording_tick(gesture, state->dimensions);
         } else if (gesture->is_recorded) {
+            // TODO: if this returns something non-zero, complain about it.
             handle_evaluation_tick(gesture, state->dimensions);
         } else {
             // TODO: complain that we need to have one of these two categories.
