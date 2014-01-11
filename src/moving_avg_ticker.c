@@ -3,7 +3,12 @@
 
 #include "moving_avg_ticker.h"
 
+#define PRECONDITION_NOT_NULL(foo) \
+    if (foo == NULL) { return MOVING_AVG_PARAM_ERROR; }
+
 int precondition_valid_moving_avg_values(moving_avg_values *input) {
+    PRECONDITION_NOT_NULL(input);
+
     if (input == NULL) {
         // TODO: log that this is incorrect input.
         return MOVING_AVG_PARAM_ERROR;
@@ -31,28 +36,19 @@ int precondition_valid_moving_avg_values(moving_avg_values *input) {
 
 int allocate_moving_avg(int num_wbuf, int subtotal_sizes, moving_avg_values **allocated) {
     if (*allocated != NULL) {
-        // TODO: complain about invalid input.
         return MOVING_AVG_PARAM_ERROR;
     }
-    *allocated = NULL;
     // TODO: use an unsigned int instead.
     if (num_wbuf <= 0) {
-        // TODO: complain about invalid input.
         return MOVING_AVG_PARAM_ERROR;
     }
     if (subtotal_sizes == 0) {
-        // TODO: complain about invalid input.
         return MOVING_AVG_PARAM_ERROR;
     }
     size_t size = sizeof(moving_avg_values);
-    if (subtotal_sizes == 0) {
-        // TODO: log an error.
-        return MOVING_AVG_INTERNAL_ERROR;
-    }
 
     *allocated = (moving_avg_values *) malloc(size);
     if (allocated == NULL) {
-        // TODO: info log
         return MOVING_AVG_MALLOC_ERROR;
     }
     memset(*allocated, 0, size);
@@ -60,6 +56,7 @@ int allocate_moving_avg(int num_wbuf, int subtotal_sizes, moving_avg_values **al
 
     int *wbuf = (int *) calloc(num_wbuf, sizeof(int));
     if (wbuf == NULL) {
+        // Run away, fast!
         free (allocated);
         *allocated = NULL;
         return MOVING_AVG_MALLOC_ERROR;
@@ -84,10 +81,7 @@ int append_to_moving_avg(moving_avg_values *value, int appended, bool* is_at_end
     int is_valid_return_value = precondition_valid_moving_avg_values(value);
     if (is_valid_return_value != 0) {return is_valid_return_value;}
 
-    if (is_at_end == NULL) {
-        // TODO: log this?
-        return MOVING_AVG_PARAM_ERROR;
-    }
+    PRECONDITION_NOT_NULL(is_at_end);
 
     ++value->subtotal_size;
     value->subtotal += appended;
@@ -108,9 +102,7 @@ int get_latest_frame_moving_avg(moving_avg_values *value, float *frame) {
     int is_valid_return_value = precondition_valid_moving_avg_values(value);
     if (is_valid_return_value != 0) {return is_valid_return_value;}
 
-    if (frame == NULL) {
-        return MOVING_AVG_PARAM_ERROR;
-    }
+    PRECONDITION_NOT_NULL(frame);
 
     int sum = 0;
     for (int i=0; i<value->wbuf_len; ++i) {
@@ -121,10 +113,8 @@ int get_latest_frame_moving_avg(moving_avg_values *value, float *frame) {
 }
 
 int free_moving_avg(moving_avg_values **value) {
-    if (*value == NULL) {
-        // TODO: complain about bad input.
-        return MOVING_AVG_PARAM_ERROR;
-    }
+    PRECONDITION_NOT_NULL(value);
+
     if ((*value)->wbuf == NULL) {
         // TODO: is this the best way to do this? (complain but do the right thing?)
         free (*value);
