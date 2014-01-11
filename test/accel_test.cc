@@ -224,46 +224,39 @@ TEST(AccelTest, record_incredibly_long_sequence) {
     test_burn_state(&state);
 }
 
-// TEST(AccelTest, end_to_end_test_single_recording) {
-//     int result = 0;
-//     accel_state *state = NULL;
-//     state = test_fabricate_1d_state();
+TEST(AccelTest, end_to_end_test_single_recording) {
+    int result = 0;
+    accel_state *state = NULL;
+    state = test_fabricate_1d_state();
 
-//     int gesture = 0;
-//     // std::cout << "starting to record gesture." << std::endl;
-//     EXPECT_EQ(0, accel_start_record_gesture(state, &gesture));
-//     EXPECT_EQ(0, gesture);
+    int gesture = 0;
+    EXPECT_EQ(0, accel_start_record_gesture(state, &gesture));
+    EXPECT_EQ(0, gesture);
 
-//     // std::cout << "recording gesture." << std::endl;
-//     int data[] = {1};
-//     for (int i=0; i<10; ++i) {
-//         data[0] = i;
-//         EXPECT_EQ(0, accel_process_timer_tick(state, data));
-//     }
+    int data[] = {1};
+    for (int i=0; i<10; ++i) {
+        data[0] = i;
+        EXPECT_EQ(0, accel_process_timer_tick(state, data));
+    }
 
-//     // std::cout << "ending recording gesture." << std::endl;
-//     EXPECT_EQ(0, accel_end_record_gesture(state, gesture));
+    EXPECT_EQ(0, accel_end_record_gesture(state, gesture));
 
-//     // std::cout << "recording user input." << std::endl;
-//     int prev_affinity = 0;
-//     for (int i=0; i<10; ++i) {
-//         data[0] = i;
-//         int gesture_found = 1;
-//         int affinity_of_gesture = 1;
-//         // std::cout << "process_timer_tick for i = " << i << std::endl;
-//         EXPECT_EQ(0, accel_process_timer_tick(state, data));
-//         // std::cout << "find_most_likely_gesture for i = " << i << std::endl;
-//         EXPECT_EQ(0, accel_find_most_likely_gesture(state, &gesture_found, &affinity_of_gesture));
-//         EXPECT_EQ(gesture, gesture_found);
-//         if (i != 0) {
-//             EXPECT_LT(affinity_of_gesture, prev_affinity) << "i was " << i;
-//         }
-//         prev_affinity = affinity_of_gesture;
-//     }
+    int prev_affinity = 0;
+    for (int i=0; i<10; ++i) {
+        data[0] = i;
+        int gesture_found = 1;
+        int affinity_of_gesture = 1;
+        ASSERT_EQ(0, accel_process_timer_tick(state, data));
+        ASSERT_EQ(0, accel_find_most_likely_gesture(state, &gesture_found, &affinity_of_gesture));
+        ASSERT_EQ(gesture, gesture_found);
+        if (i != 0) {
+            ASSERT_LT(affinity_of_gesture, prev_affinity) << "i=" << i;
+        }
+        prev_affinity = affinity_of_gesture;
+    }
 
-//     // std::cout << "burning state." << std::endl;
-//     test_burn_state(&state);
-// }
+    test_burn_state(&state);
+}
 
 int main (int argc, char** argv) {
     ::testing::InitGoogleTest(&argc, argv);
