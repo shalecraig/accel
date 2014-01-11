@@ -259,7 +259,7 @@ TEST(AccelTest, end_to_end_test_single_recording) {
 }
 
 TEST(AccelTest, end_to_end_test_multiple_recordings) {
-    // g_1(x) = x, g_2(x) = x. Sample data is f(x) = 2x, we want to ensure that g_1 is chosen.
+    // g_1(x) = x, g_2(x) = x*x. Sample data is f(x) = 2x, we want to verify that g_1 is chosen over g_2.
     int result = 0;
     accel_state *state = NULL;
     state = test_fabricate_1d_state();
