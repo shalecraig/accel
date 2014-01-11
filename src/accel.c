@@ -254,7 +254,6 @@ int handle_evaluation_tick(accel_gesture *gesture, int dimensions) {
         }
     }
     for (i=1; i<gesture->recording_size; ++i) {
-        // TODO: actually tabulate the cost.
         int cost = 0;
         for (int d=0; d<dimensions; ++d) {
             int recording_i_d = gesture->normalized_recording[i][d];
