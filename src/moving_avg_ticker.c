@@ -9,10 +9,6 @@
 int precondition_valid_moving_avg_values(moving_avg_values *input) {
     PRECONDITION_NOT_NULL(input);
 
-    if (input == NULL) {
-        // TODO: log that this is incorrect input.
-        return MOVING_AVG_PARAM_ERROR;
-    }
     if (input->wbuf == NULL) {
         return MOVING_AVG_INTERNAL_ERROR;
     }
@@ -68,7 +64,9 @@ int allocate_moving_avg(int num_wbuf, int subtotal_sizes, moving_avg_values **al
 
 int reset_moving_avg(moving_avg_values *reset) {
     int value = precondition_valid_moving_avg_values(reset);
-    if (value != 0) {return value;}
+    if (value != 0) {
+        return value;
+    }
 
     memset(reset->wbuf, 0, reset->wbuf_len);
     reset->wbuf_end = reset->wbuf_len - 1;
@@ -89,6 +87,7 @@ int append_to_moving_avg(moving_avg_values *value, int appended, bool* is_at_end
         *is_at_end = false;
         return 0;
     }
+
     value->wbuf_end = (value->wbuf_end + 1) % value->wbuf_len;
     value->wbuf[value->wbuf_end] = value->subtotal;
 
