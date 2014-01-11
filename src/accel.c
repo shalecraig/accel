@@ -25,7 +25,7 @@
 
 accel_gesture *accel_generate_gesture(accel_state *state) {
     size_t gesture_size = sizeof(accel_gesture);
-    accel_gesture *g = malloc(gesture_size);
+    accel_gesture *g = (accel_gesture *) malloc(gesture_size);
     memset(g, 0, gesture_size);
     g->is_recording = false;
     g->is_recorded = false;
@@ -34,7 +34,10 @@ accel_gesture *accel_generate_gesture(accel_state *state) {
     g->moving_avg_values = (moving_avg_values **) calloc(state->dimensions, sizeof(moving_avg_values *));
     for (int i=0; i<state->dimensions; ++i) {
         // TODO: these two shouldn't both be the same....
-        g->moving_avg_values[i] = allocate_moving_avg(state->window_size, state->window_size);
+        // TODO: result should really be checked.
+        int result = allocate_moving_avg(state->window_size, state->window_size, &(g->moving_avg_values[i]));
+        // Line placed here to prevent compiler from complaining. Read previous line.
+        if (result == 0) {continue;}
     }
     return g;
 }
@@ -49,17 +52,17 @@ void accel_destroy_gesture(accel_gesture *gesture) {
 }
 
 /* Creation and deletion of accel state objects. */
-int accel_generate_state(accel_gesture **state, int dimensions, int window_size) {
+int accel_generate_state(accel_state **state, int dimensions, int window_size) {
     PRECONDITION_NOT_NULL(state);
 
     size_t internal_size = sizeof(accel_state);
 
-    accel_state *state = (accel_state *) malloc(internal_size);
+    *state = (accel_state *) malloc(internal_size);
 
-    memset(state, 0, internal_size);
-    state->error_bit = false;
-    state->dimensions = dimensions;
-    state->window_size = window_size > 0 ? window_size : 2;
+    memset((*state), 0, internal_size);
+    (*state)->error_bit = false;
+    (*state)->dimensions = dimensions;
+    (*state)->window_size = window_size > 0 ? window_size : 2;
     return 0;
 }
 
