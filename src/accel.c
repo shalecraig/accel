@@ -197,6 +197,8 @@ int accel_end_record_gesture(accel_state *state, int gesture_id) {
 }
 
 // TOOD: check for malloc failure in this function.
+// TODO: this should return error types instead of being void.
+    // Follow-up: find usages of this method.
 void handle_recording_tick(accel_gesture *gesture, int dimensions) {
     if (gesture == NULL) { return; }
     // TODO: grow exponentially, not linearly. Linear growth allocates too frequently.
@@ -246,7 +248,6 @@ int handle_evaluation_tick(accel_gesture *gesture, int dimensions) {
             }
         }
         if (i == 0) {
-            // TODO: should just be =cost
             gesture->affinities[i] = cost;
         } else {
             gesture->affinities[i] = MIN(ALPHA * gesture->affinities[i], cost+gesture->affinities[i-1]);
@@ -295,7 +296,6 @@ int accel_process_timer_tick(accel_state *state, int *accel_data) {
         bool avg_line = false;
         int returned = 0;
         for (int d=0; d<state->dimensions && returned == 0; ++d) {
-            // TODO: verify that the return code isn't an error.
             returned = append_to_moving_avg(gesture->moving_avg_values[d], accel_data[d], &avg_line);
         }
         if (returned != 0) {
@@ -307,7 +307,6 @@ int accel_process_timer_tick(accel_state *state, int *accel_data) {
 
         returned = 0;
         if (gesture->is_recording) {
-            // TODO: this should return error types instead of being void.
             handle_recording_tick(gesture, state->dimensions);
         } else if (gesture->is_recorded) {
             // TODO: if this returns something non-zero, complain about it.
