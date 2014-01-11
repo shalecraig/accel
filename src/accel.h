@@ -40,7 +40,6 @@ typedef struct {
     bool is_recorded;
 
     int recording_size;
-    int **raw_recording;
     int **normalized_recording;
 
     moving_avg_values **moving_avg_values;
