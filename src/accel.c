@@ -21,9 +21,6 @@
        __typeof__ (b) _b = (b); \
      _a < _b ? _a : _b; })
 
-// TODO: only define the ARRAY_LENGTH macro conditionally
-#define ARRAY_LENGTH(array) (sizeof((array))/sizeof((array)[0]))
-
 int accel_generate_gesture(accel_state *state, accel_gesture **gesture) {
     PRECONDITION_NOT_NULL(state);
     PRECONDITION_NOT_NULL(gesture);
@@ -276,10 +273,8 @@ int handle_evaluation_tick(accel_gesture *gesture, int dimensions) {
 }
 
 int accel_process_timer_tick(accel_state *state, int *accel_data) {
-    if (state == NULL) { return ACCEL_PARAM_ERROR; }
-    if (accel_data == NULL) { return ACCEL_PARAM_ERROR; }
-    // TODO: verify this later.
-    // if (ARRAY_LENGTH(accel_data) != state->dimensions) { return ACCEL_PARAM_ERROR; }
+    PRECONDITION_NOT_NULL(state);
+    PRECONDITION_NOT_NULL(accel_data);
 
     int retcode = 0;
     for (int gesture_iter = 0; gesture_iter < state->num_gestures_saved; ++gesture_iter) {
