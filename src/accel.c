@@ -193,6 +193,9 @@ int accel_end_record_gesture(accel_state *state, int gesture_id) {
     for (int i=0; i<gesture->recording_size; ++i) {
         gesture->affinities[i] = INT16_MAX;
     }
+    for (int d=0; d<state->dimensions; ++d) {
+        reset_moving_avg(gesture->moving_avg_values[d]);
+    }
     return 0;
 }
 
