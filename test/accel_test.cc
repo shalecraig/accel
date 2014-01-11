@@ -4,12 +4,20 @@
 
 const void * void_null = NULL;
 
-accel_state *test_fabricate_state() {
+accel_state *test_fabricate_state(int dimensions) {
     accel_state *state = NULL;
-    int result = accel_generate_state(&state, 1, 1);
+    int result = accel_generate_state(&state, dimensions, 1);
     EXPECT_EQ(0, result);
     EXPECT_NE(void_null, state);
     return state;
+}
+
+accel_state *test_fabricate_1d_state() {
+    return test_fabricate_state(1);
+}
+
+accel_state *test_fabricate_3d_state() {
+    return test_fabricate_state(3);
 }
 
 void test_burn_state(accel_state ** state) {
@@ -71,7 +79,7 @@ TEST(AccelFuzzTest, accel_destroy_state_invalid_input) {
     EXPECT_EQ(ACCEL_PARAM_ERROR, result);
 
     // Destroying x (*x != NULL) should succeed.
-    state = test_fabricate_state();
+    state = test_fabricate_1d_state();
 
     // Destroy the state
     result = accel_destroy_state(&state);
@@ -85,7 +93,7 @@ TEST(AccelFuzzTest, accel_start_record_gesture_invalid_input) {
     result = accel_start_record_gesture(NULL, &gesture_id);
     EXPECT_EQ(ACCEL_PARAM_ERROR, result);
 
-    accel_state *state = test_fabricate_state();
+    accel_state *state = test_fabricate_1d_state();
 
     result = accel_start_record_gesture(state, NULL);
     EXPECT_EQ(ACCEL_PARAM_ERROR, result);
@@ -103,19 +111,19 @@ TEST(AccelFuzzTest, accel_end_record_gesture_invalid_input) {
     EXPECT_EQ(ACCEL_PARAM_ERROR, result);
 
     // Negative index:
-    state = test_fabricate_state();
+    state = test_fabricate_1d_state();
     result = accel_end_record_gesture(state, -1);
     EXPECT_EQ(ACCEL_PARAM_ERROR, result);
     test_burn_state(&state);
 
     // Unused index:
-    state = test_fabricate_state();
+    state = test_fabricate_1d_state();
     result = accel_end_record_gesture(state, 1);
     EXPECT_EQ(ACCEL_PARAM_ERROR, result);
     test_burn_state(&state);
 
     // Verify it works for valid indexes.
-    state = test_fabricate_state();
+    state = test_fabricate_1d_state();
     int gesture = 123;
     result = accel_start_record_gesture(state, &gesture);
     EXPECT_NE(123, gesture);
@@ -135,7 +143,7 @@ TEST(AccelFuzzTest, accel_process_timer_tick_invalid_input) {
     EXPECT_EQ(ACCEL_PARAM_ERROR, result);
 
     // Null array input.
-    state = test_fabricate_state();
+    state = test_fabricate_1d_state();
     result = accel_process_timer_tick(state, NULL);
     EXPECT_EQ(ACCEL_PARAM_ERROR, result);
     test_burn_state(&state);
@@ -152,16 +160,22 @@ TEST(AccelFuzzTest, accel_find_most_likely_gesture_invalid_input) {
     EXPECT_EQ(ACCEL_PARAM_ERROR, result);
 
     // Null gesture id is passed in.
-    state = test_fabricate_state();
+    state = test_fabricate_1d_state();
     result = accel_find_most_likely_gesture(state, NULL, &affinity);
     EXPECT_EQ(ACCEL_PARAM_ERROR, result);
     test_burn_state(&state);
 
     // Null affinity is passed in.
-    state = test_fabricate_state();
+    state = test_fabricate_1d_state();
     result = accel_find_most_likely_gesture(state, &gesture_id, NULL);
     EXPECT_EQ(ACCEL_PARAM_ERROR, result);
     test_burn_state(&state);
+
+    state = test_fabricate_1d_state();
+    result = accel_find_most_likely_gesture(state, &gesture_id, &affinity);
+    EXPECT_EQ(ACCEL_NO_VALID_GESTURE, gesture_id);
+    EXPECT_EQ(ACCEL_NO_VALID_AFFINITY, affinity);
+    EXPECT_EQ(ACCEL_NO_VALID_GESTURE, result);
 }
 
 TEST(AccelTest, accel_generate_and_destroy) {
@@ -178,7 +192,7 @@ TEST(AccelTest, accel_generate_and_destroy) {
 TEST(AccelTest, start_recording_and_close_many_gestures) {
     int result = 0;
     accel_state *state = NULL;
-    state = test_fabricate_state();
+    state = test_fabricate_1d_state();
 
     for (int i=0; i<10; ++i) {
         int gesture = 0;
@@ -194,19 +208,31 @@ TEST(AccelTest, start_recording_and_close_many_gestures) {
 TEST(AccelTest, record_incredibly_long_sequence) {
     int result = 0;
     accel_state *state = NULL;
-    state = test_fabricate_state();
+    state = test_fabricate_1d_state();
 
     int gesture = 0;
     EXPECT_EQ(0, accel_start_record_gesture(state, &gesture));
     EXPECT_EQ(0, gesture);
 
     int data[] = {1};
-    for (int i=0; i<10; ++i) {
+    for (int i=0; i<10000; ++i) {
         EXPECT_EQ(0, accel_process_timer_tick(state, data));
     }
 
     EXPECT_EQ(0, accel_end_record_gesture(state, gesture));
     test_burn_state(&state);
+}
+
+TEST(AccelTest, end_to_end_test_single_recording) {
+    int result = 0;
+    accel_state *state = NULL;
+    state = test_fabricate_1d_state();
+
+    int gesture = 0;
+    EXPECT_EQ(0, accel_start_record_gesture(state, &gesture));
+    EXPECT_EQ(0, gesture);
+
+
 }
 
 int main (int argc, char** argv) {

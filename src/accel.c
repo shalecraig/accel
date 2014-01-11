@@ -280,16 +280,17 @@ int accel_find_most_likely_gesture(accel_state *state, int *gesture_id, int *aff
         // TODO: Remove the error bit from the struct.
         return ACCEL_PARAM_ERROR;
     }
-
-    // TODO: info.log
-    if (state->num_gestures_saved == 0) {
-        // TODO: Remove the error bit from the struct.
-        return ACCEL_INTERNAL_ERROR;
-    }
     // TODO: error.log
     if (state->num_gestures_saved < 0) {
         // TODO: Remove the error bit from the struct.
         return ACCEL_INTERNAL_ERROR;
+    }
+
+    if (state->num_gestures_saved == 0) {
+        *gesture_id = ACCEL_NO_VALID_GESTURE;
+        *affinity = ACCEL_NO_VALID_AFFINITY;
+
+        return ACCEL_NO_VALID_GESTURE;
     }
 
     // TODO: error.log
@@ -299,8 +300,7 @@ int accel_find_most_likely_gesture(accel_state *state, int *gesture_id, int *aff
     }
 
     // TODO: there's a cleaner way to do some of the state->num_gestures_saved precondition stuff. Should it be explicit?
-    *gesture_id = ACCEL_NO_VALID_GESTURE;
-    *affinity = ACCEL_NO_VALID_AFFINITY;
+    // TODO: info.log
     for (int i=0; i<state->num_gestures_saved; ++i) {
         accel_gesture *gesture = state->gestures[i];
         // TODO: log error about integrity of the gestures.
@@ -323,7 +323,7 @@ int accel_find_most_likely_gesture(accel_state *state, int *gesture_id, int *aff
     }
     if (*gesture_id == ACCEL_NO_VALID_GESTURE ||
         *affinity == ACCEL_NO_VALID_AFFINITY) {
-        // TODO: set error bit. Should I have used a local variable to prevent changing the value instead?
+        return ACCEL_NO_VALID_GESTURE;
     }
     return 0;
 }
