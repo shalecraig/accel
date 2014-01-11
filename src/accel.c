@@ -61,13 +61,15 @@ int accel_generate_gesture(accel_state *state, accel_gesture **gesture) {
     return 0;
 }
 
-void accel_destroy_gesture(accel_gesture *gesture) {
-    if (gesture == NULL) {
+void accel_destroy_gesture(accel_gesture **gesture) {
+    // I suppose I successfully did no work?
+    if (gesture == NULL || *gesture == NULL) {
         return;
     }
+
     // TODO: free more than just this.
-    free(gesture);
-    gesture = NULL;
+    free(*gesture);
+    *gesture = NULL;
 }
 
 /* Creation and deletion of accel state objects. */
@@ -96,7 +98,7 @@ int accel_destroy_state(accel_state **state) {
 
     /* TODO: remove all additional fields inside the accel_state variable */
     for (int i=0; i<(*state)->num_gestures_saved; ++i) {
-        accel_destroy_gesture((*state)->gestures[i]);
+        accel_destroy_gesture(&((*state)->gestures[i]));
     }
     free((*state));
     *state = NULL;
