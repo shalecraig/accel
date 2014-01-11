@@ -308,13 +308,11 @@ int accel_process_timer_tick(accel_state *state, int *accel_data) {
         if (gesture->is_recording) {
             handle_recording_tick(gesture, state->dimensions);
         } else if (gesture->is_recorded) {
-            // TODO: if this returns something non-zero, complain about it.
             returned = handle_evaluation_tick(gesture, state->dimensions);
             if (returned != 0) {
                 retcode = returned;
             }
         } else {
-            // TODO: complain that we need to have one of these two categories.
             retcode = ACCEL_INTERNAL_ERROR;
             continue;
         }
@@ -344,11 +342,8 @@ int accel_find_most_likely_gesture(accel_state *state, int *gesture_id, int *aff
     *gesture_id = ACCEL_NO_VALID_GESTURE;
     *affinity = ACCEL_NO_VALID_GESTURE;
 
-    // TODO: there's a cleaner way to do some of the state->num_gestures_saved precondition stuff. Should it be explicit?
-    // TODO: info.log
     for (int i=0; i<state->num_gestures_saved; ++i) {
         accel_gesture *gesture = state->gestures[i];
-        // TODO: log error about integrity of the gestures.
 
         if ((*gesture_id == ACCEL_NO_VALID_GESTURE || *affinity == ACCEL_NO_VALID_GESTURE) &&
             *gesture_id != *affinity) {
