@@ -21,6 +21,40 @@
        __typeof__ (b) _b = (b); \
      _a < _b ? _a : _b; })
 
+void accel_destroy_gesture(accel_gesture **gesture, int dimensions) {
+    if (gesture == NULL || *gesture == NULL) {
+        return;
+    }
+
+    accel_gesture *gest = *gesture;
+
+    if (gest->moving_avg_values != NULL) {
+        for (int i=0; i<dimensions; ++i) {
+            free_moving_avg(&(gest->moving_avg_values[i]));
+        }
+    }
+
+    if (gest->normalized_recording != NULL) {
+        for (int i=0; i<gest->recording_size; ++i) {
+            if (gest->normalized_recording[i] != NULL) {
+                free(gest->normalized_recording[i]);
+                gest->normalized_recording[i] = NULL;
+            }
+        }
+        free(gest->normalized_recording);
+        gest->normalized_recording = NULL;
+    }
+
+    if (gest->affinities != NULL) {
+        free(gest->affinities);
+        gest->affinities = NULL;
+    }
+
+    free(*gesture);
+    *gesture = NULL;
+}
+
+
 int accel_generate_gesture(accel_state *state, accel_gesture **gesture) {
     PRECONDITION_NOT_NULL(state);
     PRECONDITION_NOT_NULL(gesture);
@@ -45,26 +79,11 @@ int accel_generate_gesture(accel_state *state, accel_gesture **gesture) {
         int result = allocate_moving_avg(state->window_size, state->window_size, &((*gesture)->moving_avg_values[i]));
 
         if (result != 0) {
-            // Abort, since there isn't much we can do if it fails.
-            for (int j=0; j<i; ++j) {
-                free_moving_avg(&((*gesture)->moving_avg_values[j]));
-            }
-            free(gesture);
+            accel_destroy_gesture(gesture, state->dimensions);
             return result;
         }
     }
     return 0;
-}
-
-void accel_destroy_gesture(accel_gesture **gesture) {
-    // I suppose I successfully did no work?
-    if (gesture == NULL || *gesture == NULL) {
-        return;
-    }
-
-    // TODO: free more than just this.
-    free(*gesture);
-    *gesture = NULL;
 }
 
 int accel_generate_state(accel_state **state, int dimensions, int window_size) {
@@ -95,7 +114,7 @@ int accel_destroy_state(accel_state **state) {
 
     /* TODO: remove all additional fields inside the accel_state variable */
     for (int i=0; i<(*state)->num_gestures_saved; ++i) {
-        accel_destroy_gesture(&((*state)->gestures[i]));
+        accel_destroy_gesture(&((*state)->gestures[i]), (*state)->dimensions);
     }
     free((*state));
     *state = NULL;
@@ -221,6 +240,7 @@ void handle_recording_tick(accel_gesture *gesture, int dimensions) {
 }
 
 int handle_evaluation_tick(accel_gesture *gesture, int dimensions) {
+    // TODO: load the input at the beginning instead of gesture->recording_size times.
     PRECONDITION_NOT_NULL(gesture);
 
     if (gesture->moving_avg_values == NULL) {
@@ -243,6 +263,7 @@ int handle_evaluation_tick(accel_gesture *gesture, int dimensions) {
             int input_i_d = 0;
             // TODO: complain about invalid return values.
             get_latest_frame_moving_avg(gesture->moving_avg_values[d], &input_i_d);
+            input_i_d = normalize(input_i_d);
             if (recording_i_d > input_i_d) {
                 cost += recording_i_d - input_i_d;
             } else {
