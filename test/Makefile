@@ -6,15 +6,23 @@ default:
 list:
 	echo $(PHONY)
 
-tests: libgtest.a moving_avg_ticker_test.cc
-	@clang++ -I../lib/gtest-1.7.0/include -pthread moving_avg_ticker_test.cc ../src/moving_avg_ticker.c libgtest.a -o test_executable
+# TODO: use variables and stuff, this is super messy.
+
+tests: moving_avg_ticker_test accel_test
+
+moving_avg_ticker_test: libgtest.a moving_avg_ticker_test.cc ../src
+	@clang++ -I../lib/gtest-1.7.0/include -pthread accel_test.cc ../src/moving_avg_ticker.c libgtest.a -o moving_avg_ticker_test
+
+accel_test: libgtest.a accel_test.cc ../src
+	@clang++ -I../lib/gtest-1.7.0/include -pthread accel_test.cc ../src/accel.c ../src/moving_avg_ticker.c libgtest.a -o accel_test
 
 libgtest.a:
 	clang++ -I../lib/gtest-1.7.0/include -I../lib/gtest-1.7.0 -c ../lib/gtest-1.7.0/src/gtest-all.cc -lpthread
 	ar -rv libgtest.a gtest-all.o
 
-run: tests
-	./test_executable
+run: moving_avg_ticker_test
+	./moving_avg_ticker_test
+	./accel_test
 
 clean:
 	rm libgtest.a gtest-all.o test_executable
