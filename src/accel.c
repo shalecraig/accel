@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "accel.h"
 #include "moving_avg_ticker.h"
@@ -148,10 +149,14 @@ int accel_end_record_gesture(accel_state *state, int gesture_id) {
     gesture->is_recording = false;
 
     // TODO: verify if safe to divide and assume a round-down.
-    int normalized_recording_len = gesture->recording_size - gesture->recording_size%state->window_size;
-    normalized_recording_len = normalized_recording_len / state->window_size;
+    int normalized_id = -1;
 
-    gesture->normalized_recording = (int **) calloc(normalized_recording_len, sizeof(int*));
+    // TODO: I'm bad at math, so we should probably realloc according to the difference afterwards (and don't).
+    // Should do this perfectly instead.
+    int projected_normalized_recording_len = gesture->recording_size - gesture->recording_size%state->window_size;
+    projected_normalized_recording_len = projected_normalized_recording_len / state->window_size;
+
+    gesture->normalized_recording = (int **) calloc(projected_normalized_recording_len, sizeof(int*));
 
     // convert from raw to normalized
     // TODO: this can be done much more efficiently, re-implement once testing is up.
@@ -170,10 +175,9 @@ int accel_end_record_gesture(accel_state *state, int gesture_id) {
             }
             sum[d] = normalize(sum[d]);
         }
-        int normalized_id = (i+1)/state->window_size;
-        gesture->normalized_recording[normalized_id] = sum;
+        gesture->normalized_recording[++normalized_id] = sum;
     }
-
+    // printf("Normalized id: %i \n", normalized_id);
     // free raw
     for(int j=0; j<gesture->recording_size; ++j) {
         free(gesture->raw_recording[j]);
@@ -181,11 +185,14 @@ int accel_end_record_gesture(accel_state *state, int gesture_id) {
     }
     free(gesture->raw_recording);
 
+    if (normalized_id == -1) {
+
+    }
     // Set the new recording length
-    gesture->recording_size = normalized_recording_len;
+    gesture->recording_size = normalized_id;
     gesture->is_recorded = true;
 
-    gesture->affinities = (int *) calloc(normalized_recording_len, sizeof(int));
+    gesture->affinities = (int *) calloc(normalized_id, sizeof(int));
     return 0;
 }
 
@@ -222,22 +229,60 @@ int handle_evaluation_tick(accel_gesture *gesture, int dimensions) {
         return ACCEL_INTERNAL_ERROR;
     }
 
-    // TODO: implement DTW algoritm
     int i = gesture->recording_size;
     while (i != 0) {
+        // printf("i is %i, will be %i \n", i, i-1);
         --i;
+
         int cost = 0;
-        // TODO: tabulate the cost.
+        for (int d=0; d<dimensions; ++d) {
+            int recording_i_d = gesture->normalized_recording[i][d];
+            int input_i_d = 0;
+            // TODO: complain about invalid return values.
+            get_latest_frame_moving_avg(gesture->moving_avg_values[d], &input_i_d);
+            if (recording_i_d > input_i_d) {
+                // printf("(%i, %i)", recording_i_d, input_i_d);
+                cost += recording_i_d - input_i_d;
+            } else {
+                // recording_i_d <= input_i_d
+                // printf("(%i, %i)", input_i_d, recording_i_d);
+                cost += input_i_d - recording_i_d;
+            }
+        }
         if (i == 0) {
-            gesture->affinities[i] = MIN(0, gesture->affinities[i]) + cost;
+            // TODO: should just be =cost
+            // printf("affinities[%i] = %i,", i, gesture->affinities[i]);
+            gesture->affinities[i] = cost;
+            // printf("after = %i, cost = %i\n", gesture->affinities[i], cost);
         } else {
+            // printf("affinities[%i] = %i,", i, gesture->affinities[i]);
             gesture->affinities[i] = MIN(gesture->affinities[i], gesture->affinities[i-1]) + cost;
+            // printf("after = %i, cost = %i\n", gesture->affinities[i], cost);
         }
     }
+    // printf("Iterating in the reverse order now \n");
     for (i=1; i<gesture->recording_size; ++i) {
         // TODO: actually tabulate the cost.
         int cost = 0;
+        for (int d=0; d<dimensions; ++d) {
+            // printf("recording for i=%i, d=%i\n", i, d);
+            int recording_i_d = gesture->normalized_recording[i][d];
+            int input_i_d = 0;
+            // TODO: complain about invalid return values.
+            // printf("latest_frame_moving_avg for i=%i, d=%i\n", i, d);
+            get_latest_frame_moving_avg(gesture->moving_avg_values[d], &input_i_d);
+            if (recording_i_d > input_i_d) {
+                // printf("(%i, %i)", recording_i_d, input_i_d);
+                cost += recording_i_d - input_i_d;
+            } else {
+                // recording_i_d <= input_i_d
+                // printf("(%i, %i)", input_i_d, recording_i_d);
+                cost += input_i_d - recording_i_d;
+            }
+        }
+        // printf("affinities[%i] = %i,", i, gesture->affinities[i]);
         gesture->affinities[i] = MIN(gesture->affinities[i], gesture->affinities[i-1] + cost);
+        // printf("after = %i, cost = %i\n", gesture->affinities[i], cost);
     }
     return 0;
 }
@@ -266,6 +311,7 @@ int accel_process_timer_tick(accel_state *state, int *accel_data) {
         if (!avg_line) { continue; }
 
         if (gesture->is_recording) {
+            // TODO: this should return error types instead of being void.
             handle_recording_tick(gesture, state->dimensions);
         } else if (gesture->is_recorded) {
             // TODO: if this returns something non-zero, complain about it.
