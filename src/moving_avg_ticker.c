@@ -3,13 +3,40 @@
 
 #include "moving_avg_ticker.h"
 
+int precondition_valid_moving_avg_values(moving_avg_values *input) {
+    if (input == NULL) {
+        // TODO: log that this is incorrect input.
+        return MOVING_AVG_PARAM_ERROR;
+    }
+    if (input->wbuf == NULL) {
+        return MOVING_AVG_INTERNAL_ERROR;
+    }
+    if (input->wbuf_end < 0) {
+        return MOVING_AVG_INTERNAL_ERROR;
+    }
+    if (input->wbuf_len <= 0) {
+        return MOVING_AVG_INTERNAL_ERROR;
+    }
+    if (input->subtotal_size < 0) {
+        return MOVING_AVG_INTERNAL_ERROR;
+    }
+    if (input->subtotal_size >= input->max_subtotal_size) {
+        return MOVING_AVG_INTERNAL_ERROR;
+    }
+    if (input->max_subtotal_size <= 0) {
+        return MOVING_AVG_INTERNAL_ERROR;
+    }
+    return 0;
+}
+
 int allocate_moving_avg(int num_wbuf, int subtotal_sizes, moving_avg_values **allocated) {
     if (*allocated != NULL) {
         // TODO: complain about invalid input.
         return MOVING_AVG_PARAM_ERROR;
     }
     *allocated = NULL;
-    if (num_wbuf == 0) {
+    // TODO: use an unsigned int instead.
+    if (num_wbuf <= 0) {
         // TODO: complain about invalid input.
         return MOVING_AVG_PARAM_ERROR;
     }
@@ -43,21 +70,8 @@ int allocate_moving_avg(int num_wbuf, int subtotal_sizes, moving_avg_values **al
 }
 
 int reset_moving_avg(moving_avg_values *reset) {
-    // TODO: complain about invalid input.
-    if (reset == NULL) {
-        // TODO: complain about invalid input.
-        return MOVING_AVG_PARAM_ERROR;
-    }
-    if (reset->wbuf == NULL) {
-        // TODO: complain about the lack of struct integrity.
-        return MOVING_AVG_INTERNAL_ERROR;
-    }
-
-    // TODO: use unsigned ints instead so we only need to check for equality with 0.
-    if (reset->wbuf_len <= 0) {
-        // TODO: complain about the lack of struct integrity.
-        return MOVING_AVG_INTERNAL_ERROR;
-    }
+    int value = precondition_valid_moving_avg_values(reset);
+    if (value != 0) {return value;}
 
     memset(reset->wbuf, 0, reset->wbuf_len);
     reset->wbuf_end = reset->wbuf_len - 1;
@@ -67,32 +81,12 @@ int reset_moving_avg(moving_avg_values *reset) {
 }
 
 int append_to_moving_avg(moving_avg_values *value, int appended, bool* is_at_end) {
-    // TODO: make an isInvalid inline'd method that checks for structural integrity/etc.
-    if (value == NULL) {
-        // TODO: debug-log these errors.
-        return MOVING_AVG_PARAM_ERROR;
-    }
+    int is_valid_return_value = precondition_valid_moving_avg_values(value);
+    if (is_valid_return_value != 0) {return is_valid_return_value;}
+
     if (is_at_end == NULL) {
-        // TODO: debug-log these errors.
+        // TODO: log this?
         return MOVING_AVG_PARAM_ERROR;
-    }
-    if (value->wbuf == NULL) {
-        // TODO: error about invalid internal state.
-        return MOVING_AVG_INTERNAL_ERROR;
-    }
-    if (value->subtotal_size < 0) {
-        // TODO: error about invalid internal state.
-        // TODO: use unsigned ints instead
-        return MOVING_AVG_INTERNAL_ERROR;
-    }
-    if (value->max_subtotal_size < 0) {
-        // TODO: error about invalid internal state.
-        // TODO: use unsigned ints instead
-        return MOVING_AVG_INTERNAL_ERROR;
-    }
-    if (value->subtotal_size >= value->max_subtotal_size) {
-        // TODO: error about invalid internal state.
-        return MOVING_AVG_INTERNAL_ERROR;
     }
 
     ++value->subtotal_size;
@@ -110,14 +104,20 @@ int append_to_moving_avg(moving_avg_values *value, int appended, bool* is_at_end
     return 0;
 }
 
-int get_latest_frame_moving_avg(moving_avg_values *value) {
-    // TODO: complain about the invalid input.
-    if (value == NULL) { return 0; }
+int get_latest_frame_moving_avg(moving_avg_values *value, float *frame) {
+    int is_valid_return_value = precondition_valid_moving_avg_values(value);
+    if (is_valid_return_value != 0) {return is_valid_return_value;}
+
+    if (frame == NULL) {
+        return MOVING_AVG_PARAM_ERROR;
+    }
+
     int sum = 0;
     for (int i=0; i<value->wbuf_len; ++i) {
         sum += value->wbuf[i];
     }
-    return sum / value->wbuf_len;
+    *frame = sum * 1.0 / value->wbuf_len;
+    return 0;
 }
 
 int free_moving_avg(moving_avg_values **value) {

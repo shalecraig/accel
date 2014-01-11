@@ -13,7 +13,7 @@ int reset_moving_avg(moving_avg_values * reset);
 
 int append_to_moving_avg(moving_avg_values *value, int appended, bool *isAtEnd);
 
-int get_latest_frame_moving_avg(moving_avg_values *value);
+int get_latest_frame_moving_avg(moving_avg_values *value, float *frame);
 
 int free_moving_avg(moving_avg_values **value);
 
