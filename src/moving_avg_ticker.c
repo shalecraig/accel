@@ -104,11 +104,11 @@ int get_latest_frame_moving_avg(moving_avg_values *value, int *frame) {
 
     PRECONDITION_NOT_NULL(frame);
 
-    int sum = 0;
+    float sum = 0;
     for (int i=0; i<value->wbuf_len; ++i) {
-        sum += value->wbuf[i];
+        sum += value->wbuf[i] * 1.0 / value->wbuf_len;
     }
-    *frame = sum / value->wbuf_len;
+    *frame = (int) sum;
     return 0;
 }
 

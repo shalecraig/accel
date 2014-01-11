@@ -160,11 +160,14 @@ int accel_end_record_gesture(accel_state *state, int gesture_id) {
         int *sum = (int *) malloc(state->dimensions * sizeof(int));
         for (int d=0; d<state->dimensions; ++d) {
             int num_counted = 0;
+            sum[d] = 0;
             for (int j=MAX(0, i-state->window_size); j<i; ++j) {
                 sum[d] += gesture->raw_recording[j][d];
                 ++num_counted;
             }
-            sum[d] /= num_counted;
+            if (num_counted != 0) {
+                sum[d] /= num_counted;
+            }
             sum[d] = normalize(sum[d]);
         }
         int normalized_id = (i+1)/state->window_size;
