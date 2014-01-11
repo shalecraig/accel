@@ -59,7 +59,7 @@ TEST(MovingAvgTicker, AppendsCorrectly1_1) {
     EXPECT_EQ(0, retval);
     EXPECT_TRUE(is_at_end);
 
-    float frame = 0;
+    int frame = 0;
     retval = get_latest_frame_moving_avg(allocated, &frame);
     EXPECT_EQ(0, retval);
     EXPECT_EQ(1, frame);
@@ -82,14 +82,24 @@ TEST(MovingAvgTicker, AppendsCorrectly2_1) {
     EXPECT_EQ(0, retval);
 
     bool is_at_end = false;
-    retval = append_to_moving_avg(allocated, 1, &is_at_end);
+    retval = append_to_moving_avg(allocated, 2, &is_at_end);
     EXPECT_EQ(0, retval);
     EXPECT_TRUE(is_at_end);
 
-    float frame = 0;
+    int frame = 0;
     retval = get_latest_frame_moving_avg(allocated, &frame);
     EXPECT_EQ(0, retval);
-    EXPECT_EQ(0.5, frame);
+    EXPECT_EQ(1, frame);
+
+    is_at_end = false;
+    retval = append_to_moving_avg(allocated, 4, &is_at_end);
+    EXPECT_EQ(0, retval);
+    EXPECT_TRUE(is_at_end);
+
+    frame = 0;
+    retval = get_latest_frame_moving_avg(allocated, &frame);
+    EXPECT_EQ(0, retval);
+    EXPECT_EQ(3, frame);
 
     is_at_end = false;
     retval = append_to_moving_avg(allocated, 2, &is_at_end);
@@ -99,17 +109,7 @@ TEST(MovingAvgTicker, AppendsCorrectly2_1) {
     frame = 0;
     retval = get_latest_frame_moving_avg(allocated, &frame);
     EXPECT_EQ(0, retval);
-    EXPECT_EQ(1.5, frame);
-
-    is_at_end = false;
-    retval = append_to_moving_avg(allocated, 2, &is_at_end);
-    EXPECT_EQ(0, retval);
-    EXPECT_TRUE(is_at_end);
-
-    frame = 0;
-    retval = get_latest_frame_moving_avg(allocated, &frame);
-    EXPECT_EQ(0, retval);
-    EXPECT_EQ(2, frame);
+    EXPECT_EQ(3, frame);
 }
 
 TEST(MovingAvgTicker, AppendsCorrectly1_2) {
@@ -127,7 +127,7 @@ TEST(MovingAvgTicker, AppendsCorrectly1_2) {
     EXPECT_EQ(0, retval);
     EXPECT_TRUE(is_at_end);
 
-    float frame = 0;
+    int frame = 0;
     retval = get_latest_frame_moving_avg(allocated, &frame);
     EXPECT_EQ(0, retval);
     EXPECT_EQ(2, frame);
@@ -162,7 +162,7 @@ TEST(MovingAvgTicker, AppendsCorrectly2_2) {
     EXPECT_EQ(0, retval);
     EXPECT_TRUE(is_at_end);
 
-    float frame = 0;
+    int frame = 0;
     retval = get_latest_frame_moving_avg(allocated, &frame);
     EXPECT_EQ(0, retval);
     EXPECT_EQ(1, frame);
@@ -208,7 +208,7 @@ TEST(MovingAvgTicker, AppendWithInvalidAtEnd) {
 
 TEST(MovingAvgTicker, InvalidLatestFrameParams) {
     int retval = 0;
-    float frame = 0;
+    int frame = 0;
     retval = get_latest_frame_moving_avg(NULL, &frame);
     EXPECT_EQ(MOVING_AVG_PARAM_ERROR, retval);
 
@@ -217,7 +217,7 @@ TEST(MovingAvgTicker, InvalidLatestFrameParams) {
     EXPECT_EQ(0, retval);
     EXPECT_NE(void_null, allocated);
 
-    retval = get_latest_frame_moving_avg(allocated, (float *) NULL);
+    retval = get_latest_frame_moving_avg(allocated, (int *) NULL);
     EXPECT_EQ(MOVING_AVG_PARAM_ERROR, retval);
 
     EXPECT_EQ(0, free_moving_avg(&allocated));
