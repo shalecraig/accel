@@ -299,8 +299,8 @@ int accel_find_most_likely_gesture(accel_state *state, int *gesture_id, int *aff
     }
 
     // TODO: there's a cleaner way to do some of the state->num_gestures_saved precondition stuff. Should it be explicit?
-    *gesture_id = ACCEL_ERROR_GESTURE;
-    *affinity = ACCEL_ERROR_AFFINITY;
+    *gesture_id = ACCEL_NO_VALID_GESTURE;
+    *affinity = ACCEL_NO_VALID_AFFINITY;
     for (int i=0; i<state->num_gestures_saved; ++i) {
         accel_gesture *gesture = state->gestures[i];
         // TODO: log error about integrity of the gestures.
@@ -309,21 +309,20 @@ int accel_find_most_likely_gesture(accel_state *state, int *gesture_id, int *aff
         if (!gesture->is_recorded) { continue; }
         if (gesture->recording_size == 0) { continue; }
 
-        if ((*gesture_id == ACCEL_ERROR_GESTURE && *affinity != ACCEL_ERROR_AFFINITY) ||
-           (*gesture_id != ACCEL_ERROR_GESTURE && *affinity == ACCEL_ERROR_AFFINITY)) {
+        if ((*gesture_id == ACCEL_NO_VALID_GESTURE && *affinity != ACCEL_NO_VALID_AFFINITY) ||
+           (*gesture_id != ACCEL_NO_VALID_GESTURE && *affinity == ACCEL_NO_VALID_AFFINITY)) {
             // TODO: debug/complain about internal consistency.
             continue;
         }
 
-
-        if (*affinity == ACCEL_ERROR_AFFINITY ||
+        if (*affinity == ACCEL_NO_VALID_AFFINITY ||
             gesture->affinities[i] < *affinity) {
             *affinity = gesture->affinities[i];
             *gesture_id = i;
         }
     }
-    if (*gesture_id == ACCEL_ERROR_GESTURE ||
-        *affinity == ACCEL_ERROR_AFFINITY) {
+    if (*gesture_id == ACCEL_NO_VALID_GESTURE ||
+        *affinity == ACCEL_NO_VALID_AFFINITY) {
         // TODO: set error bit. Should I have used a local variable to prevent changing the value instead?
     }
     return 0;

@@ -20,8 +20,8 @@
 #define ACCEL_INTERNAL_ERROR -2
 #define ACCEL_MALLOC_ERROR -3
 
-#define ACCEL_ERROR_GESTURE -3
-#define ACCEL_ERROR_AFFINITY -4
+#define ACCEL_NO_VALID_GESTURE -3
+#define ACCEL_NO_VALID_AFFINITY -4
 
 /* TODO: hide these in the implementation */
 typedef struct {
