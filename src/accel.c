@@ -332,17 +332,10 @@ int accel_process_timer_tick(accel_state *state, int *accel_data) {
 }
 
 int accel_find_most_likely_gesture(accel_state *state, int *gesture_id, int *affinity) {
-    // TODO: complain about these, do them more formally
-    if (state == NULL) {
-        return ACCEL_PARAM_ERROR;
-    }
-    if (gesture_id == NULL) {
-        return ACCEL_PARAM_ERROR;
-    }
-    if (affinity == NULL) {
-        return ACCEL_PARAM_ERROR;
-    }
-    // TODO: error.log
+    PRECONDITION_NOT_NULL(state);
+    PRECONDITION_NOT_NULL(gesture_id);
+    PRECONDITION_NOT_NULL(affinity);
+
     if (state->num_gestures_saved < 0) {
         return ACCEL_INTERNAL_ERROR;
     }
@@ -350,11 +343,9 @@ int accel_find_most_likely_gesture(accel_state *state, int *gesture_id, int *aff
     if (state->num_gestures_saved == 0) {
         *gesture_id = ACCEL_NO_VALID_GESTURE;
         *affinity = ACCEL_NO_VALID_GESTURE;
-
         return ACCEL_NO_VALID_GESTURE;
     }
 
-    // TODO: error.log
     if (state->gestures == NULL) {
         return ACCEL_INTERNAL_ERROR;
     }
@@ -370,8 +361,7 @@ int accel_find_most_likely_gesture(accel_state *state, int *gesture_id, int *aff
 
         if ((*gesture_id == ACCEL_NO_VALID_GESTURE || *affinity == ACCEL_NO_VALID_GESTURE) &&
             *gesture_id != *affinity) {
-            // TODO: debug/complain about internal consistency.
-            continue;
+            return ACCEL_INTERNAL_ERROR;
         }
 
         if (*affinity == ACCEL_NO_VALID_GESTURE ||
