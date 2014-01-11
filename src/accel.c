@@ -112,9 +112,16 @@ int accel_start_record_gesture(accel_state *state, int *gesture) {
     PRECONDITION_NOT_NULL(gesture);
 
     if (state->num_gestures_saved != 0) {
-        state->gestures = (accel_gesture **)realloc(state->gestures, (state->num_gestures_saved + 1)*sizeof(accel_gesture *));
+        accel_gesture **tmp = (accel_gesture **)realloc(state->gestures, (state->num_gestures_saved + 1)*sizeof(accel_gesture *));
+        if (tmp == NULL) {
+            return ACCEL_MALLOC_ERROR;
+        }
+        state->gestures = tmp;
     } else {
         state->gestures = (accel_gesture **)malloc(sizeof(accel_gesture *));
+        if (state->gestures == NULL) {
+            return ACCEL_MALLOC_ERROR;
+        }
     }
     *gesture = (state->num_gestures_saved)++;
 
