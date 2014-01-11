@@ -20,9 +20,9 @@ libgtest.a:
 	clang++ -I../lib/gtest-1.7.0/include -I../lib/gtest-1.7.0 -c ../lib/gtest-1.7.0/src/gtest-all.cc -lpthread
 	ar -rv libgtest.a gtest-all.o
 
-run: moving_avg_ticker_test
+run: moving_avg_ticker_test accel_test
 	./moving_avg_ticker_test
 	./accel_test
 
 clean:
-	rm libgtest.a gtest-all.o test_executable
+	rm -f libgtest.a gtest-all.o moving_avg_ticker_test accel_test
