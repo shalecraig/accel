@@ -199,7 +199,7 @@ int accel_end_record_gesture(accel_state *state, int gesture_id) {
     return 0;
 }
 
-// TOOD: check for malloc failure in this function.
+// TODO: check for malloc failure in this function.
 // TODO: this should return error types instead of being void.
     // Follow-up: find usages of this method.
 void handle_recording_tick(accel_gesture *gesture, int dimensions) {
