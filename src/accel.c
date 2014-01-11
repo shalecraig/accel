@@ -317,8 +317,8 @@ int accel_find_most_likely_gesture(accel_state *state, int *gesture_id, int *aff
 
 
         if (*affinity == ACCEL_ERROR_AFFINITY ||
-            gesture->affinities[gesture->recording_size-1] < *affinity) {
-            *affinity = gesture->affinities[gesture->recording_size-1];
+            gesture->affinities[i] < *affinity) {
+            *affinity = gesture->affinities[i];
             *gesture_id = i;
         }
     }
