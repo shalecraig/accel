@@ -7,6 +7,8 @@
 #define PRECONDITION_NOT_NULL(foo) \
     if (foo == NULL) { return ACCEL_PARAM_ERROR; }
 
+// Decay rate of values we choose to keep. 1.0 is no decay, 2.0 is a doubling every time we keep them.
+// TODO: should we store the affinities as floats instead?
 #define ALPHA 1.0
 
 // TODO: check for failed allocation.
@@ -24,23 +26,39 @@
 // TODO: only define the ARRAY_LENGTH macro conditionally
 #define ARRAY_LENGTH(array) (sizeof((array))/sizeof((array)[0]))
 
-accel_gesture *accel_generate_gesture(accel_state *state) {
-    size_t gesture_size = sizeof(accel_gesture);
-    accel_gesture *g = (accel_gesture *) malloc(gesture_size);
-    memset(g, 0, gesture_size);
-    g->is_recording = false;
-    g->is_recorded = false;
-    g->normalized_recording = NULL;
+int accel_generate_gesture(accel_state *state, accel_gesture **gesture) {
+    PRECONDITION_NOT_NULL(state);
+    PRECONDITION_NOT_NULL(gesture);
 
-    g->moving_avg_values = (moving_avg_values **) calloc(state->dimensions, sizeof(moving_avg_values *));
+    size_t gesture_size = sizeof(accel_gesture);
+    *gesture = (accel_gesture *) malloc(gesture_size);
+    if (*gesture == NULL) {
+        return ACCEL_MALLOC_ERROR;
+    }
+    memset(*gesture, 0, gesture_size);
+    (*gesture)->is_recording = false;
+    (*gesture)->is_recorded = false;
+    (*gesture)->normalized_recording = NULL;
+
+    (*gesture)->moving_avg_values = (moving_avg_values **) calloc(state->dimensions, sizeof(moving_avg_values *));
+    if ((*gesture)->moving_avg_values == NULL) {
+        free((*gesture));
+        *gesture = NULL;
+    }
     for (int i=0; i<state->dimensions; ++i) {
         // TODO: these two shouldn't both be the same....
-        // TODO: result should really be checked.
-        int result = allocate_moving_avg(state->window_size, state->window_size, &(g->moving_avg_values[i]));
-        // Line placed here to prevent compiler from complaining. Read previous line.
-        if (result == 0) {continue;}
+        int result = allocate_moving_avg(state->window_size, state->window_size, &((*gesture)->moving_avg_values[i]));
+
+        if (result != 0) {
+            // Abort, since there isn't much we can do if it fails.
+            for (int j=0; j<i; ++j) {
+                free_moving_avg(&((*gesture)->moving_avg_values[j]));
+            }
+            free(gesture);
+            return result;
+        }
     }
-    return g;
+    return 0;
 }
 
 void accel_destroy_gesture(accel_gesture *gesture) {
@@ -96,7 +114,22 @@ int accel_start_record_gesture(accel_state *state, int *gesture) {
     }
     *gesture = (state->num_gestures_saved)++;
 
-    state->gestures[*gesture] = accel_generate_gesture(state);
+    int result = accel_generate_gesture(state, &(state->gestures[*gesture]));
+    if (result != 0) {
+        *gesture = -1;
+        if (state->num_gestures_saved == 1) {
+            free(state->gestures);
+            state->gestures = NULL;
+        } else {
+            accel_gesture ** tmp = (accel_gesture **)realloc(state->gestures, state->num_gestures_saved - 1);
+            if (tmp != NULL) {
+                // If tmp is null, we don't really care that realloc failed, since a future use of realloc will help us.
+                state->gestures = tmp;
+            }
+        }
+        --(state->num_gestures_saved);
+        return result;
+    }
     state->gestures[*gesture]->is_recording = true;
     return 0;
 }
