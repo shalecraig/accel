@@ -8,7 +8,6 @@
 #define PRECONDITION_NOT_NULL(foo) \
     if (foo == NULL) { return ACCEL_PARAM_ERROR; }
 
-// TODO: set the error bit when things are wrong.
 // TODO: check for failed allocation.
 
 // TODO: include these from a header file?
@@ -67,7 +66,6 @@ int accel_generate_state(accel_state **state, int dimensions, int window_size) {
     *state = (accel_state *) malloc(internal_size);
 
     memset((*state), 0, internal_size);
-    (*state)->error_bit = false;
     (*state)->dimensions = dimensions;
     (*state)->window_size = window_size > 0 ? window_size : 2;
     return 0;
@@ -120,7 +118,6 @@ int normalize(int sum) {
 
 // TODO: does this work for zero recorded timestamps?
 int accel_end_record_gesture(accel_state *state, int gesture_id) {
-    // TODO: Check with a macro for error bit, nullity with error logging.
     if (state == NULL) {
         return ACCEL_PARAM_ERROR;
     }
@@ -285,20 +282,16 @@ int accel_process_timer_tick(accel_state *state, int *accel_data) {
 int accel_find_most_likely_gesture(accel_state *state, int *gesture_id, int *affinity) {
     // TODO: complain about these, do them more formally
     if (state == NULL) {
-        // TODO: Remove the error bit from the struct.
         return ACCEL_PARAM_ERROR;
     }
     if (gesture_id == NULL) {
-        // TODO: Remove the error bit from the struct.
         return ACCEL_PARAM_ERROR;
     }
     if (affinity == NULL) {
-        // TODO: Remove the error bit from the struct.
         return ACCEL_PARAM_ERROR;
     }
     // TODO: error.log
     if (state->num_gestures_saved < 0) {
-        // TODO: Remove the error bit from the struct.
         return ACCEL_INTERNAL_ERROR;
     }
 
@@ -311,7 +304,6 @@ int accel_find_most_likely_gesture(accel_state *state, int *gesture_id, int *aff
 
     // TODO: error.log
     if (state->gestures == NULL) {
-        // TODO: Remove the error bit from the struct.
         return ACCEL_INTERNAL_ERROR;
     }
 

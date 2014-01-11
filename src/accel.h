@@ -48,8 +48,6 @@ typedef struct {
 
 // TODO: forward declare the implementation-based state so it is not exposed.
 typedef struct {
-    bool error_bit;
-
     /* data */
     int dimensions;
     int window_size;
