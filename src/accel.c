@@ -221,11 +221,8 @@ void handle_recording_tick(accel_gesture *gesture, int dimensions) {
 }
 
 int handle_evaluation_tick(accel_gesture *gesture, int dimensions) {
-    // TODO: actually complain about these issues.
-    if (gesture == NULL) {
-        // Internal because the gesture shouldn't be touched by end users.
-        return ACCEL_INTERNAL_ERROR;
-    }
+    PRECONDITION_NOT_NULL(gesture);
+
     if (gesture->moving_avg_values == NULL) {
         // Internal because the gesture's avg values shouldn't be touched by end users.
         return ACCEL_INTERNAL_ERROR;
@@ -286,35 +283,52 @@ int accel_process_timer_tick(accel_state *state, int *accel_data) {
     // TODO: verify this later.
     // if (ARRAY_LENGTH(accel_data) != state->dimensions) { return ACCEL_PARAM_ERROR; }
 
+    int retcode = 0;
     for (int gesture_iter = 0; gesture_iter < state->num_gestures_saved; ++gesture_iter) {
         accel_gesture *gesture = state->gestures[gesture_iter];
-        // TODO: complain about struct integrity issues.
-        if (gesture == NULL) { continue; }
-        // TODO: complain about struct integrity issues.
-        if (!gesture->is_recording && !gesture->is_recorded) { continue; }
-        // TODO: complain about struct integrity issues.
-        if (gesture->moving_avg_values == NULL) { continue; }
+        if (gesture == NULL) {
+            retcode = ACCEL_INTERNAL_ERROR;
+            continue;
+        }
+        if (!gesture->is_recording && !gesture->is_recorded) {
+            retcode = ACCEL_INTERNAL_ERROR;
+            continue;
+        }
+        if (gesture->moving_avg_values == NULL) {
+            retcode = ACCEL_INTERNAL_ERROR;
+            continue;
+        }
         // If the moving average is at a final line.
         bool avg_line = false;
-        for (int d=0; d<state->dimensions; ++d) {
+        int returned = 0;
+        for (int d=0; d<state->dimensions && returned == 0; ++d) {
             // TODO: verify that the return code isn't an error.
-            append_to_moving_avg(gesture->moving_avg_values[d], accel_data[d], &avg_line);
+            returned = append_to_moving_avg(gesture->moving_avg_values[d], accel_data[d], &avg_line);
+        }
+        if (returned != 0) {
+            retcode = returned;
+            continue;
         }
 
         if (!avg_line) { continue; }
 
+        returned = 0;
         if (gesture->is_recording) {
             // TODO: this should return error types instead of being void.
             handle_recording_tick(gesture, state->dimensions);
         } else if (gesture->is_recorded) {
             // TODO: if this returns something non-zero, complain about it.
-            handle_evaluation_tick(gesture, state->dimensions);
+            returned = handle_evaluation_tick(gesture, state->dimensions);
+            if (returned != 0) {
+                retcode = returned;
+            }
         } else {
             // TODO: complain that we need to have one of these two categories.
+            retcode = ACCEL_INTERNAL_ERROR;
             continue;
         }
     }
-    return 0;
+    return retcode;
 }
 
 int accel_find_most_likely_gesture(accel_state *state, int *gesture_id, int *affinity) {
