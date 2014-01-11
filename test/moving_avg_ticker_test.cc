@@ -2,16 +2,6 @@
 
 #include "../src/moving_avg_ticker.h"
 
-// TEST(blahTest, blah1) {
-//     EXPECT_EQ(1, 1);
-// }
-
-// TEST(SquareRootTest, PositiveNos) {
-//     EXPECT_EQ (18.0, square_root (324.0));
-//     EXPECT_EQ (25.4, square_root (645.16));
-//     EXPECT_EQ (50.3321, square_root (2533.310224));
-// }
-
 const void * void_null = NULL;
 
 TEST(MovingAvgTicker, InvalidInputValues) {
