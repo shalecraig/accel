@@ -11,8 +11,6 @@
 // TODO: should we store the affinities as floats instead?
 #define ALPHA 1.0
 
-// TODO: check for failed allocation.
-
 // TODO: include these from a header file?
 #define MAX(a,b) \
    ({ __typeof__ (a) _a = (a); \
