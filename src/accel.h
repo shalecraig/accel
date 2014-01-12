@@ -5,17 +5,6 @@
 
 #include "accel_consts.c"
 
-#ifndef ACCEL_QUAN_POINT_SIZE
-#define ACCEL_QUAN_POINT_SIZE ((uint32_t)ACCEL_FREQUENCY_HZ/25)
-#endif
-
-/*
- * At 100Hz, this should be 20s
- */
-#ifndef ACCEL_RECORD_MAX_LENGTH
-#define ACCEL_RECORD_MAX_LENGTH ACCEL_FREQUENCY_HZ*ACCEL_MAX_RECORDING_TIME_S
-#endif
-
 #define ACCEL_SUCCESS 0
 #define ACCEL_PARAM_ERROR -1
 #define ACCEL_INTERNAL_ERROR -2
