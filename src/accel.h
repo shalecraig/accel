@@ -56,9 +56,6 @@ typedef struct {
     accel_gesture **gestures;
 } accel_state;
 
-// TODO: rewrite the docs, I wrote them waaaaaaaaaay too early
-
-// Creation and deletion of accel state objects.
 /**
  * Creates a state object, essentially a constructor.
  * @param  state       Pointer-to-pointer of the state being generated, populated
@@ -92,24 +89,35 @@ int accel_start_record_gesture(accel_state *state, int *gesture);
 
 /**
  * Ends recording a accel gesture
- * @param state      state being recorded
- * @param gesture_id id the gesture corresponds to
+ * @param state      A pointer to a non-NULL state variable that holds recording
+ *                   metadata.
+ * @param gesture_id Value that corresponds to a gesture currently being
+ *                   recorded.
+ * @return           ACCEL_SUCCESS if successful, an error code otherwise.
  */
 int accel_end_record_gesture(accel_state *state, int gesture_id);
 
 /**
- * Updates the uWave algorithm's DTW-compare step across all gestures.
- * @param state    state being recorded
- * @param accel_data a array with accelerometer data
+ * Updates the state variable's current state based on the accel data array
+ * passed in.
+ * @param  state      A pointer to a non-NULL state variable that holds
+ *                    recording metadata.
+ * @param  accel_data An with accelerometer data.
+ * @return            ACCEL_SUCCESS if successful, an error code otherwise.
  */
 int accel_process_timer_tick(accel_state *state, int *accel_data);
 
 /**
- * At a given state, returns the most likely gesture and its affinity.
- * @param state      state being recorded
- * @param gesture_id id the gesture corresponds to
- * @param affinity   affinity of the gesture to the accelerometer input.
+ * For a given state, returns the most likely valid gesture and its distance
+ * according to tick data.
+ * @param  state      A pointer to a non-NULL state variable that holds
+ *                    recording metadata.
+ * @param  gesture_id A non-NULL pointer that will be populated with the gesture
+ *                    of lowest distance.
+ * @param  distance   A non-NULL pointer that will be populated with the
+ *                    distance corresponding to the returned gesture.
+ * @return            ACCEL_SUCCESS if successful, an error code otherwise.
  */
-int accel_find_most_likely_gesture(accel_state *state, int *gesture_id, int *affinity);
+int accel_find_most_likely_gesture(accel_state *state, int *gesture_id, int *distance);
 
 #endif
