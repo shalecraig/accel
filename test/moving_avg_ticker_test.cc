@@ -223,7 +223,7 @@ TEST(MovingAvgTicker, InvalidLatestFrameParams) {
     EXPECT_EQ(0, free_moving_avg(&allocated));
 }
 
-TEST(MovingAvgTicker, input_fuzz_allocate_moving_avg) {
+TEST(MovingAvgTickerFuzzTest, allocate_moving_avg) {
     moving_avg_values *allocated = NULL;
 
     // Test with negative num_wbuf
@@ -253,12 +253,12 @@ TEST(MovingAvgTicker, input_fuzz_allocate_moving_avg) {
     EXPECT_EQ(void_null, allocated);
 }
 
-TEST(MovingAvgTicker, input_fuzz_reset_moving_avg) {
+TEST(MovingAvgTickerFuzzTest, reset_moving_avg) {
     // Test with null pointer
     EXPECT_EQ(MOVING_AVG_PARAM_ERROR, reset_moving_avg(NULL));
 }
 
-TEST(MovingAvgTicker, input_fuzz_append_to_moving_avg) {
+TEST(MovingAvgTickerFuzzTest, append_to_moving_avg) {
     // Setup:
     bool is_at_end = false;
     moving_avg_values *allocated = NULL;
@@ -277,7 +277,7 @@ TEST(MovingAvgTicker, input_fuzz_append_to_moving_avg) {
     EXPECT_EQ(0, free_moving_avg(&allocated));
 }
 
-TEST(MovingAvgTicker, input_fuzz_get_latest_frame_moving_avg) {
+TEST(MovingAvgTickerFuzzTest, get_latest_frame_moving_avg) {
     int frame = 0;
     moving_avg_values *allocated = NULL;
     EXPECT_EQ(0, allocate_moving_avg(1, 1, &allocated));
@@ -298,7 +298,7 @@ TEST(MovingAvgTicker, input_fuzz_get_latest_frame_moving_avg) {
     EXPECT_EQ(0, free_moving_avg(&allocated));
 }
 
-TEST(MovingAvgTicker, input_fuzz_free_moving_avg) {
+TEST(MovingAvgTickerFuzzTest, free_moving_avg) {
     // Test with null pointer-pointer
     EXPECT_EQ(MOVING_AVG_PARAM_ERROR, free_moving_avg(NULL));
 
