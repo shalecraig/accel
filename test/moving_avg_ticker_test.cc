@@ -223,6 +223,36 @@ TEST(MovingAvgTicker, InvalidLatestFrameParams) {
     EXPECT_EQ(0, free_moving_avg(&allocated));
 }
 
+TEST(MovingAvgTicker, input_fuzz_allocate_moving_avg) {
+    moving_avg_values *allocated = NULL;
+
+    // Test with negative num_wbuf
+    EXPECT_EQ(MOVING_AVG_PARAM_ERROR, allocate_moving_avg(-1, 1, &allocated));
+
+    // Test with zero num_wbuf
+    EXPECT_EQ(MOVING_AVG_PARAM_ERROR, allocate_moving_avg(0, 1, &allocated));
+
+    // Test with negative subtotal_size
+    EXPECT_EQ(MOVING_AVG_PARAM_ERROR, allocate_moving_avg(1, -1, &allocated));
+
+    // Test with zero subtotal_size
+    EXPECT_EQ(MOVING_AVG_PARAM_ERROR, allocate_moving_avg(1, 0, &allocated));
+
+    // Test with NULL pointer
+    EXPECT_EQ(MOVING_AVG_PARAM_ERROR, allocate_moving_avg(1, 0, NULL));
+
+    // Test with non-NULL pointer-pointer
+    allocated = (moving_avg_values *) 0x1;
+    EXPECT_EQ(MOVING_AVG_PARAM_ERROR, allocate_moving_avg(1, 1, &allocated));
+
+    // Test with success, to validate that there was only one difference between this and the above tests.
+    allocated = NULL;
+    EXPECT_EQ(0, allocate_moving_avg(1, 1, &allocated));
+    EXPECT_NE(void_null, allocated);
+    EXPECT_EQ(0, free_moving_avg(&allocated));
+    EXPECT_EQ(void_null, allocated);
+}
+
 int main (int argc, char** argv) {
     ::testing::InitGoogleTest(&argc, argv);
 
