@@ -16,10 +16,10 @@
 #define ACCEL_RECORD_MAX_LENGTH ACCEL_FREQUENCY_HZ*ACCEL_MAX_RECORDING_TIME_S
 #endif
 
+#define ACCEL_SUCCESS 0
 #define ACCEL_PARAM_ERROR -1
 #define ACCEL_INTERNAL_ERROR -2
 #define ACCEL_MALLOC_ERROR -3
-
 #define ACCEL_NO_VALID_GESTURE -4
 
 /* TODO: hide these in the implementation */

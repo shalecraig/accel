@@ -78,12 +78,12 @@ int accel_generate_gesture(accel_state *state, accel_gesture **gesture) {
         // TODO: these two shouldn't both be the same....
         int result = allocate_moving_avg(state->window_size, state->window_size, &((*gesture)->moving_avg_values[i]));
 
-        if (result != 0) {
+        if (result != ACCEL_SUCCESS) {
             accel_destroy_gesture(gesture, state->dimensions);
             return result;
         }
     }
-    return 0;
+    return ACCEL_SUCCESS;
 }
 
 // TODO: needs direct testing with invalid objects.
@@ -106,7 +106,7 @@ int accel_generate_state(accel_state **state, int dimensions, int window_size) {
     memset((*state), 0, internal_size);
     (*state)->dimensions = dimensions;
     (*state)->window_size = window_size > 0 ? window_size : 2;
-    return 0;
+    return ACCEL_SUCCESS;
 }
 
 // TODO: needs testing with invalid objects.
@@ -124,7 +124,7 @@ int accel_destroy_state(accel_state **state) {
     free((*state));
     *state = NULL;
 
-    return 0;
+    return ACCEL_SUCCESS;
 }
 
 int accel_start_record_gesture(accel_state *state, int *gesture) {
@@ -146,7 +146,7 @@ int accel_start_record_gesture(accel_state *state, int *gesture) {
     *gesture = (state->num_gestures_saved)++;
 
     int result = accel_generate_gesture(state, &(state->gestures[*gesture]));
-    if (result != 0) {
+    if (result != ACCEL_SUCCESS) {
         *gesture = -1;
         if (state->num_gestures_saved == 1) {
             free(state->gestures);
@@ -162,7 +162,7 @@ int accel_start_record_gesture(accel_state *state, int *gesture) {
         return result;
     }
     state->gestures[*gesture]->is_recording = true;
-    return 0;
+    return ACCEL_SUCCESS;
 }
 
 // TODO: These arbitrarily chosen constants are from the uWave algorithm's paper, and have nothing to do with my implementation.
@@ -221,7 +221,7 @@ int accel_end_record_gesture(accel_state *state, int gesture_id) {
     for (int d=0; d<state->dimensions; ++d) {
         reset_moving_avg(gesture->moving_avg_values[d]);
     }
-    return 0;
+    return ACCEL_SUCCESS;
 }
 
 // TODO: check for malloc failure in this function.
@@ -299,14 +299,14 @@ int handle_evaluation_tick(accel_gesture *gesture, int dimensions) {
         }
         gesture->affinities[i] = MIN(gesture->affinities[i], gesture->affinities[i-1] + cost);
     }
-    return 0;
+    return ACCEL_SUCCESS;
 }
 
 int accel_process_timer_tick(accel_state *state, int *accel_data) {
     PRECONDITION_NOT_NULL(state);
     PRECONDITION_NOT_NULL(accel_data);
 
-    int retcode = 0;
+    int retcode = ACCEL_SUCCESS;
     for (int gesture_iter = 0; gesture_iter < state->num_gestures_saved; ++gesture_iter) {
         accel_gesture *gesture = state->gestures[gesture_iter];
         if (gesture == NULL) {
@@ -323,23 +323,23 @@ int accel_process_timer_tick(accel_state *state, int *accel_data) {
         }
         // If the moving average is at a final line.
         bool avg_line = false;
-        int returned = 0;
+        int returned = ACCEL_SUCCESS;
         for (int d=0; d<state->dimensions && returned == 0; ++d) {
             returned = append_to_moving_avg(gesture->moving_avg_values[d], accel_data[d], &avg_line);
         }
-        if (returned != 0) {
+        if (returned != ACCEL_SUCCESS) {
             retcode = returned;
             continue;
         }
 
         if (!avg_line) { continue; }
 
-        returned = 0;
+        returned = ACCEL_SUCCESS;
         if (gesture->is_recording) {
             handle_recording_tick(gesture, state->dimensions);
         } else if (gesture->is_recorded) {
             returned = handle_evaluation_tick(gesture, state->dimensions);
-            if (returned != 0) {
+            if (returned != ACCEL_SUCCESS) {
                 retcode = returned;
             }
         } else {
@@ -390,5 +390,5 @@ int accel_find_most_likely_gesture(accel_state *state, int *gesture_id, int *aff
         *affinity == ACCEL_NO_VALID_GESTURE) {
         return ACCEL_NO_VALID_GESTURE;
     }
-    return 0;
+    return ACCEL_SUCCESS;
 }
