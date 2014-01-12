@@ -3,12 +3,18 @@
 
 #include "accel.h"
 
-moving_avg_values *allocate_moving_avg(int num_wbuf, int subtotal_sizes);
+#define MOVING_AVG_PARAM_ERROR ACCEL_PARAM_ERROR
+#define MOVING_AVG_INTERNAL_ERROR ACCEL_INTERNAL_ERROR
+#define MOVING_AVG_MALLOC_ERROR ACCEL_MALLOC_ERROR
 
-void reset_moving_avg(moving_avg_values * reset);
+int allocate_moving_avg(int num_wbuf, int subtotal_sizes, moving_avg_values **allocated);
 
-bool append_to_moving_avg(moving_avg_values *value, int appended);
+int reset_moving_avg(moving_avg_values * reset);
 
-int get_latest_frame_moving_avg(moving_avg_values *value);
+int append_to_moving_avg(moving_avg_values *value, int appended, bool *isAtEnd);
+
+int get_latest_frame_moving_avg(moving_avg_values *value, int *frame);
+
+int free_moving_avg(moving_avg_values **value);
 
 #endif
