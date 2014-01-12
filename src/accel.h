@@ -11,6 +11,11 @@
 #define ACCEL_MALLOC_ERROR -3
 #define ACCEL_NO_VALID_GESTURE -4
 
+#define ACCEL_VERSION_GEN(major, minor, point, isBeta, isAlpha) \
+    (4*(100*((100*major)+minor)+point) + 3 - (isAlpha?2:0) - (isBeta?1:0))
+
+#define ACCEL_VERSION_CODE ACCEL_VERSION_GEN(0, 1, 1, false, true)
+
 struct internalAccelState;
 
 typedef struct {

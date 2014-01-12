@@ -15,7 +15,7 @@ accel
     - [x] Rearrange structs to hide implementation.
     - [ ] Beef up unit tests with unusual input.
     - [ ] Write sample app that uses this.
-    - [ ] Provide #define version number.
+    - [x] Provide #define version number. [`ACCEL_VERSION_CODE`]
 - Va.2
     - [ ] Decide on having callbacks instead of (or) `accel_find_most_likely_gesture`
         - Maybe needs a const for the values?
