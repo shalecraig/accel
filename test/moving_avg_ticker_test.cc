@@ -253,6 +253,13 @@ TEST(MovingAvgTicker, input_fuzz_allocate_moving_avg) {
     EXPECT_EQ(void_null, allocated);
 }
 
+TEST(MovingAvgTicker, input_fuzz_reset_moving_avg) {
+    // Test with null pointer
+    EXPECT_EQ(MOVING_AVG_PARAM_ERROR, reset_moving_avg(NULL));
+}
+
+
+
 TEST(MovingAvgTicker, input_fuzz_free_moving_avg) {
     // Test with null pointer-pointer
     EXPECT_EQ(MOVING_AVG_PARAM_ERROR, free_moving_avg(NULL));
