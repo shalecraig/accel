@@ -277,6 +277,27 @@ TEST(MovingAvgTicker, input_fuzz_append_to_moving_avg) {
     EXPECT_EQ(0, free_moving_avg(&allocated));
 }
 
+TEST(MovingAvgTicker, input_fuzz_get_latest_frame_moving_avg) {
+    int frame = 0;
+    moving_avg_values *allocated = NULL;
+    EXPECT_EQ(0, allocate_moving_avg(1, 1, &allocated));
+
+    // Both are NULL
+    EXPECT_EQ(MOVING_AVG_PARAM_ERROR, get_latest_frame_moving_avg(NULL, NULL));
+
+    // First is NULL
+    EXPECT_EQ(MOVING_AVG_PARAM_ERROR, get_latest_frame_moving_avg(NULL, &frame));
+
+    // Second is NULL
+    EXPECT_EQ(MOVING_AVG_PARAM_ERROR, get_latest_frame_moving_avg(allocated, NULL));
+
+    // Validate it works to justify the above unit tests
+    EXPECT_EQ(0, get_latest_frame_moving_avg(allocated, &frame));
+
+    // Cleanup
+    EXPECT_EQ(0, free_moving_avg(&allocated));
+}
+
 TEST(MovingAvgTicker, input_fuzz_free_moving_avg) {
     // Test with null pointer-pointer
     EXPECT_EQ(MOVING_AVG_PARAM_ERROR, free_moving_avg(NULL));
