@@ -157,16 +157,16 @@ int accel_destroy_state(accel_state **state) {
 
     int dimensions = (*state)->dimensions;
     if ((*state)->state != NULL) {
-        if ((*state)->state->gestures != NULL) {
+        internal_accel_state *istate = (*state)->state;
+        if (istate->gestures != NULL) {
             /* TODO: remove all additional fields inside the accel_state variable */
-            for (int i=0; i<(*state)->state->num_gestures_saved; ++i) {
-                accel_gesture *gest = ((*state)->state->gestures[i]);
+            for (int i=0; i<istate->num_gestures_saved; ++i) {
+                accel_gesture *gest = (istate->gestures[i]);
                 accel_destroy_gesture(&(gest), dimensions);
             }
-            free((*state)->state->gestures);
-            (*state)->state->gestures = NULL;
+            free(istate->gestures);
+            istate->gestures = NULL;
         }
-
         free((*state)->state);
         (*state)->state = NULL;
     }
@@ -215,8 +215,9 @@ int accel_start_record_gesture(accel_state *state, int *gesture) {
     return ACCEL_SUCCESS;
 }
 
-// The uWave paper suggests clamping in the range [-20, 20], but cube root seems
-// to work better for variable ranges.
+// The uWave paper suggests a mapping from [-20, 20]->[-15, 15], but cube root
+// should to work better for variable ranges.
+// TODO: revisit this decision.
 int normalize(int sum) {
     return (int) cbrt(sum);
 }
@@ -229,24 +230,21 @@ int accel_end_record_gesture(accel_state *state, int gesture_id) {
     if (gesture_id < 0) {
         return ACCEL_PARAM_ERROR;
     }
-    // TODO: log the user's error.
-    if (gesture_id > state->state->num_gestures_saved) {
+    internal_accel_state *istate = state->state;
+    if (gesture_id > istate->num_gestures_saved) {
         return ACCEL_PARAM_ERROR;
     }
-    // TODO: log accel's error.
-    if (state->state->gestures[gesture_id] == NULL) {
+    if (istate->gestures[gesture_id] == NULL) {
         return ACCEL_INTERNAL_ERROR;
     }
-    // TODO: log the user's error.
-    if (!(state->state->gestures[gesture_id]->is_recording)) {
+    accel_gesture *gesture = istate->gestures[gesture_id];
+    if (!(gesture->is_recording)) {
         return ACCEL_PARAM_ERROR;
     }
-    // TODO: log accel's error.
-    if (state->state->gestures[gesture_id]->is_recorded) {
+    if (gesture->is_recorded) {
         return ACCEL_INTERNAL_ERROR;
     }
 
-    accel_gesture *gesture = state->state->gestures[gesture_id];
     gesture->affinities = (int *) malloc(gesture->recording_size * sizeof(int));
     if (gesture->affinities == NULL) {
         return ACCEL_MALLOC_ERROR;
@@ -289,13 +287,8 @@ int handle_evaluation_tick(accel_gesture *gesture, int dimensions) {
     // TODO: load the input at the beginning instead of gesture->recording_size times.
     PRECONDITION_NOT_NULL(gesture);
 
-    if (gesture->moving_avg_values == NULL) {
-        // Internal because the gesture's avg values shouldn't be touched by end users.
-        return ACCEL_INTERNAL_ERROR;
-    }
-
-    if (gesture->affinities == NULL) {
-        // Internal because the gesture's affinities shouldn't be touched by end users.
+    if (gesture->moving_avg_values == NULL ||
+        gesture->affinities == NULL) {
         return ACCEL_INTERNAL_ERROR;
     }
 
@@ -395,22 +388,20 @@ int accel_find_most_likely_gesture(accel_state *state, int *gesture_id, int *aff
     PRECONDITION_NOT_NULL(gesture_id);
     PRECONDITION_NOT_NULL(affinity);
 
+    *gesture_id = ACCEL_NO_VALID_GESTURE;
+    *affinity = ACCEL_NO_VALID_GESTURE;
+
     if (state->state->num_gestures_saved < 0) {
         return ACCEL_INTERNAL_ERROR;
     }
 
     if (state->state->num_gestures_saved == 0) {
-        *gesture_id = ACCEL_NO_VALID_GESTURE;
-        *affinity = ACCEL_NO_VALID_GESTURE;
         return ACCEL_NO_VALID_GESTURE;
     }
 
     if (state->state->gestures == NULL) {
         return ACCEL_INTERNAL_ERROR;
     }
-
-    *gesture_id = ACCEL_NO_VALID_GESTURE;
-    *affinity = ACCEL_NO_VALID_GESTURE;
 
     for (int i=0; i<state->state->num_gestures_saved; ++i) {
         accel_gesture *gesture = state->state->gestures[i];
