@@ -5,6 +5,17 @@
 #include "accel.h"
 #include "moving_avg_ticker.h"
 
+typedef struct accelGesture {
+    bool is_recording;
+    bool is_recorded;
+
+    int recording_size;
+    int **normalized_recording;
+
+    moving_avg_values **moving_avg_values;
+    int *affinities;
+} accel_gesture;
+
 #define PRECONDITION_NOT_NULL(foo) \
     if (foo == NULL) { return ACCEL_PARAM_ERROR; }
 

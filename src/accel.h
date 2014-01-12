@@ -22,29 +22,7 @@
 #define ACCEL_MALLOC_ERROR -3
 #define ACCEL_NO_VALID_GESTURE -4
 
-/* TODO: hide these in the implementation */
-typedef struct {
-    // Circular buffer
-    int *wbuf;
-    int wbuf_end;
-    int wbuf_len;
-
-    int subtotal;
-    int subtotal_size;
-    int max_subtotal_size;
-} moving_avg_values;
-
-/* TODO: hide these in the implementation */
-typedef struct {
-    bool is_recording;
-    bool is_recorded;
-
-    int recording_size;
-    int **normalized_recording;
-
-    moving_avg_values **moving_avg_values;
-    int *affinities;
-} accel_gesture;
+struct accelGesture;
 
 // TODO: forward declare the implementation-based state so it is not exposed.
 typedef struct {
@@ -53,7 +31,7 @@ typedef struct {
     int window_size;
 
     int num_gestures_saved;
-    accel_gesture **gestures;
+    accelGesture **gestures;
 } accel_state;
 
 /**
