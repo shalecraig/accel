@@ -59,14 +59,34 @@ typedef struct {
 // TODO: rewrite the docs, I wrote them waaaaaaaaaay too early
 
 // Creation and deletion of accel state objects.
+/**
+ * Creates a state object, essentially a constructor.
+ * @param  state       Pointer-to-pointer of the state being generated, populated
+ *                     by the method.
+ *                     The current value of the pointer's pointed (*state) must
+ *                     be NULL.
+ * @param  dimensions  The number of dimensions of input that the state
+ *                     represents.
+ * @param  window_size The size of the moving windows used to calculate smoothed
+ *                     sensor readings.
+ * @return             ACCEL_SUCCESS if successful, an error code otherwise.
+ */
 int accel_generate_state(accel_state **state, int dimensions, int window_size);
+
+/**
+ * Destroys the state object at the pointer pointed to by the state pointer.
+ * @param  state pointer to pointer of object to be destroyed. Pointer (*state)
+ *               will be set to NULL after execution.
+ * @return       ACCEL_SUCCESS if successful, an error code otherwise.
+ */
 int accel_destroy_state(accel_state **state);
 
 /**
  * Starts recording a accel gesture
- * @param  state state being recorded
- * @param  gesture gesture being recorded
- * @return       id the gesture corresponds to
+ * @param  state   A pointer to a non-NULL state variable that holds recording
+ *                 metadata.
+ * @param  gesture Non-NULL pointer that will be populated with the gesture id.
+ * @return         ACCEL_SUCCESS if successful, an error code otherwise.
  */
 int accel_start_record_gesture(accel_state *state, int *gesture);
 
