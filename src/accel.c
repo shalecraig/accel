@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #include "accel.h"
 #include "moving_avg_ticker.h"
@@ -11,8 +12,6 @@
 // TODO: should we store the affinities as floats instead?
 #define ALPHA 1.0
 
-// TODO: check for failed allocation.
-
 // TODO: include these from a header file?
 #define MAX(a,b) \
    ({ __typeof__ (a) _a = (a); \
@@ -23,8 +22,39 @@
        __typeof__ (b) _b = (b); \
      _a < _b ? _a : _b; })
 
-// TODO: only define the ARRAY_LENGTH macro conditionally
-#define ARRAY_LENGTH(array) (sizeof((array))/sizeof((array)[0]))
+void accel_destroy_gesture(accel_gesture **gesture, int dimensions) {
+    if (gesture == NULL || *gesture == NULL) {
+        return;
+    }
+
+    accel_gesture *gest = *gesture;
+
+    if (gest->moving_avg_values != NULL) {
+        for (int i=0; i<dimensions; ++i) {
+            free_moving_avg(&(gest->moving_avg_values[i]));
+        }
+    }
+
+    if (gest->normalized_recording != NULL) {
+        for (int i=0; i<gest->recording_size; ++i) {
+            if (gest->normalized_recording[i] != NULL) {
+                free(gest->normalized_recording[i]);
+                gest->normalized_recording[i] = NULL;
+            }
+        }
+        free(gest->normalized_recording);
+        gest->normalized_recording = NULL;
+    }
+
+    if (gest->affinities != NULL) {
+        free(gest->affinities);
+        gest->affinities = NULL;
+    }
+
+    free(*gesture);
+    *gesture = NULL;
+}
+
 
 int accel_generate_gesture(accel_state *state, accel_gesture **gesture) {
     PRECONDITION_NOT_NULL(state);
@@ -50,27 +80,13 @@ int accel_generate_gesture(accel_state *state, accel_gesture **gesture) {
         int result = allocate_moving_avg(state->window_size, state->window_size, &((*gesture)->moving_avg_values[i]));
 
         if (result != 0) {
-            // Abort, since there isn't much we can do if it fails.
-            for (int j=0; j<i; ++j) {
-                free_moving_avg(&((*gesture)->moving_avg_values[j]));
-            }
-            free(gesture);
+            accel_destroy_gesture(gesture, state->dimensions);
             return result;
         }
     }
     return 0;
 }
 
-void accel_destroy_gesture(accel_gesture *gesture) {
-    if (gesture == NULL) {
-        return;
-    }
-    // TODO: free more than just this.
-    free(gesture);
-    gesture = NULL;
-}
-
-/* Creation and deletion of accel state objects. */
 int accel_generate_state(accel_state **state, int dimensions, int window_size) {
     PRECONDITION_NOT_NULL(state);
     if (dimensions <= 0) {
@@ -83,6 +99,9 @@ int accel_generate_state(accel_state **state, int dimensions, int window_size) {
     size_t internal_size = sizeof(accel_state);
 
     *state = (accel_state *) malloc(internal_size);
+    if (state == NULL) {
+        return ACCEL_MALLOC_ERROR;
+    }
 
     memset((*state), 0, internal_size);
     (*state)->dimensions = dimensions;
@@ -96,7 +115,7 @@ int accel_destroy_state(accel_state **state) {
 
     /* TODO: remove all additional fields inside the accel_state variable */
     for (int i=0; i<(*state)->num_gestures_saved; ++i) {
-        accel_destroy_gesture((*state)->gestures[i]);
+        accel_destroy_gesture(&((*state)->gestures[i]), (*state)->dimensions);
     }
     free((*state));
     *state = NULL;
@@ -108,9 +127,16 @@ int accel_start_record_gesture(accel_state *state, int *gesture) {
     PRECONDITION_NOT_NULL(gesture);
 
     if (state->num_gestures_saved != 0) {
-        state->gestures = (accel_gesture **)realloc(state->gestures, (state->num_gestures_saved + 1)*sizeof(accel_gesture *));
+        accel_gesture **tmp = (accel_gesture **)realloc(state->gestures, (state->num_gestures_saved + 1)*sizeof(accel_gesture *));
+        if (tmp == NULL) {
+            return ACCEL_MALLOC_ERROR;
+        }
+        state->gestures = tmp;
     } else {
         state->gestures = (accel_gesture **)malloc(sizeof(accel_gesture *));
+        if (state->gestures == NULL) {
+            return ACCEL_MALLOC_ERROR;
+        }
     }
     *gesture = (state->num_gestures_saved)++;
 
@@ -134,27 +160,16 @@ int accel_start_record_gesture(accel_state *state, int *gesture) {
     return 0;
 }
 
-// TODO: These arbitrarily chosen constants are from the uWave algorithm's paper, and have nothing to do with my implementation.
-// Find better numbers that'll do instead, apparently pebble uses in the range of +-4k, so we should probably scale +-16k
+// The uWave paper suggests clamping in the range [-20, 20], but cube root seems
+// to work better for variable ranges.
 int normalize(int sum) {
-    if (sum > 20) {
-        return 15;
-    } else if (sum > 10) {
-        return (sum-10)*5.0+10;
-    } else if (sum > -10) {
-        return sum;
-    } else if (sum > -20) {
-        return (sum+10)*5.0-10;
-    } else { // sum <= -20
-        return -15;
-    }
+    return (int) cbrt(sum);
 }
 
 // TODO: does this work for zero recorded timestamps?
 int accel_end_record_gesture(accel_state *state, int gesture_id) {
-    if (state == NULL) {
-        return ACCEL_PARAM_ERROR;
-    }
+    PRECONDITION_NOT_NULL(state);
+
     // TODO: use an unsigned int instead so we don't need to check for this type of error.
     if (gesture_id < 0) {
         return ACCEL_PARAM_ERROR;
@@ -177,19 +192,29 @@ int accel_end_record_gesture(accel_state *state, int gesture_id) {
     }
 
     accel_gesture *gesture = state->gestures[gesture_id];
+    gesture->affinities = (int *) malloc(gesture->recording_size * sizeof(int));
+    if (gesture->affinities == NULL) {
+        return ACCEL_MALLOC_ERROR;
+    }
+
     gesture->is_recording = false;
     gesture->is_recorded = true;
 
-    gesture->affinities = (int *) malloc(gesture->recording_size * sizeof(int));
     for (int i=0; i<gesture->recording_size; ++i) {
         gesture->affinities[i] = INT16_MAX;
+    }
+    for (int d=0; d<state->dimensions; ++d) {
+        reset_moving_avg(gesture->moving_avg_values[d]);
     }
     return 0;
 }
 
+// TODO: check for malloc failure in this function.
+// TODO: this should return error types instead of being void.
+    // Follow-up: find usages of this method.
 void handle_recording_tick(accel_gesture *gesture, int dimensions) {
     if (gesture == NULL) { return; }
-    // TODO: grow exponentially, not linearly. Linear growth has a bad running profile.
+    // TODO: grow exponentially, not linearly. Linear growth allocates too frequently.
     if (gesture->recording_size != 0) {
         gesture->normalized_recording = (int **) realloc(gesture->normalized_recording, (gesture->recording_size + 1) * sizeof(int *));
     } else {
@@ -206,11 +231,9 @@ void handle_recording_tick(accel_gesture *gesture, int dimensions) {
 }
 
 int handle_evaluation_tick(accel_gesture *gesture, int dimensions) {
-    // TODO: actually complain about these issues.
-    if (gesture == NULL) {
-        // Internal because the gesture shouldn't be touched by end users.
-        return ACCEL_INTERNAL_ERROR;
-    }
+    // TODO: load the input at the beginning instead of gesture->recording_size times.
+    PRECONDITION_NOT_NULL(gesture);
+
     if (gesture->moving_avg_values == NULL) {
         // Internal because the gesture's avg values shouldn't be touched by end users.
         return ACCEL_INTERNAL_ERROR;
@@ -231,6 +254,7 @@ int handle_evaluation_tick(accel_gesture *gesture, int dimensions) {
             int input_i_d = 0;
             // TODO: complain about invalid return values.
             get_latest_frame_moving_avg(gesture->moving_avg_values[d], &input_i_d);
+            input_i_d = normalize(input_i_d);
             if (recording_i_d > input_i_d) {
                 cost += recording_i_d - input_i_d;
             } else {
@@ -239,14 +263,12 @@ int handle_evaluation_tick(accel_gesture *gesture, int dimensions) {
             }
         }
         if (i == 0) {
-            // TODO: should just be =cost
             gesture->affinities[i] = cost;
         } else {
             gesture->affinities[i] = MIN(ALPHA * gesture->affinities[i], cost+gesture->affinities[i-1]);
         }
     }
     for (i=1; i<gesture->recording_size; ++i) {
-        // TODO: actually tabulate the cost.
         int cost = 0;
         for (int d=0; d<dimensions; ++d) {
             int recording_i_d = gesture->normalized_recording[i][d];
@@ -266,54 +288,58 @@ int handle_evaluation_tick(accel_gesture *gesture, int dimensions) {
 }
 
 int accel_process_timer_tick(accel_state *state, int *accel_data) {
-    if (state == NULL) { return ACCEL_PARAM_ERROR; }
-    if (accel_data == NULL) { return ACCEL_PARAM_ERROR; }
-    // TODO: verify this later.
-    // if (ARRAY_LENGTH(accel_data) != state->dimensions) { return ACCEL_PARAM_ERROR; }
+    PRECONDITION_NOT_NULL(state);
+    PRECONDITION_NOT_NULL(accel_data);
 
+    int retcode = 0;
     for (int gesture_iter = 0; gesture_iter < state->num_gestures_saved; ++gesture_iter) {
         accel_gesture *gesture = state->gestures[gesture_iter];
-        // TODO: complain about struct integrity issues.
-        if (gesture == NULL) { continue; }
-        // TODO: complain about struct integrity issues.
-        if (!gesture->is_recording && !gesture->is_recorded) { continue; }
-        // TODO: complain about struct integrity issues.
-        if (gesture->moving_avg_values == NULL) { continue; }
+        if (gesture == NULL) {
+            retcode = ACCEL_INTERNAL_ERROR;
+            continue;
+        }
+        if (!gesture->is_recording && !gesture->is_recorded) {
+            retcode = ACCEL_INTERNAL_ERROR;
+            continue;
+        }
+        if (gesture->moving_avg_values == NULL) {
+            retcode = ACCEL_INTERNAL_ERROR;
+            continue;
+        }
         // If the moving average is at a final line.
         bool avg_line = false;
-        for (int d=0; d<state->dimensions; ++d) {
-            // TODO: verify that the return code isn't an error.
-            append_to_moving_avg(gesture->moving_avg_values[d], accel_data[d], &avg_line);
+        int returned = 0;
+        for (int d=0; d<state->dimensions && returned == 0; ++d) {
+            returned = append_to_moving_avg(gesture->moving_avg_values[d], accel_data[d], &avg_line);
+        }
+        if (returned != 0) {
+            retcode = returned;
+            continue;
         }
 
         if (!avg_line) { continue; }
 
+        returned = 0;
         if (gesture->is_recording) {
-            // TODO: this should return error types instead of being void.
             handle_recording_tick(gesture, state->dimensions);
         } else if (gesture->is_recorded) {
-            // TODO: if this returns something non-zero, complain about it.
-            handle_evaluation_tick(gesture, state->dimensions);
+            returned = handle_evaluation_tick(gesture, state->dimensions);
+            if (returned != 0) {
+                retcode = returned;
+            }
         } else {
-            // TODO: complain that we need to have one of these two categories.
+            retcode = ACCEL_INTERNAL_ERROR;
             continue;
         }
     }
-    return 0;
+    return retcode;
 }
 
 int accel_find_most_likely_gesture(accel_state *state, int *gesture_id, int *affinity) {
-    // TODO: complain about these, do them more formally
-    if (state == NULL) {
-        return ACCEL_PARAM_ERROR;
-    }
-    if (gesture_id == NULL) {
-        return ACCEL_PARAM_ERROR;
-    }
-    if (affinity == NULL) {
-        return ACCEL_PARAM_ERROR;
-    }
-    // TODO: error.log
+    PRECONDITION_NOT_NULL(state);
+    PRECONDITION_NOT_NULL(gesture_id);
+    PRECONDITION_NOT_NULL(affinity);
+
     if (state->num_gestures_saved < 0) {
         return ACCEL_INTERNAL_ERROR;
     }
@@ -321,11 +347,9 @@ int accel_find_most_likely_gesture(accel_state *state, int *gesture_id, int *aff
     if (state->num_gestures_saved == 0) {
         *gesture_id = ACCEL_NO_VALID_GESTURE;
         *affinity = ACCEL_NO_VALID_GESTURE;
-
         return ACCEL_NO_VALID_GESTURE;
     }
 
-    // TODO: error.log
     if (state->gestures == NULL) {
         return ACCEL_INTERNAL_ERROR;
     }
@@ -333,16 +357,12 @@ int accel_find_most_likely_gesture(accel_state *state, int *gesture_id, int *aff
     *gesture_id = ACCEL_NO_VALID_GESTURE;
     *affinity = ACCEL_NO_VALID_GESTURE;
 
-    // TODO: there's a cleaner way to do some of the state->num_gestures_saved precondition stuff. Should it be explicit?
-    // TODO: info.log
     for (int i=0; i<state->num_gestures_saved; ++i) {
         accel_gesture *gesture = state->gestures[i];
-        // TODO: log error about integrity of the gestures.
 
         if ((*gesture_id == ACCEL_NO_VALID_GESTURE || *affinity == ACCEL_NO_VALID_GESTURE) &&
             *gesture_id != *affinity) {
-            // TODO: debug/complain about internal consistency.
-            continue;
+            return ACCEL_INTERNAL_ERROR;
         }
 
         if (*affinity == ACCEL_NO_VALID_GESTURE ||
