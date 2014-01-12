@@ -19,6 +19,14 @@ typedef struct accelGesture {
 #define PRECONDITION_NOT_NULL(foo) \
     if (foo == NULL) { return ACCEL_PARAM_ERROR; }
 
+#define PRECONDITION_VALID_STATE(state) \
+    if (state == NULL) { return ACCEL_PARAM_ERROR; }  \
+    if (state->dimensions <= 0) { return ACCEL_INTERNAL_ERROR; } \
+    if (state->window_size <= 0) { return ACCEL_INTERNAL_ERROR; } \
+    if (state->num_gestures_saved < 0) { return ACCEL_INTERNAL_ERROR; } \
+    if (state->gestures == NULL && state->num_gestures_saved != 0) { return ACCEL_INTERNAL_ERROR; } \
+    if (state->gestures != NULL && state->num_gestures_saved == 0) { return ACCEL_INTERNAL_ERROR; }
+
 // Decay rate of values we choose to keep. 1.0 is no decay, 2.0 is a doubling every time we keep them.
 // TODO: should we store the affinities as floats instead?
 #define ALPHA 1.0
@@ -68,7 +76,7 @@ void accel_destroy_gesture(accel_gesture **gesture, int dimensions) {
 
 
 int accel_generate_gesture(accel_state *state, accel_gesture **gesture) {
-    PRECONDITION_NOT_NULL(state);
+    PRECONDITION_VALID_STATE(state);
     PRECONDITION_NOT_NULL(gesture);
 
     size_t gesture_size = sizeof(accel_gesture);
@@ -124,7 +132,7 @@ int accel_generate_state(accel_state **state, int dimensions, int window_size) {
 // TODO: needs testing with invalid objects.
 int accel_destroy_state(accel_state **state) {
     PRECONDITION_NOT_NULL(state);
-    PRECONDITION_NOT_NULL(*state);
+    PRECONDITION_VALID_STATE((*state));
 
     /* TODO: remove all additional fields inside the accel_state variable */
     for (int i=0; i<(*state)->num_gestures_saved; ++i) {
@@ -140,7 +148,7 @@ int accel_destroy_state(accel_state **state) {
 }
 
 int accel_start_record_gesture(accel_state *state, int *gesture) {
-    PRECONDITION_NOT_NULL(state);
+    PRECONDITION_VALID_STATE(state);
     PRECONDITION_NOT_NULL(gesture);
 
     if (state->num_gestures_saved != 0) {
@@ -185,7 +193,7 @@ int normalize(int sum) {
 
 // TODO: does this work for zero recorded timestamps?
 int accel_end_record_gesture(accel_state *state, int gesture_id) {
-    PRECONDITION_NOT_NULL(state);
+    PRECONDITION_VALID_STATE(state);
 
     // TODO: use an unsigned int instead so we don't need to check for this type of error.
     if (gesture_id < 0) {
@@ -305,7 +313,7 @@ int handle_evaluation_tick(accel_gesture *gesture, int dimensions) {
 }
 
 int accel_process_timer_tick(accel_state *state, int *accel_data) {
-    PRECONDITION_NOT_NULL(state);
+    PRECONDITION_VALID_STATE(state);
     PRECONDITION_NOT_NULL(accel_data);
 
     int retcode = ACCEL_SUCCESS;
@@ -353,7 +361,7 @@ int accel_process_timer_tick(accel_state *state, int *accel_data) {
 }
 
 int accel_find_most_likely_gesture(accel_state *state, int *gesture_id, int *affinity) {
-    PRECONDITION_NOT_NULL(state);
+    PRECONDITION_VALID_STATE(state);
     PRECONDITION_NOT_NULL(gesture_id);
     PRECONDITION_NOT_NULL(affinity);
 
