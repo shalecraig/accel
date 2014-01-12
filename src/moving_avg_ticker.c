@@ -114,15 +114,12 @@ int get_latest_frame_moving_avg(moving_avg_values *value, int *frame) {
 
 int free_moving_avg(moving_avg_values **value) {
     PRECONDITION_NOT_NULL(value);
+    PRECONDITION_NOT_NULL((*value));
 
-    if ((*value)->wbuf == NULL) {
-        // TODO: is this the best way to do this? (complain but do the right thing?)
-        free (*value);
-        *value = NULL;
-        return MOVING_AVG_INTERNAL_ERROR;
+    if ((*value)->wbuf != NULL) {
+        free((*value)->wbuf);
+        (*value)->wbuf = NULL;
     }
-    free((*value)->wbuf);
-    (*value)->wbuf = NULL;
     free(*value);
     *value = NULL;
     return 0;

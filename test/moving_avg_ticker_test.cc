@@ -253,6 +253,30 @@ TEST(MovingAvgTicker, input_fuzz_allocate_moving_avg) {
     EXPECT_EQ(void_null, allocated);
 }
 
+TEST(MovingAvgTicker, input_fuzz_free_moving_avg) {
+    // Test with null pointer-pointer
+    EXPECT_EQ(MOVING_AVG_PARAM_ERROR, free_moving_avg(NULL));
+
+    // Test with null pointer
+    moving_avg_values *allocated = NULL;
+    EXPECT_EQ(MOVING_AVG_PARAM_ERROR, free_moving_avg(&allocated));
+
+    // Test with null wbuf
+    EXPECT_EQ(0, allocate_moving_avg(1, 1, &allocated));
+    EXPECT_NE(void_null, allocated);
+    free(allocated->wbuf);
+    allocated->wbuf = NULL;
+    // TODO: successfully completes, even with invalid input.
+    EXPECT_EQ(0, free_moving_avg(&allocated));
+    EXPECT_EQ(void_null, allocated);
+
+    // Test normal path.
+    EXPECT_EQ(0, allocate_moving_avg(1, 1, &allocated));
+    EXPECT_NE(void_null, allocated);
+    EXPECT_EQ(0, free_moving_avg(&allocated));
+    EXPECT_EQ(void_null, allocated);
+}
+
 int main (int argc, char** argv) {
     ::testing::InitGoogleTest(&argc, argv);
 
