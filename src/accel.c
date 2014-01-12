@@ -5,7 +5,7 @@
 #include "accel.h"
 #include "moving_avg_ticker.h"
 
-typedef struct accelGesture {
+typedef struct {
     bool is_recording;
     bool is_recorded;
 
@@ -16,16 +16,24 @@ typedef struct accelGesture {
     int *affinities;
 } accel_gesture;
 
+typedef struct internalAccelState {
+    int window_size;
+    int num_gestures_saved;
+
+    accel_gesture **gestures;
+} internal_accel_state;
+
 #define PRECONDITION_NOT_NULL(foo) \
     if (foo == NULL) { return ACCEL_PARAM_ERROR; }
 
 #define PRECONDITION_VALID_STATE(state) \
     if (state == NULL) { return ACCEL_PARAM_ERROR; }  \
+    if (state->state == NULL) { return ACCEL_INTERNAL_ERROR; } \
     if (state->dimensions <= 0) { return ACCEL_INTERNAL_ERROR; } \
-    if (state->window_size <= 0) { return ACCEL_INTERNAL_ERROR; } \
-    if (state->num_gestures_saved < 0) { return ACCEL_INTERNAL_ERROR; } \
-    if (state->gestures == NULL && state->num_gestures_saved != 0) { return ACCEL_INTERNAL_ERROR; } \
-    if (state->gestures != NULL && state->num_gestures_saved == 0) { return ACCEL_INTERNAL_ERROR; }
+    if (state->state->window_size <= 0) { return ACCEL_INTERNAL_ERROR; } \
+    if (state->state->num_gestures_saved < 0) { return ACCEL_INTERNAL_ERROR; } \
+    if (state->state->gestures == NULL && state->state->num_gestures_saved != 0) { return ACCEL_INTERNAL_ERROR; } \
+    if (state->state->gestures != NULL && state->state->num_gestures_saved == 0) { return ACCEL_INTERNAL_ERROR; }
 
 // Decay rate of values we choose to keep. 1.0 is no decay, 2.0 is a doubling every time we keep them.
 // TODO: should we store the affinities as floats instead?
@@ -53,7 +61,6 @@ void accel_destroy_gesture(accel_gesture **gesture, int dimensions) {
             free_moving_avg(&(gest->moving_avg_values[i]));
         }
     }
-
     if (gest->normalized_recording != NULL) {
         for (int i=0; i<gest->recording_size; ++i) {
             if (gest->normalized_recording[i] != NULL) {
@@ -64,7 +71,6 @@ void accel_destroy_gesture(accel_gesture **gesture, int dimensions) {
         free(gest->normalized_recording);
         gest->normalized_recording = NULL;
     }
-
     if (gest->affinities != NULL) {
         free(gest->affinities);
         gest->affinities = NULL;
@@ -96,7 +102,7 @@ int accel_generate_gesture(accel_state *state, accel_gesture **gesture) {
     }
     for (int i=0; i<state->dimensions; ++i) {
         // TODO: these two shouldn't both be the same....
-        int result = allocate_moving_avg(state->window_size, state->window_size, &((*gesture)->moving_avg_values[i]));
+        int result = allocate_moving_avg(state->state->window_size, state->state->window_size, &((*gesture)->moving_avg_values[i]));
 
         if (result != ACCEL_SUCCESS) {
             accel_destroy_gesture(gesture, state->dimensions);
@@ -116,30 +122,54 @@ int accel_generate_state(accel_state **state, int dimensions, int window_size) {
         return ACCEL_PARAM_ERROR;
     }
 
-    size_t internal_size = sizeof(accel_state);
+    size_t state_size = sizeof(accel_state);
+    size_t internal_state_size = sizeof(internal_accel_state);
 
-    *state = (accel_state *) malloc(internal_size);
-    if (state == NULL) {
+    internal_accel_state *internal_state = (internal_accel_state *) malloc(internal_state_size);
+    *state = (accel_state *) malloc(state_size);
+    if (*state == NULL || internal_state == NULL) {
+        if (state != NULL) {
+            free(*state);
+            *state = NULL;
+        }
+        if (internal_state != NULL) {
+            free(internal_state);
+            internal_state = NULL;
+        }
         return ACCEL_MALLOC_ERROR;
     }
 
-    memset((*state), 0, internal_size);
+    memset((*state), 0, state_size);
+    memset(internal_state, 0, internal_state_size);
+
+    (*state)->state = internal_state;
+
+
     (*state)->dimensions = dimensions;
-    (*state)->window_size = window_size > 0 ? window_size : 2;
+    (*state)->state->window_size = window_size > 0 ? window_size : 2;
     return ACCEL_SUCCESS;
 }
 
 // TODO: needs testing with invalid objects.
 int accel_destroy_state(accel_state **state) {
     PRECONDITION_NOT_NULL(state);
-    PRECONDITION_VALID_STATE((*state));
+    PRECONDITION_NOT_NULL(*state);
 
-    /* TODO: remove all additional fields inside the accel_state variable */
-    for (int i=0; i<(*state)->num_gestures_saved; ++i) {
-        accel_destroy_gesture(&((*state)->gestures[i]), (*state)->dimensions);
+    int dimensions = (*state)->dimensions;
+    if ((*state)->state != NULL) {
+        if ((*state)->state->gestures != NULL) {
+            /* TODO: remove all additional fields inside the accel_state variable */
+            for (int i=0; i<(*state)->state->num_gestures_saved; ++i) {
+                accel_gesture *gest = ((*state)->state->gestures[i]);
+                accel_destroy_gesture(&(gest), dimensions);
+            }
+            free((*state)->state->gestures);
+            (*state)->state->gestures = NULL;
+        }
+
+        free((*state)->state);
+        (*state)->state = NULL;
     }
-    free((*state)->gestures);
-    (*state)->gestures = NULL;
 
     free((*state));
     *state = NULL;
@@ -151,37 +181,37 @@ int accel_start_record_gesture(accel_state *state, int *gesture) {
     PRECONDITION_VALID_STATE(state);
     PRECONDITION_NOT_NULL(gesture);
 
-    if (state->num_gestures_saved != 0) {
-        accel_gesture **tmp = (accel_gesture **)realloc(state->gestures, (state->num_gestures_saved + 1)*sizeof(accel_gesture *));
+    if (state->state->num_gestures_saved != 0) {
+        accel_gesture **tmp = (accel_gesture **)realloc(state->state->gestures, (state->state->num_gestures_saved + 1)*sizeof(accel_gesture *));
         if (tmp == NULL) {
             return ACCEL_MALLOC_ERROR;
         }
-        state->gestures = tmp;
+        state->state->gestures = tmp;
     } else {
-        state->gestures = (accel_gesture **)malloc(sizeof(accel_gesture *));
-        if (state->gestures == NULL) {
+        state->state->gestures = (accel_gesture **)malloc(sizeof(accel_gesture *));
+        if (state->state->gestures == NULL) {
             return ACCEL_MALLOC_ERROR;
         }
     }
-    *gesture = (state->num_gestures_saved)++;
+    *gesture = (state->state->num_gestures_saved)++;
 
-    int result = accel_generate_gesture(state, &(state->gestures[*gesture]));
+    int result = accel_generate_gesture(state, &(state->state->gestures[*gesture]));
     if (result != ACCEL_SUCCESS) {
         *gesture = -1;
-        if (state->num_gestures_saved == 1) {
-            free(state->gestures);
-            state->gestures = NULL;
+        if (state->state->num_gestures_saved == 1) {
+            free(state->state->gestures);
+            state->state->gestures = NULL;
         } else {
-            accel_gesture ** tmp = (accel_gesture **)realloc(state->gestures, state->num_gestures_saved - 1);
+            accel_gesture ** tmp = (accel_gesture **)realloc(state->state->gestures, state->state->num_gestures_saved - 1);
             if (tmp != NULL) {
                 // If tmp is null, we don't really care that realloc failed, since a future use of realloc will help us.
-                state->gestures = tmp;
+                state->state->gestures = tmp;
             }
         }
-        --(state->num_gestures_saved);
+        --(state->state->num_gestures_saved);
         return result;
     }
-    state->gestures[*gesture]->is_recording = true;
+    state->state->gestures[*gesture]->is_recording = true;
     return ACCEL_SUCCESS;
 }
 
@@ -200,23 +230,23 @@ int accel_end_record_gesture(accel_state *state, int gesture_id) {
         return ACCEL_PARAM_ERROR;
     }
     // TODO: log the user's error.
-    if (gesture_id > state->num_gestures_saved) {
+    if (gesture_id > state->state->num_gestures_saved) {
         return ACCEL_PARAM_ERROR;
     }
     // TODO: log accel's error.
-    if (state->gestures[gesture_id] == NULL) {
+    if (state->state->gestures[gesture_id] == NULL) {
         return ACCEL_INTERNAL_ERROR;
     }
     // TODO: log the user's error.
-    if (!(state->gestures[gesture_id]->is_recording)) {
+    if (!(state->state->gestures[gesture_id]->is_recording)) {
         return ACCEL_PARAM_ERROR;
     }
     // TODO: log accel's error.
-    if (state->gestures[gesture_id]->is_recorded) {
+    if (state->state->gestures[gesture_id]->is_recorded) {
         return ACCEL_INTERNAL_ERROR;
     }
 
-    accel_gesture *gesture = state->gestures[gesture_id];
+    accel_gesture *gesture = state->state->gestures[gesture_id];
     gesture->affinities = (int *) malloc(gesture->recording_size * sizeof(int));
     if (gesture->affinities == NULL) {
         return ACCEL_MALLOC_ERROR;
@@ -317,8 +347,8 @@ int accel_process_timer_tick(accel_state *state, int *accel_data) {
     PRECONDITION_NOT_NULL(accel_data);
 
     int retcode = ACCEL_SUCCESS;
-    for (int gesture_iter = 0; gesture_iter < state->num_gestures_saved; ++gesture_iter) {
-        accel_gesture *gesture = state->gestures[gesture_iter];
+    for (int gesture_iter = 0; gesture_iter < state->state->num_gestures_saved; ++gesture_iter) {
+        accel_gesture *gesture = state->state->gestures[gesture_iter];
         if (gesture == NULL) {
             retcode = ACCEL_INTERNAL_ERROR;
             continue;
@@ -365,25 +395,25 @@ int accel_find_most_likely_gesture(accel_state *state, int *gesture_id, int *aff
     PRECONDITION_NOT_NULL(gesture_id);
     PRECONDITION_NOT_NULL(affinity);
 
-    if (state->num_gestures_saved < 0) {
+    if (state->state->num_gestures_saved < 0) {
         return ACCEL_INTERNAL_ERROR;
     }
 
-    if (state->num_gestures_saved == 0) {
+    if (state->state->num_gestures_saved == 0) {
         *gesture_id = ACCEL_NO_VALID_GESTURE;
         *affinity = ACCEL_NO_VALID_GESTURE;
         return ACCEL_NO_VALID_GESTURE;
     }
 
-    if (state->gestures == NULL) {
+    if (state->state->gestures == NULL) {
         return ACCEL_INTERNAL_ERROR;
     }
 
     *gesture_id = ACCEL_NO_VALID_GESTURE;
     *affinity = ACCEL_NO_VALID_GESTURE;
 
-    for (int i=0; i<state->num_gestures_saved; ++i) {
-        accel_gesture *gesture = state->gestures[i];
+    for (int i=0; i<state->state->num_gestures_saved; ++i) {
+        accel_gesture *gesture = state->state->gestures[i];
 
         if ((*gesture_id == ACCEL_NO_VALID_GESTURE || *affinity == ACCEL_NO_VALID_GESTURE) &&
             *gesture_id != *affinity) {

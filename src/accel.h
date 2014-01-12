@@ -11,16 +11,12 @@
 #define ACCEL_MALLOC_ERROR -3
 #define ACCEL_NO_VALID_GESTURE -4
 
-struct accelGesture;
+struct internalAccelState;
 
-// TODO: forward declare the implementation-based state so it is not exposed.
 typedef struct {
-    /* data */
     int dimensions;
-    int window_size;
 
-    int num_gestures_saved;
-    accelGesture **gestures;
+    internalAccelState *state;
 } accel_state;
 
 /**

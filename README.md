@@ -12,7 +12,7 @@ accel
     - [x] Move global variables into a struct.
     - [x] Record and find multiple movements, not just one.
     - [x] Clean up Headers.
-    - [ ] Rearrange structs to hide implementation.
+    - [x] Rearrange structs to hide implementation.
     - [ ] Beef up unit tests with unusual input.
     - [ ] Write sample app that uses this.
     - [ ] Provide #define version number.
