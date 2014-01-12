@@ -162,17 +162,17 @@ int accel_start_record_gesture(accel_state *state, int *gesture) {
 // TODO: These arbitrarily chosen constants are from the uWave algorithm's paper, and have nothing to do with my implementation.
 // Find better numbers that'll do instead, apparently pebble uses in the range of +-4k, so we should probably scale +-16k
 int normalize(int sum) {
-    if (sum > 20) {
-        return 15;
-    } else if (sum > 10) {
-        return (sum-10)*5.0+10;
-    } else if (sum > -10) {
-        return sum;
-    } else if (sum > -20) {
-        return (sum+10)*5.0-10;
-    } else { // sum <= -20
-        return -15;
+    if (sum == 0) {
+        return 0;
+    } else if (sum < 0) {
+        return -1*normalize(-sum);
     }
+    int result = 0;
+    // TODO: don't be as ghetto as this.
+    while (result*result*result < sum) {
+        ++result;
+    }
+    return result;
 }
 
 // TODO: does this work for zero recorded timestamps?

@@ -230,7 +230,7 @@ TEST(AccelTest, end_to_end_test_single_recording) {
 
     int data[] = {1};
     for (int i=0; i<10; ++i) {
-        data[0] = i;
+        data[0] = i*100;
         EXPECT_EQ(0, accel_process_timer_tick(state, data));
     }
 
@@ -238,7 +238,7 @@ TEST(AccelTest, end_to_end_test_single_recording) {
 
     int prev_affinity = 0;
     for (int i=0; i<10; ++i) {
-        data[0] = i;
+        data[0] = i*100;
         int gesture_found = 1;
         int affinity_of_gesture = 1;
         ASSERT_EQ(0, accel_process_timer_tick(state, data));
