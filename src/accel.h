@@ -5,55 +5,18 @@
 
 #include "accel_consts.c"
 
-#ifndef ACCEL_QUAN_POINT_SIZE
-#define ACCEL_QUAN_POINT_SIZE ((uint32_t)ACCEL_FREQUENCY_HZ/25)
-#endif
-
-/*
- * At 100Hz, this should be 20s
- */
-#ifndef ACCEL_RECORD_MAX_LENGTH
-#define ACCEL_RECORD_MAX_LENGTH ACCEL_FREQUENCY_HZ*ACCEL_MAX_RECORDING_TIME_S
-#endif
-
 #define ACCEL_SUCCESS 0
 #define ACCEL_PARAM_ERROR -1
 #define ACCEL_INTERNAL_ERROR -2
 #define ACCEL_MALLOC_ERROR -3
 #define ACCEL_NO_VALID_GESTURE -4
 
-/* TODO: hide these in the implementation */
+struct internalAccelState;
+
 typedef struct {
-    // Circular buffer
-    int *wbuf;
-    int wbuf_end;
-    int wbuf_len;
-
-    int subtotal;
-    int subtotal_size;
-    int max_subtotal_size;
-} moving_avg_values;
-
-/* TODO: hide these in the implementation */
-typedef struct {
-    bool is_recording;
-    bool is_recorded;
-
-    int recording_size;
-    int **normalized_recording;
-
-    moving_avg_values **moving_avg_values;
-    int *affinities;
-} accel_gesture;
-
-// TODO: forward declare the implementation-based state so it is not exposed.
-typedef struct {
-    /* data */
     int dimensions;
-    int window_size;
 
-    int num_gestures_saved;
-    accel_gesture **gestures;
+    internalAccelState *state;
 } accel_state;
 
 /**
