@@ -86,6 +86,7 @@ int accel_generate_gesture(accel_state *state, accel_gesture **gesture) {
     return 0;
 }
 
+// TODO: needs direct testing with invalid objects.
 int accel_generate_state(accel_state **state, int dimensions, int window_size) {
     PRECONDITION_NOT_NULL(state);
     if (dimensions <= 0) {
@@ -108,6 +109,7 @@ int accel_generate_state(accel_state **state, int dimensions, int window_size) {
     return 0;
 }
 
+// TODO: needs testing with invalid objects.
 int accel_destroy_state(accel_state **state) {
     PRECONDITION_NOT_NULL(state);
     PRECONDITION_NOT_NULL(*state);
@@ -116,8 +118,12 @@ int accel_destroy_state(accel_state **state) {
     for (int i=0; i<(*state)->num_gestures_saved; ++i) {
         accel_destroy_gesture(&((*state)->gestures[i]), (*state)->dimensions);
     }
+    free((*state)->gestures);
+    (*state)->gestures = NULL;
+
     free((*state));
     *state = NULL;
+
     return 0;
 }
 
