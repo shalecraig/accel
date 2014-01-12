@@ -258,7 +258,24 @@ TEST(MovingAvgTicker, input_fuzz_reset_moving_avg) {
     EXPECT_EQ(MOVING_AVG_PARAM_ERROR, reset_moving_avg(NULL));
 }
 
+TEST(MovingAvgTicker, input_fuzz_append_to_moving_avg) {
+    // Setup:
+    bool is_at_end = false;
+    moving_avg_values *allocated = NULL;
+    EXPECT_EQ(0, allocate_moving_avg(1, 1, &allocated));
 
+    // Test with null pointer
+    EXPECT_EQ(MOVING_AVG_PARAM_ERROR, append_to_moving_avg(NULL, 1, &is_at_end));
+
+    // Test with null isAtEnd
+    EXPECT_EQ(MOVING_AVG_PARAM_ERROR, append_to_moving_avg(allocated, 1, NULL));
+
+    // Test with all valid input
+    EXPECT_EQ(0, append_to_moving_avg(allocated, 1, &is_at_end));
+
+    // Cleanup:
+    EXPECT_EQ(0, free_moving_avg(&allocated));
+}
 
 TEST(MovingAvgTicker, input_fuzz_free_moving_avg) {
     // Test with null pointer-pointer
