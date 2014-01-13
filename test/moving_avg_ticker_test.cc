@@ -223,6 +223,105 @@ TEST(MovingAvgTicker, InvalidLatestFrameParams) {
     EXPECT_EQ(0, free_moving_avg(&allocated));
 }
 
+TEST(MovingAvgTickerFuzzTest, allocate_moving_avg) {
+    moving_avg_values *allocated = NULL;
+
+    // Test with negative num_wbuf
+    EXPECT_EQ(MOVING_AVG_PARAM_ERROR, allocate_moving_avg(-1, 1, &allocated));
+
+    // Test with zero num_wbuf
+    EXPECT_EQ(MOVING_AVG_PARAM_ERROR, allocate_moving_avg(0, 1, &allocated));
+
+    // Test with negative subtotal_size
+    EXPECT_EQ(MOVING_AVG_PARAM_ERROR, allocate_moving_avg(1, -1, &allocated));
+
+    // Test with zero subtotal_size
+    EXPECT_EQ(MOVING_AVG_PARAM_ERROR, allocate_moving_avg(1, 0, &allocated));
+
+    // Test with NULL pointer
+    EXPECT_EQ(MOVING_AVG_PARAM_ERROR, allocate_moving_avg(1, 0, NULL));
+
+    // Test with non-NULL pointer-pointer
+    allocated = (moving_avg_values *) 0x1;
+    EXPECT_EQ(MOVING_AVG_PARAM_ERROR, allocate_moving_avg(1, 1, &allocated));
+
+    // Test with success, to validate that there was only one difference between this and the above tests.
+    allocated = NULL;
+    EXPECT_EQ(0, allocate_moving_avg(1, 1, &allocated));
+    EXPECT_NE(void_null, allocated);
+    EXPECT_EQ(0, free_moving_avg(&allocated));
+    EXPECT_EQ(void_null, allocated);
+}
+
+TEST(MovingAvgTickerFuzzTest, reset_moving_avg) {
+    // Test with null pointer
+    EXPECT_EQ(MOVING_AVG_PARAM_ERROR, reset_moving_avg(NULL));
+}
+
+TEST(MovingAvgTickerFuzzTest, append_to_moving_avg) {
+    // Setup:
+    bool is_at_end = false;
+    moving_avg_values *allocated = NULL;
+    EXPECT_EQ(0, allocate_moving_avg(1, 1, &allocated));
+
+    // Test with null pointer
+    EXPECT_EQ(MOVING_AVG_PARAM_ERROR, append_to_moving_avg(NULL, 1, &is_at_end));
+
+    // Test with null isAtEnd
+    EXPECT_EQ(MOVING_AVG_PARAM_ERROR, append_to_moving_avg(allocated, 1, NULL));
+
+    // Test with all valid input
+    EXPECT_EQ(0, append_to_moving_avg(allocated, 1, &is_at_end));
+
+    // Cleanup:
+    EXPECT_EQ(0, free_moving_avg(&allocated));
+}
+
+TEST(MovingAvgTickerFuzzTest, get_latest_frame_moving_avg) {
+    int frame = 0;
+    moving_avg_values *allocated = NULL;
+    EXPECT_EQ(0, allocate_moving_avg(1, 1, &allocated));
+
+    // Both are NULL
+    EXPECT_EQ(MOVING_AVG_PARAM_ERROR, get_latest_frame_moving_avg(NULL, NULL));
+
+    // First is NULL
+    EXPECT_EQ(MOVING_AVG_PARAM_ERROR, get_latest_frame_moving_avg(NULL, &frame));
+
+    // Second is NULL
+    EXPECT_EQ(MOVING_AVG_PARAM_ERROR, get_latest_frame_moving_avg(allocated, NULL));
+
+    // Validate it works to justify the above unit tests
+    EXPECT_EQ(0, get_latest_frame_moving_avg(allocated, &frame));
+
+    // Cleanup
+    EXPECT_EQ(0, free_moving_avg(&allocated));
+}
+
+TEST(MovingAvgTickerFuzzTest, free_moving_avg) {
+    // Test with null pointer-pointer
+    EXPECT_EQ(MOVING_AVG_PARAM_ERROR, free_moving_avg(NULL));
+
+    // Test with null pointer
+    moving_avg_values *allocated = NULL;
+    EXPECT_EQ(MOVING_AVG_PARAM_ERROR, free_moving_avg(&allocated));
+
+    // Test with null wbuf
+    EXPECT_EQ(0, allocate_moving_avg(1, 1, &allocated));
+    EXPECT_NE(void_null, allocated);
+    free(allocated->wbuf);
+    allocated->wbuf = NULL;
+    // TODO: successfully completes, even with invalid input.
+    EXPECT_EQ(0, free_moving_avg(&allocated));
+    EXPECT_EQ(void_null, allocated);
+
+    // Test normal path.
+    EXPECT_EQ(0, allocate_moving_avg(1, 1, &allocated));
+    EXPECT_NE(void_null, allocated);
+    EXPECT_EQ(0, free_moving_avg(&allocated));
+    EXPECT_EQ(void_null, allocated);
+}
+
 int main (int argc, char** argv) {
     ::testing::InitGoogleTest(&argc, argv);
 

@@ -31,6 +31,7 @@ int precondition_valid_moving_avg_values(moving_avg_values *input) {
 }
 
 int allocate_moving_avg(int num_wbuf, int subtotal_sizes, moving_avg_values **allocated) {
+    PRECONDITION_NOT_NULL(allocated);
     if (*allocated != NULL) {
         return MOVING_AVG_PARAM_ERROR;
     }
@@ -38,7 +39,7 @@ int allocate_moving_avg(int num_wbuf, int subtotal_sizes, moving_avg_values **al
     if (num_wbuf <= 0) {
         return MOVING_AVG_PARAM_ERROR;
     }
-    if (subtotal_sizes == 0) {
+    if (subtotal_sizes <= 0) {
         return MOVING_AVG_PARAM_ERROR;
     }
     size_t size = sizeof(moving_avg_values);
@@ -113,15 +114,12 @@ int get_latest_frame_moving_avg(moving_avg_values *value, int *frame) {
 
 int free_moving_avg(moving_avg_values **value) {
     PRECONDITION_NOT_NULL(value);
+    PRECONDITION_NOT_NULL((*value));
 
-    if ((*value)->wbuf == NULL) {
-        // TODO: is this the best way to do this? (complain but do the right thing?)
-        free (*value);
-        *value = NULL;
-        return MOVING_AVG_INTERNAL_ERROR;
+    if ((*value)->wbuf != NULL) {
+        free((*value)->wbuf);
+        (*value)->wbuf = NULL;
     }
-    free((*value)->wbuf);
-    (*value)->wbuf = NULL;
     free(*value);
     *value = NULL;
     return 0;

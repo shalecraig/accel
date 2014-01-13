@@ -13,7 +13,7 @@ accel
     - [x] Record and find multiple movements, not just one.
     - [x] Clean up Headers.
     - [x] Rearrange structs to hide implementation.
-    - [ ] Beef up unit tests with unusual input.
+    - [x] Beef up unit tests with unusual input.
     - [ ] Write sample app that uses this.
     - [x] Provide #define version number. [`ACCEL_VERSION_CODE`]
 - V0.2.0a:
