@@ -7,7 +7,7 @@ accel
 ### TODO:
 
 
-- Va.1:
+- V0.1.0a:
     - [x] Create tests.
     - [x] Move global variables into a struct.
     - [x] Record and find multiple movements, not just one.
@@ -16,7 +16,7 @@ accel
     - [ ] Beef up unit tests with unusual input.
     - [ ] Write sample app that uses this.
     - [x] Provide #define version number. [`ACCEL_VERSION_CODE`]
-- Va.2
+- V0.2.0a:
     - [ ] Decide on having callbacks instead of (or) `accel_find_most_likely_gesture`
         - Maybe needs a const for the values?
     - [ ] Implement a `public` reset gesture method
