@@ -20,6 +20,7 @@ accel
     - [ ] Decide on having callbacks instead of (or) `accel_find_most_likely_gesture`
         - Maybe needs a const for the values?
     - [ ] Implement a `public` reset gesture method
+    - [ ] Use the `-DPEBBLE` flag to conditionally load pebble libraries (and define `realloc`, `calloc`, etc.)
 
 Attribution
 =====
