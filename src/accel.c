@@ -5,6 +5,10 @@
 #include "accel.h"
 #include "moving_avg_ticker.h"
 
+#ifndef INT16_MAX
+#define INT16_MAX 0x7fff
+#endif
+
 typedef struct {
     bool is_recording;
     bool is_recorded;
