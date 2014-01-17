@@ -30,6 +30,9 @@ typedef struct internalAccelState {
 #define PRECONDITION_NOT_NULL(foo) \
     if (foo == NULL) { return ACCEL_PARAM_ERROR; }
 
+#define PRECONDITION_NULL(foo) \
+    if (foo != NULL) { return ACCEL_PARAM_ERROR; }
+
 #define PRECONDITION_VALID_STATE(state) \
     if (state == NULL) { return ACCEL_PARAM_ERROR; }  \
     if (state->state == NULL) { return ACCEL_INTERNAL_ERROR; } \
@@ -89,6 +92,9 @@ int accel_generate_gesture(accel_state *state, accel_gesture **gesture) {
     PRECONDITION_VALID_STATE(state);
     PRECONDITION_NOT_NULL(gesture);
 
+    // TODO: write a test for this value.
+    PRECONDITION_NULL(*gesture);
+
     size_t gesture_size = sizeof(accel_gesture);
     *gesture = (accel_gesture *) malloc(gesture_size);
     if (*gesture == NULL) {
@@ -103,6 +109,7 @@ int accel_generate_gesture(accel_state *state, accel_gesture **gesture) {
     if ((*gesture)->moving_avg_values == NULL) {
         free((*gesture));
         *gesture = NULL;
+        return ACCEL_MALLOC_ERROR;
     }
     for (int i=0; i<state->dimensions; ++i) {
         // TODO: these two shouldn't both be the same....
@@ -119,6 +126,10 @@ int accel_generate_gesture(accel_state *state, accel_gesture **gesture) {
 // TODO: needs direct testing with invalid objects.
 int accel_generate_state(accel_state **state, int dimensions, int window_size) {
     PRECONDITION_NOT_NULL(state);
+
+    // TODO: write a test for this value.
+    PRECONDITION_NULL(state);
+
     if (dimensions <= 0) {
         return ACCEL_PARAM_ERROR;
     }
