@@ -292,7 +292,6 @@ void handle_recording_tick(accel_gesture *gesture, int dimensions) {
     if (gesture->recording_size != 0) {
         gesture->normalized_recording = (int **) realloc(gesture->normalized_recording, (gesture->recording_size + 1) * sizeof(int *));
         if (gesture->normalized_recording == NULL) {
-            // APP_LOG(APP_LOG_LEVEL_ERROR, "my_realloc returned NULL");
             return;
         }
     } else {
@@ -448,7 +447,6 @@ int accel_find_most_likely_gesture(accel_state *state, int *gesture_id, int *aff
 
         if (gesture->recording_size == 0) {
             // This gesture will cause an error. May as well skip it and log an error.
-            // APP_LOG(APP_LOG_LEVEL_WARNING, "Skipped gesture %i because it has a zero-sized recording_size", i);
             continue;
         }
 
