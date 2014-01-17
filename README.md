@@ -1,4 +1,4 @@
-accel
+accel [![Build Status](https://travis-ci.org/shalecraig/accel.png?branch=master)](https://travis-ci.org/shalecraig/accel)
 =====
 
 [not-even-alpha] C gesture recognition library from accelerometers, written with the Pebble in mind.
