@@ -258,6 +258,9 @@ int accel_end_record_gesture(accel_state *state, int gesture_id) {
     if (gesture->is_recorded) {
         return ACCEL_INTERNAL_ERROR;
     }
+    if (gesture->recording_size == 0) {
+        return ACCEL_PARAM_ERROR;
+    }
 
     gesture->affinities = (int *) malloc(gesture->recording_size * sizeof(int));
     if (gesture->affinities == NULL) {
@@ -284,6 +287,10 @@ void handle_recording_tick(accel_gesture *gesture, int dimensions) {
     // TODO: grow exponentially, not linearly. Linear growth allocates too frequently.
     if (gesture->recording_size != 0) {
         gesture->normalized_recording = (int **) realloc(gesture->normalized_recording, (gesture->recording_size + 1) * sizeof(int *));
+        if (gesture->normalized_recording == NULL) {
+            // APP_LOG(APP_LOG_LEVEL_ERROR, "my_realloc returned NULL");
+            return;
+        }
     } else {
         gesture->normalized_recording = (int **) malloc(sizeof(int *));
     }
@@ -420,9 +427,25 @@ int accel_find_most_likely_gesture(accel_state *state, int *gesture_id, int *aff
     for (int i=0; i<state->state->num_gestures_saved; ++i) {
         accel_gesture *gesture = state->state->gestures[i];
 
+        // TODO: this should be tested.
+        if (gesture == NULL) {
+            return ACCEL_INTERNAL_ERROR;
+        }
+
         if ((*gesture_id == ACCEL_NO_VALID_GESTURE || *affinity == ACCEL_NO_VALID_GESTURE) &&
             *gesture_id != *affinity) {
             return ACCEL_INTERNAL_ERROR;
+        }
+
+        if (!gesture->is_recorded) {
+            // This gesture is not ready yet.
+            continue;
+        }
+
+        if (gesture->recording_size == 0) {
+            // This gesture will cause an error. May as well skip it and log an error.
+            // APP_LOG(APP_LOG_LEVEL_WARNING, "Skipped gesture %i because it has a zero-sized recording_size", i);
+            continue;
         }
 
         if (*affinity == ACCEL_NO_VALID_GESTURE ||
