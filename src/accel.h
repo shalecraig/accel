@@ -21,7 +21,7 @@ struct internalAccelState;
 typedef struct {
     int dimensions;
 
-    internalAccelState *state;
+    struct internalAccelState *state;
 } accel_state;
 
 /**
