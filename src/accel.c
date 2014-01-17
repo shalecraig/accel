@@ -112,6 +112,9 @@ int accel_generate_gesture(accel_state *state, accel_gesture **gesture) {
         int result = allocate_moving_avg(state->state->window_size, state->state->window_size, &((*gesture)->moving_avg_values[i]));
 
         if (result != ACCEL_SUCCESS) {
+            for (int j=0; j<i; ++j) {
+                free_moving_avg(&((*gesture)->moving_avg_values[i]));
+            }
             accel_destroy_gesture(gesture, state->dimensions);
             return result;
         }
