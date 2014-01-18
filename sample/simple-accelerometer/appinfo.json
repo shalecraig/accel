@@ -1,0 +1,17 @@
+{
+  "uuid": "de9971f8-950e-41d5-91f5-b7a3fb12fadd",
+  "shortName": "simple-accelerometer",
+  "longName": "simple-accelerometer",
+  "companyName": "MakeAwesomeHappen",
+  "versionCode": 1,
+  "versionLabel": "1.0.0",
+  "watchapp": {
+    "watchface": false
+  },
+  "appKeys": {
+    "dummy": 0
+  },
+  "resources": {
+    "media": []
+  }
+}
