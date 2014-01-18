@@ -5,13 +5,11 @@
 #endif
 
 #ifdef PEBBLE
-
 #include <pebble.h>
+#endif
 
 #ifndef INT16_MAX
 #define INT16_MAX 0x7fff
-#endif
-
 #endif
 
 // cbrt is defined and importable for everybody!
