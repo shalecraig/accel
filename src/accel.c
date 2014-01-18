@@ -30,6 +30,9 @@ typedef struct internalAccelState {
 #define PRECONDITION_NOT_NULL(foo) \
     if (foo == NULL) { return ACCEL_PARAM_ERROR; }
 
+#define PRECONDITION_NULL(foo) \
+    if (foo != NULL) { return ACCEL_PARAM_ERROR; }
+
 #define PRECONDITION_VALID_STATE(state) \
     if (state == NULL) { return ACCEL_PARAM_ERROR; }  \
     if (state->state == NULL) { return ACCEL_INTERNAL_ERROR; } \
@@ -89,6 +92,9 @@ int accel_generate_gesture(accel_state *state, accel_gesture **gesture) {
     PRECONDITION_VALID_STATE(state);
     PRECONDITION_NOT_NULL(gesture);
 
+    // TODO: write a test for this value.
+    PRECONDITION_NULL(*gesture);
+
     size_t gesture_size = sizeof(accel_gesture);
     *gesture = (accel_gesture *) malloc(gesture_size);
     if (*gesture == NULL) {
@@ -103,12 +109,16 @@ int accel_generate_gesture(accel_state *state, accel_gesture **gesture) {
     if ((*gesture)->moving_avg_values == NULL) {
         free((*gesture));
         *gesture = NULL;
+        return ACCEL_MALLOC_ERROR;
     }
     for (int i=0; i<state->dimensions; ++i) {
         // TODO: these two shouldn't both be the same....
         int result = allocate_moving_avg(state->state->window_size, state->state->window_size, &((*gesture)->moving_avg_values[i]));
 
         if (result != ACCEL_SUCCESS) {
+            for (int j=0; j<i; ++j) {
+                free_moving_avg(&((*gesture)->moving_avg_values[i]));
+            }
             accel_destroy_gesture(gesture, state->dimensions);
             return result;
         }
@@ -119,6 +129,10 @@ int accel_generate_gesture(accel_state *state, accel_gesture **gesture) {
 // TODO: needs direct testing with invalid objects.
 int accel_generate_state(accel_state **state, int dimensions, int window_size) {
     PRECONDITION_NOT_NULL(state);
+
+    // TODO: write a test for this value.
+    PRECONDITION_NULL(state);
+
     if (dimensions <= 0) {
         return ACCEL_PARAM_ERROR;
     }
@@ -248,6 +262,9 @@ int accel_end_record_gesture(accel_state *state, int gesture_id) {
     if (gesture->is_recorded) {
         return ACCEL_INTERNAL_ERROR;
     }
+    if (gesture->recording_size == 0) {
+        return ACCEL_PARAM_ERROR;
+    }
 
     gesture->affinities = (int *) malloc(gesture->recording_size * sizeof(int));
     if (gesture->affinities == NULL) {
@@ -274,6 +291,9 @@ void handle_recording_tick(accel_gesture *gesture, int dimensions) {
     // TODO: grow exponentially, not linearly. Linear growth allocates too frequently.
     if (gesture->recording_size != 0) {
         gesture->normalized_recording = (int **) realloc(gesture->normalized_recording, (gesture->recording_size + 1) * sizeof(int *));
+        if (gesture->normalized_recording == NULL) {
+            return;
+        }
     } else {
         gesture->normalized_recording = (int **) malloc(sizeof(int *));
     }
@@ -410,9 +430,24 @@ int accel_find_most_likely_gesture(accel_state *state, int *gesture_id, int *aff
     for (int i=0; i<state->state->num_gestures_saved; ++i) {
         accel_gesture *gesture = state->state->gestures[i];
 
+        // TODO: this should be tested.
+        if (gesture == NULL) {
+            return ACCEL_INTERNAL_ERROR;
+        }
+
         if ((*gesture_id == ACCEL_NO_VALID_GESTURE || *affinity == ACCEL_NO_VALID_GESTURE) &&
             *gesture_id != *affinity) {
             return ACCEL_INTERNAL_ERROR;
+        }
+
+        if (!gesture->is_recorded) {
+            // This gesture is not ready yet.
+            continue;
+        }
+
+        if (gesture->recording_size == 0) {
+            // This gesture will cause an error. May as well skip it and log an error.
+            continue;
         }
 
         if (*affinity == ACCEL_NO_VALID_GESTURE ||
