@@ -43,6 +43,7 @@ TEST(AccelFuzzTest, generate_state_negative_or_zero_dimensions) {
     EXPECT_EQ(ACCEL_PARAM_ERROR, result);
 
     // 1 dimension must succeed.
+    state = NULL;
     result = accel_generate_state(&state, 1, 1);
     EXPECT_EQ(0, result);
     // TODO: result's memory is leaked :s
@@ -123,10 +124,13 @@ TEST(AccelFuzzTest, accel_end_record_gesture_invalid_input) {
 
     // Verify it works for valid indexes.
     state = test_fabricate_1d_state();
-    int gesture = 123;
+    int gesture = 1234;
     result = accel_start_record_gesture(state, &gesture);
-    EXPECT_NE(123, gesture);
+    EXPECT_NE(1234, gesture);
     EXPECT_EQ(0, result);
+    int data[1] = {1};
+    EXPECT_EQ(0, accel_process_timer_tick(state, data));
+
     result = accel_end_record_gesture(state, gesture);
     EXPECT_EQ(0, result)  << "gesture " << gesture << " couldn't be recorded correctly" << std::endl;
     test_burn_state(&state);
@@ -192,13 +196,15 @@ TEST(AccelTest, start_recording_and_close_many_gestures) {
     accel_state *state = NULL;
     state = test_fabricate_1d_state();
 
+    int data[1] = {0};
     for (int i=0; i<10; ++i) {
         int gesture = 0;
-        EXPECT_EQ(0, accel_start_record_gesture(state, &gesture));
-        EXPECT_EQ(i, gesture);
+        ASSERT_EQ(0, accel_start_record_gesture(state, &gesture));
+        ASSERT_EQ(i, gesture);
+        ASSERT_EQ(0, accel_process_timer_tick(state, data));
     }
     for (int i=0; i<10; ++i) {
-        EXPECT_EQ(0, accel_end_record_gesture(state, i));
+        ASSERT_EQ(0, accel_end_record_gesture(state, i));
     }
     test_burn_state(&state);
 }
