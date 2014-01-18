@@ -1,13 +1,27 @@
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
+#ifndef IS_NOT_PEBBLE
+#ifndef PEBBLE
+#define PEBBLE
+#endif
+#endif
 
-#include "accel.h"
-#include "moving_avg_ticker.h"
+#ifdef PEBBLE
+
+#include <pebble.h>
 
 #ifndef INT16_MAX
 #define INT16_MAX 0x7fff
 #endif
+
+#endif
+
+// cbrt is defined and importable for everybody!
+#include <math.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+
+#include "accel.h"
+#include "moving_avg_ticker.h"
 
 typedef struct {
     bool is_recording;
@@ -27,20 +41,20 @@ typedef struct internalAccelState {
     accel_gesture **gestures;
 } internal_accel_state;
 
-#define PRECONDITION_NOT_NULL(foo) \
-    if (foo == NULL) { return ACCEL_PARAM_ERROR; }
+#define PRECONDITION_NOT_NULL(foo_$) \
+    if (foo_$ == NULL) { return ACCEL_PARAM_ERROR; }
 
-#define PRECONDITION_NULL(foo) \
-    if (foo != NULL) { return ACCEL_PARAM_ERROR; }
+#define PRECONDITION_NULL(foo_$) \
+    if (foo_$ != NULL) { return ACCEL_PARAM_ERROR; }
 
-#define PRECONDITION_VALID_STATE(state) \
-    if (state == NULL) { return ACCEL_PARAM_ERROR; }  \
-    if (state->state == NULL) { return ACCEL_INTERNAL_ERROR; } \
-    if (state->dimensions <= 0) { return ACCEL_INTERNAL_ERROR; } \
-    if (state->state->window_size <= 0) { return ACCEL_INTERNAL_ERROR; } \
-    if (state->state->num_gestures_saved < 0) { return ACCEL_INTERNAL_ERROR; } \
-    if (state->state->gestures == NULL && state->state->num_gestures_saved != 0) { return ACCEL_INTERNAL_ERROR; } \
-    if (state->state->gestures != NULL && state->state->num_gestures_saved == 0) { return ACCEL_INTERNAL_ERROR; }
+#define PRECONDITION_VALID_STATE(state_$) \
+    if (state_$ == NULL) { return ACCEL_PARAM_ERROR; }  \
+    if (state_$->state == NULL) { return ACCEL_INTERNAL_ERROR; } \
+    if (state_$->dimensions <= 0) { return ACCEL_INTERNAL_ERROR; } \
+    if (state_$->state->window_size <= 0) { return ACCEL_INTERNAL_ERROR; } \
+    if (state_$->state->num_gestures_saved < 0) { return ACCEL_INTERNAL_ERROR; } \
+    if (state_$->state->gestures == NULL && state_$->state->num_gestures_saved != 0) { return ACCEL_INTERNAL_ERROR; } \
+    if (state_$->state->gestures != NULL && state_$->state->num_gestures_saved == 0) { return ACCEL_INTERNAL_ERROR; }
 
 // Decay rate of values we choose to keep. 1.0 is no decay, 2.0 is a doubling every time we keep them.
 // TODO: should we store the affinities as floats instead?
@@ -93,7 +107,7 @@ int accel_generate_gesture(accel_state *state, accel_gesture **gesture) {
     PRECONDITION_NOT_NULL(gesture);
 
     // TODO: write a test for this value.
-    PRECONDITION_NULL(*gesture);
+    PRECONDITION_NULL((*gesture));
 
     size_t gesture_size = sizeof(accel_gesture);
     *gesture = (accel_gesture *) malloc(gesture_size);
@@ -131,7 +145,7 @@ int accel_generate_state(accel_state **state, int dimensions, int window_size) {
     PRECONDITION_NOT_NULL(state);
 
     // TODO: write a test for this value.
-    PRECONDITION_NULL(state);
+    PRECONDITION_NULL(*state);
 
     if (dimensions <= 0) {
         return ACCEL_PARAM_ERROR;
@@ -212,6 +226,8 @@ int accel_start_record_gesture(accel_state *state, int *gesture) {
         }
     }
     *gesture = (state->state->num_gestures_saved)++;
+
+    state->state->gestures[*gesture] = NULL;
 
     int result = accel_generate_gesture(state, &(state->state->gestures[*gesture]));
     if (result != ACCEL_SUCCESS) {
