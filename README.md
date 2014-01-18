@@ -14,7 +14,7 @@ accel [![Build Status](https://travis-ci.org/shalecraig/accel.png?branch=master)
     - [x] Clean up Headers.
     - [x] Rearrange structs to hide implementation.
     - [x] Beef up unit tests with unusual input.
-    - [ ] Write sample app that uses this.
+    - [x] Write sample app that uses this.
     - [x] Provide #define version number. [`ACCEL_VERSION_CODE`]
 - V0.2.0a:
     - [ ] Decide on having callbacks instead of (or) `accel_find_most_likely_gesture`
