@@ -1,0 +1,8 @@
+argv = ['/home/vagrant/pebble-dev/PebbleSDK-2.0-BETA5/Pebble/waf', 'configure', 'build']
+environ = {'XDG_RUNTIME_DIR': '/run/user/1000', 'LESS': '-R', 'LC_CTYPE': 'en_US.UTF-8', 'SSH_CLIENT': '10.0.2.2 49994 22', 'LSCOLORS': 'Gxfxcxdxbxegedabagacad', 'LOGNAME': 'vagrant', 'USER': 'vagrant', 'PATH': '/home/vagrant/pebble-dev/PebbleSDK-2.0-BETA5/arm-cs-tools/bin:/home/vagrant/bin:/usr/local/bin:/home/vagrant/pebble-dev/PebbleSDK-2.0-BETA5/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games', 'HOME': '/home/vagrant', 'XDG_SESSION_ID': '11', '_': '/home/vagrant/pebble-dev/PebbleSDK-2.0-BETA5/bin/pebble', 'LANG': 'en_US.UTF-8', 'TERM': 'xterm-256color', 'SHELL': '/bin/zsh', 'XDG_SESSION_COOKIE': '16ccae8f6a53e04feed02d6f52cb75dd-1390072954.343424-1847087206', 'SHLVL': '1', 'SSH_TTY': '/dev/pts/1', 'OLDPWD': '/home/vagrant', 'PWD': '/vagrant/mount/code/accel/sample/simple-accelerometer', 'GREP_OPTIONS': '--color=auto', 'MAIL': '/var/mail/vagrant', 'GREP_COLOR': '1;32', 'SSH_CONNECTION': '10.0.2.2 49994 10.0.2.15 22', 'PAGER': 'less'}
+files = ['/vagrant/mount/code/accel/sample/simple-accelerometer/wscript']
+hash = -326433459
+options = {'files': '', 'jobs': 1, 'verbose': 0, 'nocache': False, 'progress_bar': 0, 'timestamp': None, 'distcheck_args': None, 'top': '', 'destdir': '', 'keep': 0, 'zones': '', 'debug': False, 'prefix': '/usr/local/', 'download': False, 'force': False, 'targets': '', 'out': ''}
+out_dir = '/vagrant/mount/code/accel/sample/simple-accelerometer/build'
+run_dir = '/vagrant/mount/code/accel/sample/simple-accelerometer'
+top_dir = '/vagrant/mount/code/accel/sample/simple-accelerometer'
