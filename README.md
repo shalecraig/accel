@@ -16,10 +16,14 @@ accel
     - [x] Beef up unit tests with unusual input.
     - [ ] Write sample app that uses this.
     - [x] Provide #define version number. [`ACCEL_VERSION_CODE`]
-- V0.2.0a:
+- V1.1.0:
     - [ ] Decide on having callbacks instead of (or) `accel_find_most_likely_gesture`
         - Maybe needs a const for the values?
     - [ ] Implement a `public` reset gesture method
+    - [ ] Use the `-DPEBBLE` flag to conditionally load pebble libraries.
+        - [ ] Define `realloc`, since it's not defined in pebble.h (ew)
+        - [ ] Define `calloc`, since it's not defined in pebble.h (ew)
+        - [ ] Define `cbrt`, since it's not defined in pebble.h (ew)
 
 Attribution
 =====
