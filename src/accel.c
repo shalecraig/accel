@@ -6,6 +6,10 @@
 
 #ifdef PEBBLE
 #include <pebble.h>
+#include <pebble_makeup.h>
+#else
+#define my_realloc(a, b, c) realloc(a, b)
+#define my_calloc(a, b) calloc(a, b)
 #endif
 
 #ifndef INT16_MAX
@@ -117,7 +121,7 @@ int accel_generate_gesture(accel_state *state, accel_gesture **gesture) {
     (*gesture)->is_recorded = false;
     (*gesture)->normalized_recording = NULL;
 
-    (*gesture)->moving_avg_values = (moving_avg_values **) calloc(state->dimensions, sizeof(moving_avg_values *));
+    (*gesture)->moving_avg_values = (moving_avg_values **) my_calloc(state->dimensions, sizeof(moving_avg_values *));
     if ((*gesture)->moving_avg_values == NULL) {
         free((*gesture));
         *gesture = NULL;
@@ -212,7 +216,7 @@ int accel_start_record_gesture(accel_state *state, int *gesture) {
     PRECONDITION_NOT_NULL(gesture);
 
     if (state->state->num_gestures_saved != 0) {
-        accel_gesture **tmp = (accel_gesture **)realloc(state->state->gestures, (state->state->num_gestures_saved + 1)*sizeof(accel_gesture *));
+        accel_gesture **tmp = (accel_gesture **)my_realloc(state->state->gestures, (state->state->num_gestures_saved + 1)*sizeof(accel_gesture *), (state->state->num_gestures_saved)*sizeof(accel_gesture *));
         if (tmp == NULL) {
             return ACCEL_MALLOC_ERROR;
         }
@@ -234,7 +238,7 @@ int accel_start_record_gesture(accel_state *state, int *gesture) {
             free(state->state->gestures);
             state->state->gestures = NULL;
         } else {
-            accel_gesture ** tmp = (accel_gesture **)realloc(state->state->gestures, state->state->num_gestures_saved - 1);
+            accel_gesture ** tmp = (accel_gesture **)my_realloc(state->state->gestures, state->state->num_gestures_saved - 1, state->state->num_gestures_saved);
             if (tmp != NULL) {
                 // If tmp is null, we don't really care that realloc failed, since a future use of realloc will help us.
                 state->state->gestures = tmp;
@@ -304,7 +308,7 @@ void handle_recording_tick(accel_gesture *gesture, int dimensions) {
     if (gesture == NULL) { return; }
     // TODO: grow exponentially, not linearly. Linear growth allocates too frequently.
     if (gesture->recording_size != 0) {
-        gesture->normalized_recording = (int **) realloc(gesture->normalized_recording, (gesture->recording_size + 1) * sizeof(int *));
+        gesture->normalized_recording = (int **) my_realloc(gesture->normalized_recording, (gesture->recording_size + 1) * sizeof(int *), gesture->recording_size * sizeof(int *));
         if (gesture->normalized_recording == NULL) {
             return;
         }
