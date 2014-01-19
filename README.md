@@ -54,8 +54,13 @@ cp accel/src/* myproject/src/
 
 The source code is in the `src` directory. Simply include `accel.h` and make sure you compile all files. If you needed to make changes, feel free to submit pull requests to [the accel repo](https://github.com/shalecraig/accel).
 
+## Running tests
 
-### Current Version
+After going to the test directory (`cd test/`), running `make run` should execute tests successfully.
+
+TODO: As of right now, C tests are compiled by the C++ compiler. We should fix this.
+
+## Current Version
 
 The accel version is currently 1.0.0b.
 This version is exposed in `accel.h` as the `ACCEL_VERSION_CODE` const, which is generated using the `ACCEL_VERSION_GEN` macro.
