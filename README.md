@@ -9,7 +9,7 @@ Though it is written with the Pebble in mind, it should work with other embedded
 
 ### Return types
 
-All methods in the accel api return a success value or error codes.
+All methods in the accel API return a success value or error codes.
 
 Return values are as follows:
 
@@ -18,6 +18,21 @@ Return values are as follows:
 - `ACCEL_MALLOC_ERROR` - returned when malloc fails
 - `ACCEL_NO_VALID_GESTURE` - when gestures are queried, this value is returned when there are no applicable gestures.
 - `ACCEL_INTERNAL_ERROR` - there is an internal error in the accel library, usually due to consistency issues in parameter attributes. It's best to report these.
+
+### Methods
+
+- `int accel_generate_state(accel_state **state, int dimensions, int window_size)`
+    - Generates and sets up a valid `accel_state` object that tracks input of `dimensions` dimensions, using a rolling window of size `window_size` to smooth measurements.
+- `int accel_destroy_state(accel_state **state)`
+    - Destroys any `accel_state` objects passed in, and resets `state` to point to the `NULL` value.
+- `int accel_start_record_gesture(accel_state *state, int *gesture)`
+    - Starts to record a gesture, saving the gesture id to `gesture`.
+- `int accel_end_record_gesture(accel_state *state, int gesture_id)`
+    - Completes recording the gesture at gesture id `gesture_id`.
+- `int accel_process_timer_tick(accel_state *state, int *accel_data)`
+    - Called whenever a tick happens, this allows `accel` to update projected most-likely gestures.
+- `int accel_find_most_likely_gesture(accel_state *state, int *gesture_id, int *distance)`
+    - Returns the id of the gesture that is most likely to have occurred.
 
 ## Using accel in Your Project
 
@@ -44,18 +59,6 @@ The source code is in the `src` directory. Simply include `accel.h` and make sur
 
 The accel version is currently 1.0.0b.
 This version is exposed in `accel.h` as the `ACCEL_VERSION_CODE` const, which is generated using the `ACCEL_VERSION_GEN` macro.
-
-
-## Using Accel
-## Using Accel
-# Using Accel
-
-### TODO:
-
-- V1.1.0:
-    - [ ] Decide on having callbacks instead of (or) `accel_find_most_likely_gesture`
-        - Maybe needs a const for the values?
-    - [ ] Implement a `public` reset gesture method
 
 Attribution
 =====
