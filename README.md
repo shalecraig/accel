@@ -44,15 +44,17 @@ git clone https://github.com/shalecraig/accel.git
 
 ### Using accel in Pebble Projects
 
-Simply copy all files from the `src` directory in accel into the `src` directory in your pebble app. The `pebble build` command will find the newly added files, so everything should work smoothly.
+Simply copy all files from the `accel/src` directory in accel into the `accel/src` directory in your pebble app. The `pebble build` command will find the newly added files, so everything should work smoothly.
 
 ```
 cp accel/src/* myproject/src/
 ```
 
+A sample of library usage is in the `accel/samples` directory.
+
 ### Using accel in Other Projects
 
-The source code is in the `src` directory. Simply include `accel.h` and make sure you compile all files. If you needed to make changes, feel free to submit pull requests to [the accel repo](https://github.com/shalecraig/accel).
+The source code is in the `accel/src` directory. Simply include `accel.h` and make sure you compile all files. If you needed to make changes, feel free to submit pull requests to [the accel repo](https://github.com/shalecraig/accel).
 
 ## Running tests
 
@@ -63,7 +65,7 @@ TODO: As of right now, C tests are compiled by the C++ compiler. We should fix t
 ## Current Version
 
 The accel version is currently 1.0.0b.
-This version is exposed in `accel.h` as the `ACCEL_VERSION_CODE` const, which is generated using the `ACCEL_VERSION_GEN` macro.
+This version is defined in `accel.h` as `ACCEL_VERSION_CODE` , which is generated using the `ACCEL_VERSION_GEN` macro.
 
 Attribution
 =====
