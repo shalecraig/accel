@@ -2,7 +2,7 @@
 ---
 
 #### What is accel?
-Accel is a gesture recognition library written in C that uses accelerometer data to find gestures.
+Accel is a simple library written in C that uses accelerometer data to find gestures in realtime. 
 Though it is written with the Pebble in mind, it should work with other embedded devices as well.
 
 ## API Overview
