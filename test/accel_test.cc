@@ -301,6 +301,51 @@ TEST(AccelTest, end_to_end_test_multiple_recordings) {
     test_burn_state(&state);
 }
 
+
+TEST(AccelTest, test_fuzz_reset_affinities) {
+    accel_state *state = NULL;
+
+    // Null accel states.
+    EXPECT_EQ(ACCEL_PARAM_ERROR, accel_reset_affinities_for_gesture(NULL, 0));
+
+    // No recorded accelerations
+    state = test_fabricate_1d_state();
+    EXPECT_EQ(ACCEL_PARAM_ERROR, accel_reset_affinities_for_gesture(state, 0));
+
+    int gesture_id = 0;
+    EXPECT_EQ(ACCEL_SUCCESS, accel_start_record_gesture(state, &gesture_id));
+
+    // A recording gesture with no data.
+    EXPECT_EQ(ACCEL_PARAM_ERROR, accel_reset_affinities_for_gesture(state, gesture_id));
+
+    int data[1] = {0};
+    EXPECT_EQ(ACCEL_SUCCESS, accel_process_timer_tick(state, data));
+    EXPECT_EQ(ACCEL_SUCCESS, accel_process_timer_tick(state, data));
+    EXPECT_EQ(ACCEL_SUCCESS, accel_process_timer_tick(state, data));
+
+    // A recording gesture with some data.
+    EXPECT_EQ(ACCEL_PARAM_ERROR, accel_reset_affinities_for_gesture(state, gesture_id));
+
+    EXPECT_EQ(ACCEL_SUCCESS, accel_end_record_gesture(state, gesture_id));
+
+    // No ticks have been recorded.
+    EXPECT_EQ(ACCEL_SUCCESS, accel_reset_affinities_for_gesture(state, gesture_id));
+
+    int found_gesture = 1;
+    int found_distance = 1;
+    EXPECT_EQ(ACCEL_SUCCESS, accel_process_timer_tick(state, data));
+    EXPECT_EQ(ACCEL_SUCCESS, accel_find_most_likely_gesture(state, &found_gesture, &found_distance));
+
+    int after_reset_gesture = 1;
+    int after_reset_distance = 1;
+    EXPECT_EQ(ACCEL_SUCCESS, accel_reset_affinities_for_gesture(state, gesture_id));
+    EXPECT_EQ(ACCEL_SUCCESS, accel_find_most_likely_gesture(state, &after_reset_gesture, &after_reset_distance));
+
+    EXPECT_NE(found_distance, after_reset_distance);
+
+    test_burn_state(&state);
+}
+
 int main (int argc, char** argv) {
     ::testing::InitGoogleTest(&argc, argv);
 
