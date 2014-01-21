@@ -86,13 +86,4 @@ int accel_process_timer_tick(accel_state *state, int *accel_data);
  */
 int accel_find_most_likely_gesture(accel_state *state, int *gesture_id, int *distance);
 
-/**
- * For a given state and recorded gesture, resets the gesture's affinity state entirely.
- * @param state      A pointer to a non-NULL state variable that holds recording
- *                   metadata.
- * @param gesture_id Value that corresponds to a gesture currently being reset.
- * @return           ACCEL_SUCCESS if successful, an error code otherwise.
- */
-int accel_reset_affinities_for_gesture(accel_state *state, int gesture_id);
-
 #endif
