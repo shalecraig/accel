@@ -258,6 +258,17 @@ int normalize(int sum) {
     return (int) cbrt(sum);
 }
 
+int reset_gesture(accel_gesture *gest, const int dimensions) {
+    PRECONDITION_NOT_NULL(gest);
+    for (int i=0; i<gest->recording_size; ++i) {
+        gest->affinities[i] = INT16_MAX;
+    }
+    for (int d=0; d<dimensions; ++d) {
+        reset_moving_avg(gest->moving_avg_values[d]);
+    }
+    return ACCEL_SUCCESS;
+}
+
 // TODO: does this work for zero recorded timestamps?
 int accel_end_record_gesture(accel_state *state, int gesture_id) {
     PRECONDITION_VALID_STATE(state);
@@ -289,16 +300,16 @@ int accel_end_record_gesture(accel_state *state, int gesture_id) {
         return ACCEL_MALLOC_ERROR;
     }
 
-    gesture->is_recording = false;
-    gesture->is_recorded = true;
+    int reset_result = reset_gesture(gesture, state->dimensions);
+    if (reset_result != ACCEL_SUCCESS) {
+        free(gesture->affinities);
+        gesture->affinities = NULL;
+    } else {
+        gesture->is_recording = false;
+        gesture->is_recorded = true;
+    }
 
-    for (int i=0; i<gesture->recording_size; ++i) {
-        gesture->affinities[i] = INT16_MAX;
-    }
-    for (int d=0; d<state->dimensions; ++d) {
-        reset_moving_avg(gesture->moving_avg_values[d]);
-    }
-    return ACCEL_SUCCESS;
+    return reset_result;
 }
 
 // TODO: check for malloc failure in this function.
@@ -479,4 +490,21 @@ int accel_find_most_likely_gesture(accel_state *state, int *gesture_id, int *aff
         return ACCEL_NO_VALID_GESTURE;
     }
     return ACCEL_SUCCESS;
+}
+
+int accel_reset_affinities_for_gesture(accel_state *state, int gesture_id) {
+    PRECONDITION_VALID_STATE(state);
+    internal_accel_state *ias = state->state;
+    if (ias->num_gestures_saved <= gesture_id || gesture_id < 0) {
+        return ACCEL_PARAM_ERROR;
+    }
+    accel_gesture *gest = ias->gestures[gesture_id];
+    if (gest == NULL) {
+        return ACCEL_INTERNAL_ERROR;
+    }
+    if (!gest->is_recorded || gest->is_recording) {
+        // Gesture is in the wrong state for resetting.
+        return ACCEL_PARAM_ERROR;
+    }
+    return reset_gesture(gest, state->dimensions);
 }
