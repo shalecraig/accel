@@ -24,6 +24,45 @@ typedef struct {
 } accel_state;
 
 /**
+ * Callback called whenever a given gesture drops below the affinity/length
+ * threshold specified when the state is initialized.
+ *
+ * A simple accel_callback is as follows:
+ *
+ * const int my_callback(accel_state *state, int gesture_id, int affinity_found, bool *reset_gesture) {
+ *     int retval = ACCEL_SUCCESS;
+ *     if (gesture_id == 1) {
+ *         *reset_gesture = true;
+ *         ...
+ *     } else {
+ *         logger->info("unrecognized gesture %i ", gesture_id);
+ *         retval = ACCEL_MIN_RESERVED - 1;
+ *     }
+ *     return retval;
+ * }
+ *
+ * For the callback method, the documentation is as follows:
+ * @param  state            A non-NULL pointer to a state variable that holds
+ *                          recording metadata.
+ * @param  gesture_id       The identifier of the gesture that has been
+ *                          triggered.
+ * @param  affinity_found   The affinity of the triggered gesture_id to the
+ *                          recorded gesture.
+ * @param  reset_gesture    Setting reset_gesture to be true will result in the
+ *                          gesture being reset after the callback is triggered,
+ *                          and setting it to false will prevent the gesture
+ *                          from being reset. No default value is promised.
+ * @return int              Returns ACCEL_SUCCESS if successful. Values that are
+ *                          not ACCEL_SUCCESS will cause the calling method to
+ *                          immediately abort and proxy-return the value
+ *                          returned by the callback.
+ *                          Implementers wishing to return a custom value should
+ *                          refer to the ACCEL_MIN_RESERVED definition inside
+ *                          their implementations.
+ */
+typedef const int (*accel_callback)(accel_state *state, int gesture_id, int affinity_found, bool *reset_gesture);
+
+/**
  * Creates a state object, essentially a constructor.
  * @param  state       Pointer-to-pointer of the state being generated, populated
  *                     by the method.
