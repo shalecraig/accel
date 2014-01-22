@@ -4,10 +4,11 @@
 #include <stdbool.h>
 
 #define ACCEL_SUCCESS 0
-#define ACCEL_PARAM_ERROR -1
-#define ACCEL_INTERNAL_ERROR -2
-#define ACCEL_MALLOC_ERROR -3
-#define ACCEL_NO_VALID_GESTURE -4
+#define ACCEL_PARAM_ERROR (ACCEL_SUCCESS - 1)
+#define ACCEL_INTERNAL_ERROR (ACCEL_PARAM_ERROR - 1)
+#define ACCEL_MALLOC_ERROR (ACCEL_INTERNAL_ERROR - 1)
+#define ACCEL_NO_VALID_GESTURE (ACCEL_MALLOC_ERROR - 1)
+#define ACCEL_MIN_RESERVED ACCEL_NO_VALID_GESTURE
 
 #define ACCEL_VERSION_GEN(major, minor, point, isBeta, isAlpha) \
     (4*(100*((100*major)+minor)+point) + 3 - (isAlpha?2:0) - (isBeta?1:0))
