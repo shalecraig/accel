@@ -71,9 +71,14 @@ typedef const int (*accel_callback)(accel_state *state, int gesture_id, int offs
  *                     represents.
  * @param  window_size The size of the moving windows used to calculate smoothed
  *                     sensor readings.
+ * @param  callback    A callback that is triggered whenever a gesture passes a
+ *                     threshold. See the ``accel_callback`` typedef for more
+ *                     information.
+ * @param  threshold   The minimum threshold offset (divided by length) that all
+ *                     gestures must be before the callback is called.
  * @return             ACCEL_SUCCESS if successful, an error code otherwise.
  */
-int accel_generate_state(accel_state **state, int dimensions, int window_size);
+int accel_generate_state(accel_state **state, int dimensions, int window_size, accel_callback callback, const int threshold);
 
 /**
  * Destroys the state object at the pointer pointed to by the state pointer.

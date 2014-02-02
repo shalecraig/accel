@@ -143,7 +143,11 @@ int accel_generate_gesture(accel_state *state, accel_gesture **gesture) {
 }
 
 // TODO: needs direct testing with invalid objects.
-int accel_generate_state(accel_state **state, int dimensions, int window_size) {
+int accel_generate_state(accel_state **state,
+                         int dimensions,
+                         int window_size,
+                         accel_callback callback,
+                         const int threshold) {
     PRECONDITION_NOT_NULL(state);
 
     // TODO: write a test for this value.
