@@ -33,7 +33,7 @@ typedef struct {
     int **normalized_recording;
 
     moving_avg_values **moving_avg_values;
-    int *affinities;
+    int *offsets;
 } accel_gesture;
 
 typedef struct internalAccelState {
@@ -59,7 +59,7 @@ typedef struct internalAccelState {
     if (state_$->state->gestures != NULL && state_$->state->num_gestures_saved == 0) { return ACCEL_INTERNAL_ERROR; }
 
 // Decay rate of values we choose to keep. 1.0 is no decay, 2.0 is a doubling every time we keep them.
-// TODO: should we store the affinities as floats instead?
+// TODO: should we store the offsets as floats instead?
 #define ALPHA 1.0
 
 // TODO: include these from a header file?
@@ -94,9 +94,9 @@ void accel_destroy_gesture(accel_gesture **gesture, int dimensions) {
         free(gest->normalized_recording);
         gest->normalized_recording = NULL;
     }
-    if (gest->affinities != NULL) {
-        free(gest->affinities);
-        gest->affinities = NULL;
+    if (gest->offsets != NULL) {
+        free(gest->offsets);
+        gest->offsets = NULL;
     }
 
     free(*gesture);
@@ -261,7 +261,7 @@ int normalize(int sum) {
 int reset_gesture(accel_gesture *gest, const int dimensions) {
     PRECONDITION_NOT_NULL(gest);
     for (int i=0; i<gest->recording_size; ++i) {
-        gest->affinities[i] = INT16_MAX;
+        gest->offsets[i] = INT16_MAX;
     }
     for (int d=0; d<dimensions; ++d) {
         reset_moving_avg(gest->moving_avg_values[d]);
@@ -295,15 +295,15 @@ int accel_end_record_gesture(accel_state *state, int gesture_id) {
         return ACCEL_PARAM_ERROR;
     }
 
-    gesture->affinities = (int *) malloc(gesture->recording_size * sizeof(int));
-    if (gesture->affinities == NULL) {
+    gesture->offsets = (int *) malloc(gesture->recording_size * sizeof(int));
+    if (gesture->offsets == NULL) {
         return ACCEL_MALLOC_ERROR;
     }
 
     int reset_result = reset_gesture(gesture, state->dimensions);
     if (reset_result != ACCEL_SUCCESS) {
-        free(gesture->affinities);
-        gesture->affinities = NULL;
+        free(gesture->offsets);
+        gesture->offsets = NULL;
     } else {
         gesture->is_recording = false;
         gesture->is_recorded = true;
@@ -341,7 +341,7 @@ int handle_evaluation_tick(accel_gesture *gesture, int dimensions) {
     PRECONDITION_NOT_NULL(gesture);
 
     if (gesture->moving_avg_values == NULL ||
-        gesture->affinities == NULL) {
+        gesture->offsets == NULL) {
         return ACCEL_INTERNAL_ERROR;
     }
 
@@ -364,9 +364,9 @@ int handle_evaluation_tick(accel_gesture *gesture, int dimensions) {
             }
         }
         if (i == 0) {
-            gesture->affinities[i] = cost;
+            gesture->offsets[i] = cost;
         } else {
-            gesture->affinities[i] = MIN(ALPHA * gesture->affinities[i], cost+gesture->affinities[i-1]);
+            gesture->offsets[i] = MIN(ALPHA * gesture->offsets[i], cost+gesture->offsets[i-1]);
         }
     }
     for (i=1; i<gesture->recording_size; ++i) {
@@ -383,7 +383,7 @@ int handle_evaluation_tick(accel_gesture *gesture, int dimensions) {
                 cost += input_i_d - recording_i_d;
             }
         }
-        gesture->affinities[i] = MIN(gesture->affinities[i], gesture->affinities[i-1] + cost);
+        gesture->offsets[i] = MIN(gesture->offsets[i], gesture->offsets[i-1] + cost);
     }
     return ACCEL_SUCCESS;
 }
@@ -436,13 +436,13 @@ int accel_process_timer_tick(accel_state *state, int *accel_data) {
     return retcode;
 }
 
-int accel_find_most_likely_gesture(accel_state *state, int *gesture_id, int *affinity) {
+int accel_find_most_likely_gesture(accel_state *state, int *gesture_id, int *offset) {
     PRECONDITION_VALID_STATE(state);
     PRECONDITION_NOT_NULL(gesture_id);
-    PRECONDITION_NOT_NULL(affinity);
+    PRECONDITION_NOT_NULL(offset);
 
     *gesture_id = ACCEL_NO_VALID_GESTURE;
-    *affinity = ACCEL_NO_VALID_GESTURE;
+    *offset = ACCEL_NO_VALID_GESTURE;
 
     if (state->state->num_gestures_saved < 0) {
         return ACCEL_INTERNAL_ERROR;
@@ -464,8 +464,8 @@ int accel_find_most_likely_gesture(accel_state *state, int *gesture_id, int *aff
             return ACCEL_INTERNAL_ERROR;
         }
 
-        if ((*gesture_id == ACCEL_NO_VALID_GESTURE || *affinity == ACCEL_NO_VALID_GESTURE) &&
-            *gesture_id != *affinity) {
+        if ((*gesture_id == ACCEL_NO_VALID_GESTURE || *offset == ACCEL_NO_VALID_GESTURE) &&
+            *gesture_id != *offset) {
             return ACCEL_INTERNAL_ERROR;
         }
 
@@ -479,14 +479,14 @@ int accel_find_most_likely_gesture(accel_state *state, int *gesture_id, int *aff
             continue;
         }
 
-        if (*affinity == ACCEL_NO_VALID_GESTURE ||
-            gesture->affinities[gesture->recording_size-1] < *affinity) {
-            *affinity = gesture->affinities[gesture->recording_size-1];
+        if (*offset == ACCEL_NO_VALID_GESTURE ||
+            gesture->offsets[gesture->recording_size-1] < *offset) {
+            *offset = gesture->offsets[gesture->recording_size-1];
             *gesture_id = i;
         }
     }
     if (*gesture_id == ACCEL_NO_VALID_GESTURE ||
-        *affinity == ACCEL_NO_VALID_GESTURE) {
+        *offset == ACCEL_NO_VALID_GESTURE) {
         return ACCEL_NO_VALID_GESTURE;
     }
     return ACCEL_SUCCESS;
