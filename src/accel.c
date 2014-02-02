@@ -41,6 +41,9 @@ typedef struct internalAccelState {
     int num_gestures_saved;
 
     accel_gesture **gestures;
+
+    accel_callback callback;
+    int threshold;
 } internal_accel_state;
 
 #define PRECONDITION_NOT_NULL(foo_$) \
@@ -185,6 +188,8 @@ int accel_generate_state(accel_state **state,
 
     (*state)->dimensions = dimensions;
     (*state)->state->window_size = window_size > 0 ? window_size : 2;
+    (*state)->state->callback = callback;
+    (*state)->state->threshold = threshold;
     return ACCEL_SUCCESS;
 }
 
