@@ -6,7 +6,7 @@ const void * void_null = NULL;
 
 accel_state *test_fabricate_state(int dimensions) {
     accel_state *state = NULL;
-    int result = accel_generate_state(&state, dimensions, 1);
+    int result = accel_generate_state(&state, dimensions, 1, NULL, 0);
     EXPECT_EQ(0, result);
     EXPECT_NE(void_null, state);
     return state;
@@ -28,23 +28,23 @@ void test_burn_state(accel_state ** state) {
 
 
 TEST(AccelFuzzTest, generate_state_null_state) {
-    int result = accel_generate_state(NULL, 3, 1);
+    int result = accel_generate_state(NULL, 3, 1, NULL, 0);
     EXPECT_EQ(result, ACCEL_PARAM_ERROR);
 }
 
 TEST(AccelFuzzTest, generate_state_negative_or_zero_dimensions) {
     accel_state *state = NULL;
     // 0 dimensions must fail
-    int result = accel_generate_state(&state, 0, 1);
+    int result = accel_generate_state(&state, 0, 1, NULL, 0);
     EXPECT_EQ(ACCEL_PARAM_ERROR, result);
 
     // -1 dimension must fail
-    result = accel_generate_state(&state, -1, 1);
+    result = accel_generate_state(&state, -1, 1, NULL, 0);
     EXPECT_EQ(ACCEL_PARAM_ERROR, result);
 
     // 1 dimension must succeed.
     state = NULL;
-    result = accel_generate_state(&state, 1, 1);
+    result = accel_generate_state(&state, 1, 1, NULL, 0);
     EXPECT_EQ(0, result);
     // TODO: result's memory is leaked :s
 }
@@ -54,15 +54,15 @@ TEST(AccelFuzzTest, generate_state_invalid_window_size) {
     int result = 0;
 
     // Size 0 must fail
-    result = accel_generate_state(&state, 1, 0);
+    result = accel_generate_state(&state, 1, 0, NULL, 0);
     EXPECT_EQ(ACCEL_PARAM_ERROR, result);
 
     // Size -1 must fail
-    result = accel_generate_state(&state, 1, -1);
+    result = accel_generate_state(&state, 1, -1, NULL, 0);
     EXPECT_EQ(ACCEL_PARAM_ERROR, result);
 
     // Size 1 must succeed
-    result = accel_generate_state(&state, 1, 1);
+    result = accel_generate_state(&state, 1, 1, NULL, 0);
     EXPECT_EQ(0, result);
     EXPECT_NE(void_null, state);
 }
@@ -186,7 +186,7 @@ TEST(AccelTest, accel_generate_and_destroy) {
     accel_state *state = NULL;
     for (int i=1; i<10; ++i) {
         EXPECT_EQ(void_null, state) << "i = " << i;
-        EXPECT_EQ(0, accel_generate_state(&state, 2*i, i)) << "i = " << i;
+        EXPECT_EQ(0, accel_generate_state(&state, 2*i, i, NULL, 0)) << "i = " << i;
         EXPECT_EQ(0, accel_destroy_state(&state)) << "i = " << i;
         EXPECT_EQ(void_null, state) << "i = " << i;
     }
