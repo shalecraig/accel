@@ -23,12 +23,12 @@ typedef struct {
 } accel_state;
 
 /**
- * Callback called whenever a given gesture drops below the affinity/length
+ * Callback called whenever a given gesture drops below the offset/length
  * threshold specified when the state is initialized.
  *
  * A simple accel_callback is as follows:
  *
- * const int my_callback(accel_state *state, int gesture_id, int affinity_found, bool *reset_gesture) {
+ * const int my_callback(accel_state *state, int gesture_id, int offset_found, bool *reset_gesture) {
  *     int retval = ACCEL_SUCCESS;
  *     if (gesture_id == 1) {
  *         *reset_gesture = true;
@@ -45,7 +45,7 @@ typedef struct {
  *                          recording metadata.
  * @param  gesture_id       The identifier of the gesture that has been
  *                          triggered.
- * @param  affinity_found   The affinity of the triggered gesture_id to the
+ * @param  offset_found   The offset of the triggered gesture_id to the
  *                          recorded gesture.
  * @param  reset_gesture    Setting reset_gesture to be true will result in the
  *                          gesture being reset after the callback is triggered,
@@ -59,12 +59,12 @@ typedef struct {
  *                          refer to the ACCEL_MIN_RESERVED definition inside
  *                          their implementations.
  */
-typedef const int (*accel_callback)(accel_state *state, int gesture_id, int affinity_found, bool *reset_gesture);
+typedef const int (*accel_callback)(accel_state *state, int gesture_id, int offset_found, bool *reset_gesture);
 
 /**
  * Creates a state object, essentially a constructor.
- * @param  state       Pointer-to-pointer of the state being generated, populated
- *                     by the method.
+ * @param  state       Pointer-to-pointer of the state being generated,
+ *                     populated by the method.
  *                     The current value of the pointer's pointed (*state) must
  *                     be NULL.
  * @param  dimensions  The number of dimensions of input that the state
@@ -126,7 +126,8 @@ int accel_process_timer_tick(accel_state *state, int *accel_data);
 int accel_find_most_likely_gesture(accel_state *state, int *gesture_id, int *distance);
 
 /**
- * For a given state and recorded gesture, resets the gesture's affinity state entirely.
+ * For a given state and recorded gesture, resets the gesture's offset state
+ * entirely.
  * @param state      A pointer to a non-NULL state variable that holds recording
  *                   metadata.
  * @param gesture_id Value that corresponds to a gesture currently being reset.
