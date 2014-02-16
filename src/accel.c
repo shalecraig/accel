@@ -38,6 +38,7 @@ typedef struct {
 
 typedef struct internalAccelState {
     int window_size;
+    int threshold;
     int num_gestures_saved;
 
     accel_gesture **gestures;
@@ -159,6 +160,9 @@ int accel_generate_state(accel_state **state,
     if (window_size <= 0) {
         return ACCEL_PARAM_ERROR;
     }
+    if (threshold <= 0 && callback != NULL) {
+        return ACCEL_PARAM_ERROR;
+    }
 
     size_t state_size = sizeof(accel_state);
     size_t internal_state_size = sizeof(internal_accel_state);
@@ -185,6 +189,7 @@ int accel_generate_state(accel_state **state,
 
     (*state)->dimensions = dimensions;
     (*state)->state->window_size = window_size > 0 ? window_size : 2;
+    (*state)->state->threshold = threshold;
     return ACCEL_SUCCESS;
 }
 
