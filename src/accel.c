@@ -186,7 +186,7 @@ int accel_generate_state(accel_state **state,
 
     (*state)->state = internal_state;
 
-
+    (*state)->callback = callback;
     (*state)->dimensions = dimensions;
     (*state)->state->window_size = window_size > 0 ? window_size : 2;
     (*state)->state->threshold = threshold;
