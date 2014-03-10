@@ -2,6 +2,8 @@
 
 #include "../src/accel.h"
 
+#include "testutil.h"
+
 const void * VOID_NULL = NULL;
 
 accel_state *test_fabricate_state_with_callback(int dimensions, accel_callback callback, const int threshold) {
@@ -105,13 +107,7 @@ TEST(AccelFuzzTest, accel_generate_state_null_callback) {
 }
 
 
-// TODO: find a better way to declare this function inline. Global state blows.
-const int accel_generate_state_valid_callback_inline_function(
-    accel_state *state,
-    int gesture_id,
-    int offset_found,
-    bool *reset_gesture) {
-    // reset the gesture, and
+TEST_CALLBACK(const int, AccelFuzzTest, accel_generate_state_valid_callback, myTest, accel_state *state, int gesture_id, int offset_found, bool *reset_gesture)
     std::cout << "offset found is " << offset_found << ", gesture_id was " << gesture_id << std::endl;
     *reset_gesture = true;
     return ACCEL_SUCCESS;
@@ -122,13 +118,24 @@ TEST(AccelFuzzTest, accel_generate_state_valid_callback) {
     accel_state *state = NULL;
 
     // Non-null callback, watch it iterate over this stuff.
-    state = test_fabricate_1d_state();
+    state = test_fabricate_1d_state_with_callback(
+        // &TEST_CALLBACK_NAME(AccelFuzzTest, accel_generate_state_valid_callback, myTest),
+        NULL,
+        10);
 
     EXPECT_EQ(ACCEL_SUCCESS, accel_start_record_gesture(state, &gesture_id));
 
     for (int i=0; i<100; ++i) {
-        EXPECT_EQ(ACCEL_SUCCESS, )
+        int data[1] = {i};
+        EXPECT_EQ(ACCEL_SUCCESS, accel_process_timer_tick(state, data));
     }
+    EXPECT_EQ(ACCEL_SUCCESS, accel_end_record_gesture(state, gesture_id));
+
+    for (int i=0; i<100; ++i) {
+        int data[1] = {i};
+        EXPECT_EQ(ACCEL_SUCCESS, accel_process_timer_tick(state, data));
+    }
+    EXPECT_GT(TEST_CALLBACK_COUNTER(AccelFuzzTest, accel_generate_state_valid_callback, myTest), 0);
 }
 
 TEST(AccelFuzzTest, accel_destroy_state_invalid_input) {
