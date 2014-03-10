@@ -2,14 +2,26 @@
 
 #include "../src/accel.h"
 
-const void * void_null = NULL;
+const void * VOID_NULL = NULL;
 
-accel_state *test_fabricate_state(int dimensions) {
+accel_state *test_fabricate_state_with_callback(int dimensions, accel_callback callback, const int threshold) {
     accel_state *state = NULL;
     int result = accel_generate_state(&state, dimensions, 1, NULL, 0);
-    EXPECT_EQ(0, result);
-    EXPECT_NE(void_null, state);
+    EXPECT_EQ(ACCEL_SUCCESS, result);
+    EXPECT_NE(VOID_NULL, state);
     return state;
+}
+
+accel_state *test_fabricate_1d_state_with_callback(accel_callback callback, const int threshold) {
+    return test_fabricate_state_with_callback(1, callback, threshold);
+}
+
+accel_state *test_fabricate_3d_state_with_callback(accel_callback callback, const int threshold) {
+    return test_fabricate_state_with_callback(3, callback, threshold);
+}
+
+accel_state *test_fabricate_state(int dimensions) {
+    return test_fabricate_state_with_callback(dimensions, NULL, 0);
 }
 
 accel_state *test_fabricate_1d_state() {
@@ -23,7 +35,7 @@ accel_state *test_fabricate_3d_state() {
 void test_burn_state(accel_state ** state) {
     int result = accel_destroy_state(state);
     EXPECT_EQ(0, result);
-    EXPECT_EQ(void_null, *state);
+    EXPECT_EQ(VOID_NULL, *state);
 }
 
 
@@ -81,7 +93,42 @@ TEST(AccelFuzzTest, generate_state_invalid_window_size) {
     // Size 1 must succeed
     result = accel_generate_state(&state, 1, 1, NULL, 0);
     EXPECT_EQ(0, result);
-    EXPECT_NE(void_null, state);
+    EXPECT_NE(VOID_NULL, state);
+}
+
+TEST(AccelFuzzTest, accel_generate_state_null_callback) {
+    int result = 0;
+    accel_state *state = NULL;
+
+    // Null callback must be successful
+    result = accel_generate_state(&state, 1, 1, NULL, 0);
+}
+
+
+// TODO: find a better way to declare this function inline. Global state blows.
+const int accel_generate_state_valid_callback_inline_function(
+    accel_state *state,
+    int gesture_id,
+    int offset_found,
+    bool *reset_gesture) {
+    // reset the gesture, and
+    std::cout << "offset found is " << offset_found << ", gesture_id was " << gesture_id << std::endl;
+    *reset_gesture = true;
+    return ACCEL_SUCCESS;
+}
+
+TEST(AccelFuzzTest, accel_generate_state_valid_callback) {
+    int gesture_id = 0;
+    accel_state *state = NULL;
+
+    // Non-null callback, watch it iterate over this stuff.
+    state = test_fabricate_1d_state();
+
+    EXPECT_EQ(ACCEL_SUCCESS, accel_start_record_gesture(state, &gesture_id));
+
+    for (int i=0; i<100; ++i) {
+        EXPECT_EQ(ACCEL_SUCCESS, )
+    }
 }
 
 TEST(AccelFuzzTest, accel_destroy_state_invalid_input) {
@@ -102,7 +149,7 @@ TEST(AccelFuzzTest, accel_destroy_state_invalid_input) {
     // Destroy the state
     result = accel_destroy_state(&state);
     EXPECT_EQ(0, result);
-    EXPECT_EQ(void_null, state);
+    EXPECT_EQ(VOID_NULL, state);
 }
 
 TEST(AccelFuzzTest, accel_start_record_gesture_invalid_input) {
@@ -202,10 +249,10 @@ TEST(AccelFuzzTest, accel_find_most_likely_gesture_invalid_input) {
 TEST(AccelTest, accel_generate_and_destroy) {
     accel_state *state = NULL;
     for (int i=1; i<10; ++i) {
-        EXPECT_EQ(void_null, state) << "i = " << i;
+        EXPECT_EQ(VOID_NULL, state) << "i = " << i;
         EXPECT_EQ(0, accel_generate_state(&state, 2*i, i, NULL, 0)) << "i = " << i;
         EXPECT_EQ(0, accel_destroy_state(&state)) << "i = " << i;
-        EXPECT_EQ(void_null, state) << "i = " << i;
+        EXPECT_EQ(VOID_NULL, state) << "i = " << i;
     }
 }
 
