@@ -123,7 +123,7 @@ TEST(AccelFuzzTest, generate_state_threshold_fuzzing) {
     EXPECT_EQ(ACCEL_SUCCESS, accel_generate_state(&state, 1, 1, (accel_callback) NULL, 0));
     accel_destroy_state(&state);
 
-    // Threshold of 0 with a non-null callback succeeds
+    // Threshold of 0 with a non-null callback fails
     EXPECT_EQ(NULL, state);
     EXPECT_EQ(ACCEL_PARAM_ERROR, accel_generate_state(&state, 1, 1, (accel_callback) 0x1, 0));
 }
