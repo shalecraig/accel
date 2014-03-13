@@ -400,7 +400,7 @@ TEST(AccelTest, end_to_end_test_multiple_recordings) {
     test_burn_state(&state);
 }
 
-int main (int argc, char** argv) {
+int main(int argc, char** argv) {
     ::testing::InitGoogleTest(&argc, argv);
 
     int returnValue;
