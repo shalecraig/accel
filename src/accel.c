@@ -163,6 +163,9 @@ int accel_generate_state(accel_state **state,
     if (threshold <= 0 && callback != NULL) {
         return ACCEL_PARAM_ERROR;
     }
+    if (threshold > 0 && callback == NULL) {
+        return ACCEL_PARAM_ERROR;
+    }
 
     size_t state_size = sizeof(accel_state);
     size_t internal_state_size = sizeof(internal_accel_state);
@@ -351,9 +354,10 @@ void handle_recording_tick(accel_gesture *gesture, int dimensions) {
     ++gesture->recording_size;
 }
 
-int handle_evaluation_tick(accel_gesture *gesture, int dimensions) {
+int handle_evaluation_tick(accel_state *state, accel_gesture *gesture, int gesture_id) {
     // TODO: load the input at the beginning instead of gesture->recording_size times.
     PRECONDITION_NOT_NULL(gesture);
+    int dimensions = state->dimensions;
 
     if (gesture->moving_avg_values == NULL ||
         gesture->offsets == NULL) {
@@ -400,6 +404,20 @@ int handle_evaluation_tick(accel_gesture *gesture, int dimensions) {
         }
         gesture->offsets[i] = MIN(gesture->offsets[i], gesture->offsets[i-1] + cost);
     }
+    if (state->callback != NULL) {
+        if (state->state->threshold <= 0) {
+            return ACCEL_PARAM_ERROR;
+        }
+        float avg_affinity = gesture->offsets[gesture->recording_size-1] * 1.0 / gesture->recording_size;
+        if (avg_affinity < state->state->threshold) {
+            bool reset;
+            int retval = state->callback(state, gesture_id, avg_affinity, &reset);
+            if (reset == true) {
+                reset_gesture(gesture, dimensions);
+            }
+            return retval;
+        }
+    }
     return ACCEL_SUCCESS;
 }
 
@@ -408,8 +426,8 @@ int accel_process_timer_tick(accel_state *state, int *accel_data) {
     PRECONDITION_NOT_NULL(accel_data);
 
     int retcode = ACCEL_SUCCESS;
-    for (int gesture_iter = 0; gesture_iter < state->state->num_gestures_saved; ++gesture_iter) {
-        accel_gesture *gesture = state->state->gestures[gesture_iter];
+    for (int gesture_id = 0; gesture_id < state->state->num_gestures_saved; ++gesture_id) {
+        accel_gesture *gesture = state->state->gestures[gesture_id];
         if (gesture == NULL) {
             retcode = ACCEL_INTERNAL_ERROR;
             continue;
@@ -439,7 +457,7 @@ int accel_process_timer_tick(accel_state *state, int *accel_data) {
         if (gesture->is_recording) {
             handle_recording_tick(gesture, state->dimensions);
         } else if (gesture->is_recorded) {
-            returned = handle_evaluation_tick(gesture, state->dimensions);
+            returned = handle_evaluation_tick(state, gesture, gesture_id);
             if (returned != ACCEL_SUCCESS) {
                 retcode = returned;
             }

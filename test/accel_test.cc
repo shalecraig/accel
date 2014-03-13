@@ -8,9 +8,17 @@ const void * VOID_NULL = NULL;
 
 accel_state *test_fabricate_state_with_callback(int dimensions, accel_callback callback, const int threshold) {
     accel_state *state = NULL;
-    int result = accel_generate_state(&state, dimensions, 1, NULL, 0);
+    int result = accel_generate_state(&state, dimensions, 1, callback, threshold);
     EXPECT_EQ(ACCEL_SUCCESS, result);
+    if (ACCEL_SUCCESS != result) {
+        int *myNull = NULL;
+        myNull = 0;
+    }
     EXPECT_NE(VOID_NULL, state);
+    if (VOID_NULL == state) {
+        int *myNull = NULL;
+        myNull = 0;
+    }
     return state;
 }
 
@@ -98,6 +106,28 @@ TEST(AccelFuzzTest, generate_state_invalid_window_size) {
     EXPECT_NE(VOID_NULL, state);
 }
 
+TEST(AccelFuzzTest, generate_state_threshold_fuzzing) {
+    accel_state *state = NULL;
+
+    // Threshold of 1 with a non-null callback succeeds
+    EXPECT_EQ(NULL, state);
+    EXPECT_EQ(ACCEL_SUCCESS, accel_generate_state(&state, 1, 1, (accel_callback) 0x1, 1));
+    accel_destroy_state(&state);
+
+    // Threshold of 1 with a null callback fails
+    EXPECT_EQ(NULL, state);
+    EXPECT_EQ(ACCEL_PARAM_ERROR, accel_generate_state(&state, 1, 1, (accel_callback) NULL, 1));
+
+    // Threshold of 0 with a null callback succeeds
+    EXPECT_EQ(NULL, state);
+    EXPECT_EQ(ACCEL_SUCCESS, accel_generate_state(&state, 1, 1, (accel_callback) NULL, 0));
+    accel_destroy_state(&state);
+
+    // Threshold of 0 with a non-null callback succeeds
+    EXPECT_EQ(NULL, state);
+    EXPECT_EQ(ACCEL_PARAM_ERROR, accel_generate_state(&state, 1, 1, (accel_callback) 0x1, 0));
+}
+
 TEST(AccelFuzzTest, accel_generate_state_null_callback) {
     int result = 0;
     accel_state *state = NULL;
@@ -108,7 +138,6 @@ TEST(AccelFuzzTest, accel_generate_state_null_callback) {
 
 
 TEST_CALLBACK(const int, AccelFuzzTest, accel_generate_state_valid_callback, myTest, accel_state *state, int gesture_id, int offset_found, bool *reset_gesture)
-    std::cout << "offset found is " << offset_found << ", gesture_id was " << gesture_id << std::endl;
     *reset_gesture = true;
     return ACCEL_SUCCESS;
 }
@@ -119,8 +148,7 @@ TEST(AccelFuzzTest, accel_generate_state_valid_callback) {
 
     // Non-null callback, watch it iterate over this stuff.
     state = test_fabricate_1d_state_with_callback(
-        // &TEST_CALLBACK_NAME(AccelFuzzTest, accel_generate_state_valid_callback, myTest),
-        NULL,
+        &TEST_CALLBACK_NAME(AccelFuzzTest, accel_generate_state_valid_callback, myTest),
         10);
 
     EXPECT_EQ(ACCEL_SUCCESS, accel_start_record_gesture(state, &gesture_id));
