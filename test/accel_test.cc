@@ -445,7 +445,7 @@ TEST(AccelTest, test_fuzz_reset_affinities) {
     test_burn_state(&state);
 }
 
-int main (int argc, char** argv) {
+int main(int argc, char** argv) {
     ::testing::InitGoogleTest(&argc, argv);
 
     int returnValue;
