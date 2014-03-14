@@ -9,8 +9,8 @@
 #define ACCEL_MALLOC_ERROR -3
 #define ACCEL_NO_VALID_GESTURE -4
 
-#define ACCEL_VERSION_GEN(major, minor, point, isBeta, isAlpha) \
-    (4*(100*((100*major)+minor)+point) + 3 - (isAlpha?2:0) - (isBeta?1:0))
+#define ACCEL_VERSION_GEN(major, minor, point, isBeta, isAlpha)                                                        \
+    (4 * (100 * ((100 * major) + minor) + point) + 3 - (isAlpha ? 2 : 0) - (isBeta ? 1 : 0))
 
 #define ACCEL_VERSION_CODE ACCEL_VERSION_GEN(1, 0, 0, true, false)
 
@@ -63,7 +63,6 @@ typedef struct accelState {
     struct internalAccelState *state;
 } accel_state;
 
-
 /**
  * Creates a state object, essentially a constructor.
  * @param  state       Pointer-to-pointer of the state being generated,
@@ -81,7 +80,8 @@ typedef struct accelState {
  *                     gestures must be before the callback is called.
  * @return             ACCEL_SUCCESS if successful, an error code otherwise.
  */
-int accel_generate_state(accel_state **state, int dimensions, int window_size, accel_callback callback, const int threshold);
+int accel_generate_state(accel_state **state, int dimensions, int window_size, accel_callback callback,
+                         const int threshold);
 
 /**
  * Destroys the state object at the pointer pointed to by the state pointer.
