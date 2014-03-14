@@ -44,34 +44,56 @@ typedef struct internalAccelState {
     accel_gesture **gestures;
 } internal_accel_state;
 
-#define PRECONDITION_NOT_NULL(foo_$) \
-    if (foo_$ == NULL) { return ACCEL_PARAM_ERROR; }
+#define PRECONDITION_NOT_NULL(foo_$)                                                                                   \
+    if (foo_$ == NULL) {                                                                                               \
+        return ACCEL_PARAM_ERROR;                                                                                      \
+    }
 
-#define PRECONDITION_NULL(foo_$) \
-    if (foo_$ != NULL) { return ACCEL_PARAM_ERROR; }
+#define PRECONDITION_NULL(foo_$)                                                                                       \
+    if (foo_$ != NULL) {                                                                                               \
+        return ACCEL_PARAM_ERROR;                                                                                      \
+    }
 
-#define PRECONDITION_VALID_STATE(state_$) \
-    if (state_$ == NULL) { return ACCEL_PARAM_ERROR; }  \
-    if (state_$->state == NULL) { return ACCEL_INTERNAL_ERROR; } \
-    if (state_$->dimensions <= 0) { return ACCEL_INTERNAL_ERROR; } \
-    if (state_$->state->window_size <= 0) { return ACCEL_INTERNAL_ERROR; } \
-    if (state_$->state->num_gestures_saved < 0) { return ACCEL_INTERNAL_ERROR; } \
-    if (state_$->state->gestures == NULL && state_$->state->num_gestures_saved != 0) { return ACCEL_INTERNAL_ERROR; } \
-    if (state_$->state->gestures != NULL && state_$->state->num_gestures_saved == 0) { return ACCEL_INTERNAL_ERROR; }
+#define PRECONDITION_VALID_STATE(state_$)                                                                              \
+    if (state_$ == NULL) {                                                                                             \
+        return ACCEL_PARAM_ERROR;                                                                                      \
+    }                                                                                                                  \
+    if (state_$->state == NULL) {                                                                                      \
+        return ACCEL_INTERNAL_ERROR;                                                                                   \
+    }                                                                                                                  \
+    if (state_$->dimensions <= 0) {                                                                                    \
+        return ACCEL_INTERNAL_ERROR;                                                                                   \
+    }                                                                                                                  \
+    if (state_$->state->window_size <= 0) {                                                                            \
+        return ACCEL_INTERNAL_ERROR;                                                                                   \
+    }                                                                                                                  \
+    if (state_$->state->num_gestures_saved < 0) {                                                                      \
+        return ACCEL_INTERNAL_ERROR;                                                                                   \
+    }                                                                                                                  \
+    if (state_$->state->gestures == NULL && state_$->state->num_gestures_saved != 0) {                                 \
+        return ACCEL_INTERNAL_ERROR;                                                                                   \
+    }                                                                                                                  \
+    if (state_$->state->gestures != NULL && state_$->state->num_gestures_saved == 0) {                                 \
+        return ACCEL_INTERNAL_ERROR;                                                                                   \
+    }
 
 // Decay rate of values we choose to keep. 1.0 is no decay, 2.0 is a doubling every time we keep them.
 // TODO: should we store the offsets as floats instead?
 #define ALPHA 1.0
 
 // TODO: include these from a header file?
-#define MAX(a,b) \
-   ({ __typeof__ (a) _a = (a); \
-       __typeof__ (b) _b = (b); \
-     _a > _b ? _a : _b; })
-#define MIN(a,b) \
-   ({ __typeof__ (a) _a = (a); \
-       __typeof__ (b) _b = (b); \
-     _a < _b ? _a : _b; })
+#define MAX(a, b)                                                                                                      \
+    ({                                                                                                                 \
+        __typeof__(a) _a = (a);                                                                                        \
+        __typeof__(b) _b = (b);                                                                                        \
+        _a > _b ? _a : _b;                                                                                             \
+    })
+#define MIN(a, b)                                                                                                      \
+    ({                                                                                                                 \
+        __typeof__(a) _a = (a);                                                                                        \
+        __typeof__(b) _b = (b);                                                                                        \
+        _a < _b ? _a : _b;                                                                                             \
+    })
 
 void accel_destroy_gesture(accel_gesture **gesture, int dimensions) {
     if (gesture == NULL || *gesture == NULL) {
@@ -81,12 +103,12 @@ void accel_destroy_gesture(accel_gesture **gesture, int dimensions) {
     accel_gesture *gest = *gesture;
 
     if (gest->moving_avg_values != NULL) {
-        for (int i=0; i<dimensions; ++i) {
+        for (int i = 0; i < dimensions; ++i) {
             free_moving_avg(&(gest->moving_avg_values[i]));
         }
     }
     if (gest->normalized_recording != NULL) {
-        for (int i=0; i<gest->recording_size; ++i) {
+        for (int i = 0; i < gest->recording_size; ++i) {
             if (gest->normalized_recording[i] != NULL) {
                 free(gest->normalized_recording[i]);
                 gest->normalized_recording[i] = NULL;
@@ -104,7 +126,6 @@ void accel_destroy_gesture(accel_gesture **gesture, int dimensions) {
     *gesture = NULL;
 }
 
-
 int accel_generate_gesture(accel_state *state, accel_gesture **gesture) {
     PRECONDITION_VALID_STATE(state);
     PRECONDITION_NOT_NULL(gesture);
@@ -113,7 +134,7 @@ int accel_generate_gesture(accel_state *state, accel_gesture **gesture) {
     PRECONDITION_NULL((*gesture));
 
     size_t gesture_size = sizeof(accel_gesture);
-    *gesture = (accel_gesture *) malloc(gesture_size);
+    *gesture = (accel_gesture *)malloc(gesture_size);
     if (*gesture == NULL) {
         return ACCEL_MALLOC_ERROR;
     }
@@ -122,18 +143,19 @@ int accel_generate_gesture(accel_state *state, accel_gesture **gesture) {
     (*gesture)->is_recorded = false;
     (*gesture)->normalized_recording = NULL;
 
-    (*gesture)->moving_avg_values = (moving_avg_values **) my_calloc(state->dimensions, sizeof(moving_avg_values *));
+    (*gesture)->moving_avg_values = (moving_avg_values **)my_calloc(state->dimensions, sizeof(moving_avg_values *));
     if ((*gesture)->moving_avg_values == NULL) {
         free((*gesture));
         *gesture = NULL;
         return ACCEL_MALLOC_ERROR;
     }
-    for (int i=0; i<state->dimensions; ++i) {
+    for (int i = 0; i < state->dimensions; ++i) {
         // TODO: these two shouldn't both be the same....
-        int result = allocate_moving_avg(state->state->window_size, state->state->window_size, &((*gesture)->moving_avg_values[i]));
+        int result = allocate_moving_avg(state->state->window_size, state->state->window_size,
+                                         &((*gesture)->moving_avg_values[i]));
 
         if (result != ACCEL_SUCCESS) {
-            for (int j=0; j<i; ++j) {
+            for (int j = 0; j < i; ++j) {
                 free_moving_avg(&((*gesture)->moving_avg_values[i]));
             }
             accel_destroy_gesture(gesture, state->dimensions);
@@ -144,10 +166,7 @@ int accel_generate_gesture(accel_state *state, accel_gesture **gesture) {
 }
 
 // TODO: needs direct testing with invalid objects.
-int accel_generate_state(accel_state **state,
-                         int dimensions,
-                         int window_size,
-                         accel_callback callback,
+int accel_generate_state(accel_state **state, int dimensions, int window_size, accel_callback callback,
                          const int threshold) {
     PRECONDITION_NOT_NULL(state);
 
@@ -170,8 +189,8 @@ int accel_generate_state(accel_state **state,
     size_t state_size = sizeof(accel_state);
     size_t internal_state_size = sizeof(internal_accel_state);
 
-    internal_accel_state *internal_state = (internal_accel_state *) malloc(internal_state_size);
-    *state = (accel_state *) malloc(state_size);
+    internal_accel_state *internal_state = (internal_accel_state *)malloc(internal_state_size);
+    *state = (accel_state *)malloc(state_size);
     if (*state == NULL || internal_state == NULL) {
         if (state != NULL) {
             free(*state);
@@ -206,7 +225,7 @@ int accel_destroy_state(accel_state **state) {
         internal_accel_state *istate = (*state)->state;
         if (istate->gestures != NULL) {
             /* TODO: remove all additional fields inside the accel_state variable */
-            for (int i=0; i<istate->num_gestures_saved; ++i) {
+            for (int i = 0; i < istate->num_gestures_saved; ++i) {
                 accel_gesture *gest = (istate->gestures[i]);
                 accel_destroy_gesture(&(gest), dimensions);
             }
@@ -228,7 +247,9 @@ int accel_start_record_gesture(accel_state *state, int *gesture) {
     PRECONDITION_NOT_NULL(gesture);
 
     if (state->state->num_gestures_saved != 0) {
-        accel_gesture **tmp = (accel_gesture **)my_realloc(state->state->gestures, (state->state->num_gestures_saved + 1)*sizeof(accel_gesture *), (state->state->num_gestures_saved)*sizeof(accel_gesture *));
+        accel_gesture **tmp = (accel_gesture **)my_realloc(
+            state->state->gestures, (state->state->num_gestures_saved + 1) * sizeof(accel_gesture *),
+            (state->state->num_gestures_saved) * sizeof(accel_gesture *));
         if (tmp == NULL) {
             return ACCEL_MALLOC_ERROR;
         }
@@ -250,7 +271,8 @@ int accel_start_record_gesture(accel_state *state, int *gesture) {
             free(state->state->gestures);
             state->state->gestures = NULL;
         } else {
-            accel_gesture ** tmp = (accel_gesture **)my_realloc(state->state->gestures, state->state->num_gestures_saved - 1, state->state->num_gestures_saved);
+            accel_gesture **tmp = (accel_gesture **)my_realloc(
+                state->state->gestures, state->state->num_gestures_saved - 1, state->state->num_gestures_saved);
             if (tmp != NULL) {
                 // If tmp is null, we don't really care that realloc failed, since a future use of realloc will help us.
                 state->state->gestures = tmp;
@@ -266,16 +288,14 @@ int accel_start_record_gesture(accel_state *state, int *gesture) {
 // The uWave paper suggests a mapping from [-20, 20]->[-15, 15], but cube root
 // should to work better for variable ranges.
 // TODO: revisit this decision.
-int normalize(int sum) {
-    return (int) cbrt(sum);
-}
+int normalize(int sum) { return (int)cbrt(sum); }
 
 int reset_gesture(accel_gesture *gest, const int dimensions) {
     PRECONDITION_NOT_NULL(gest);
-    for (int i=0; i<gest->recording_size; ++i) {
+    for (int i = 0; i < gest->recording_size; ++i) {
         gest->offsets[i] = INT16_MAX;
     }
-    for (int d=0; d<dimensions; ++d) {
+    for (int d = 0; d < dimensions; ++d) {
         reset_moving_avg(gest->moving_avg_values[d]);
     }
     return ACCEL_SUCCESS;
@@ -307,7 +327,7 @@ int accel_end_record_gesture(accel_state *state, int gesture_id) {
         return ACCEL_PARAM_ERROR;
     }
 
-    gesture->offsets = (int *) malloc(gesture->recording_size * sizeof(int));
+    gesture->offsets = (int *)malloc(gesture->recording_size * sizeof(int));
     if (gesture->offsets == NULL) {
         return ACCEL_MALLOC_ERROR;
     }
@@ -332,24 +352,30 @@ int accel_end_record_gesture(accel_state *state, int gesture_id) {
 
 // TODO: check for malloc failure in this function.
 // TODO: this should return error types instead of being void.
-    // Follow-up: find usages of this method.
+// Follow-up: find usages of this method.
 void handle_recording_tick(accel_gesture *gesture, int dimensions) {
-    if (gesture == NULL) { return; }
+    if (gesture == NULL) {
+        return;
+    }
     // TODO: grow exponentially, not linearly. Linear growth allocates too frequently.
     if (gesture->recording_size != 0) {
-        gesture->normalized_recording = (int **) my_realloc(gesture->normalized_recording, (gesture->recording_size + 1) * sizeof(int *), gesture->recording_size * sizeof(int *));
+        gesture->normalized_recording =
+            (int **)my_realloc(gesture->normalized_recording, (gesture->recording_size + 1) * sizeof(int *),
+                               gesture->recording_size * sizeof(int *));
         if (gesture->normalized_recording == NULL) {
             return;
         }
     } else {
-        gesture->normalized_recording = (int **) malloc(sizeof(int *));
+        gesture->normalized_recording = (int **)malloc(sizeof(int *));
     }
-    gesture->normalized_recording[gesture->recording_size] = (int *) malloc(sizeof(int) * dimensions);
-    for (int i=0; i<dimensions; ++i) {
+    gesture->normalized_recording[gesture->recording_size] = (int *)malloc(sizeof(int) * dimensions);
+    for (int i = 0; i < dimensions; ++i) {
         // TODO: fix this int/float business.
         // TODO: check resultant output.
-        get_latest_frame_moving_avg(gesture->moving_avg_values[i], &(gesture->normalized_recording[gesture->recording_size][i]));
-        gesture->normalized_recording[gesture->recording_size][i] = normalize(gesture->normalized_recording[gesture->recording_size][i]);
+        get_latest_frame_moving_avg(gesture->moving_avg_values[i],
+                                    &(gesture->normalized_recording[gesture->recording_size][i]));
+        gesture->normalized_recording[gesture->recording_size][i] =
+            normalize(gesture->normalized_recording[gesture->recording_size][i]);
     }
     ++gesture->recording_size;
 }
@@ -359,8 +385,7 @@ int handle_evaluation_tick(accel_state *state, accel_gesture *gesture, int gestu
     PRECONDITION_NOT_NULL(gesture);
     int dimensions = state->dimensions;
 
-    if (gesture->moving_avg_values == NULL ||
-        gesture->offsets == NULL) {
+    if (gesture->moving_avg_values == NULL || gesture->offsets == NULL) {
         return ACCEL_INTERNAL_ERROR;
     }
 
@@ -369,7 +394,7 @@ int handle_evaluation_tick(accel_state *state, accel_gesture *gesture, int gestu
         --i;
 
         int cost = 0;
-        for (int d=0; d<dimensions; ++d) {
+        for (int d = 0; d < dimensions; ++d) {
             int recording_i_d = gesture->normalized_recording[i][d];
             int input_i_d = 0;
             // TODO: complain about invalid return values.
@@ -385,12 +410,12 @@ int handle_evaluation_tick(accel_state *state, accel_gesture *gesture, int gestu
         if (i == 0) {
             gesture->offsets[i] = cost;
         } else {
-            gesture->offsets[i] = MIN(ALPHA * gesture->offsets[i], cost+gesture->offsets[i-1]);
+            gesture->offsets[i] = MIN(ALPHA * gesture->offsets[i], cost + gesture->offsets[i - 1]);
         }
     }
-    for (i=1; i<gesture->recording_size; ++i) {
+    for (i = 1; i < gesture->recording_size; ++i) {
         int cost = 0;
-        for (int d=0; d<dimensions; ++d) {
+        for (int d = 0; d < dimensions; ++d) {
             int recording_i_d = gesture->normalized_recording[i][d];
             int input_i_d = 0;
             // TODO: complain about invalid return values.
@@ -402,13 +427,13 @@ int handle_evaluation_tick(accel_state *state, accel_gesture *gesture, int gestu
                 cost += input_i_d - recording_i_d;
             }
         }
-        gesture->offsets[i] = MIN(gesture->offsets[i], gesture->offsets[i-1] + cost);
+        gesture->offsets[i] = MIN(gesture->offsets[i], gesture->offsets[i - 1] + cost);
     }
     if (state->callback != NULL) {
         if (state->state->threshold <= 0) {
             return ACCEL_PARAM_ERROR;
         }
-        float avg_affinity = gesture->offsets[gesture->recording_size-1] * 1.0 / gesture->recording_size;
+        float avg_affinity = gesture->offsets[gesture->recording_size - 1] * 1.0 / gesture->recording_size;
         if (avg_affinity < state->state->threshold) {
             bool reset;
             int retval = state->callback(state, gesture_id, avg_affinity, &reset);
@@ -443,7 +468,7 @@ int accel_process_timer_tick(accel_state *state, int *accel_data) {
         // If the moving average is at a final line.
         bool avg_line = false;
         int returned = ACCEL_SUCCESS;
-        for (int d=0; d<state->dimensions && returned == 0; ++d) {
+        for (int d = 0; d < state->dimensions && returned == 0; ++d) {
             returned = append_to_moving_avg(gesture->moving_avg_values[d], accel_data[d], &avg_line);
         }
         if (returned != ACCEL_SUCCESS) {
@@ -451,7 +476,9 @@ int accel_process_timer_tick(accel_state *state, int *accel_data) {
             continue;
         }
 
-        if (!avg_line) { continue; }
+        if (!avg_line) {
+            continue;
+        }
 
         returned = ACCEL_SUCCESS;
         if (gesture->is_recording) {
@@ -489,7 +516,7 @@ int accel_find_most_likely_gesture(accel_state *state, int *gesture_id, int *off
         return ACCEL_INTERNAL_ERROR;
     }
 
-    for (int i=0; i<state->state->num_gestures_saved; ++i) {
+    for (int i = 0; i < state->state->num_gestures_saved; ++i) {
         accel_gesture *gesture = state->state->gestures[i];
 
         // TODO: this should be tested.
@@ -497,8 +524,7 @@ int accel_find_most_likely_gesture(accel_state *state, int *gesture_id, int *off
             return ACCEL_INTERNAL_ERROR;
         }
 
-        if ((*gesture_id == ACCEL_NO_VALID_GESTURE || *offset == ACCEL_NO_VALID_GESTURE) &&
-            *gesture_id != *offset) {
+        if ((*gesture_id == ACCEL_NO_VALID_GESTURE || *offset == ACCEL_NO_VALID_GESTURE) && *gesture_id != *offset) {
             return ACCEL_INTERNAL_ERROR;
         }
 
@@ -512,14 +538,12 @@ int accel_find_most_likely_gesture(accel_state *state, int *gesture_id, int *off
             continue;
         }
 
-        if (*offset == ACCEL_NO_VALID_GESTURE ||
-            gesture->offsets[gesture->recording_size-1] < *offset) {
-            *offset = gesture->offsets[gesture->recording_size-1];
+        if (*offset == ACCEL_NO_VALID_GESTURE || gesture->offsets[gesture->recording_size - 1] < *offset) {
+            *offset = gesture->offsets[gesture->recording_size - 1];
             *gesture_id = i;
         }
     }
-    if (*gesture_id == ACCEL_NO_VALID_GESTURE ||
-        *offset == ACCEL_NO_VALID_GESTURE) {
+    if (*gesture_id == ACCEL_NO_VALID_GESTURE || *offset == ACCEL_NO_VALID_GESTURE) {
         return ACCEL_NO_VALID_GESTURE;
     }
     return ACCEL_SUCCESS;

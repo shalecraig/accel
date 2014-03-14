@@ -4,7 +4,7 @@
 
 #include "testutil.h"
 
-const void * VOID_NULL = NULL;
+const void *VOID_NULL = NULL;
 
 accel_state *test_fabricate_state_with_callback(int dimensions, accel_callback callback, const int threshold) {
     accel_state *state = NULL;
@@ -30,24 +30,17 @@ accel_state *test_fabricate_3d_state_with_callback(accel_callback callback, cons
     return test_fabricate_state_with_callback(3, callback, threshold);
 }
 
-accel_state *test_fabricate_state(int dimensions) {
-    return test_fabricate_state_with_callback(dimensions, NULL, 0);
-}
+accel_state *test_fabricate_state(int dimensions) { return test_fabricate_state_with_callback(dimensions, NULL, 0); }
 
-accel_state *test_fabricate_1d_state() {
-    return test_fabricate_state(1);
-}
+accel_state *test_fabricate_1d_state() { return test_fabricate_state(1); }
 
-accel_state *test_fabricate_3d_state() {
-    return test_fabricate_state(3);
-}
+accel_state *test_fabricate_3d_state() { return test_fabricate_state(3); }
 
-void test_burn_state(accel_state ** state) {
+void test_burn_state(accel_state **state) {
     int result = accel_destroy_state(state);
     EXPECT_EQ(0, result);
     EXPECT_EQ(VOID_NULL, *state);
 }
-
 
 TEST(AccelFuzzTest, generate_state_null_state) {
     int result = accel_generate_state(NULL, 3, 1, NULL, 0);
@@ -73,7 +66,7 @@ TEST(AccelFuzzTest, generate_state_negative_or_zero_dimensions) {
 
 TEST(AccelFuzzTest, generate_state_invalid_threshold_with_callback_params) {
     accel_state *state = NULL;
-    accel_callback nonNullCallback = (accel_callback) 1;
+    accel_callback nonNullCallback = (accel_callback)1;
 
     // Fails for negatives.
     int result = accel_generate_state(&state, 1, 1, nonNullCallback, -1);
@@ -111,21 +104,21 @@ TEST(AccelFuzzTest, generate_state_threshold_fuzzing) {
 
     // Threshold of 1 with a non-null callback succeeds
     EXPECT_EQ(NULL, state);
-    EXPECT_EQ(ACCEL_SUCCESS, accel_generate_state(&state, 1, 1, (accel_callback) 0x1, 1));
+    EXPECT_EQ(ACCEL_SUCCESS, accel_generate_state(&state, 1, 1, (accel_callback)0x1, 1));
     accel_destroy_state(&state);
 
     // Threshold of 1 with a null callback fails
     EXPECT_EQ(NULL, state);
-    EXPECT_EQ(ACCEL_PARAM_ERROR, accel_generate_state(&state, 1, 1, (accel_callback) NULL, 1));
+    EXPECT_EQ(ACCEL_PARAM_ERROR, accel_generate_state(&state, 1, 1, (accel_callback)NULL, 1));
 
     // Threshold of 0 with a null callback succeeds
     EXPECT_EQ(NULL, state);
-    EXPECT_EQ(ACCEL_SUCCESS, accel_generate_state(&state, 1, 1, (accel_callback) NULL, 0));
+    EXPECT_EQ(ACCEL_SUCCESS, accel_generate_state(&state, 1, 1, (accel_callback)NULL, 0));
     accel_destroy_state(&state);
 
     // Threshold of 0 with a non-null callback fails
     EXPECT_EQ(NULL, state);
-    EXPECT_EQ(ACCEL_PARAM_ERROR, accel_generate_state(&state, 1, 1, (accel_callback) 0x1, 0));
+    EXPECT_EQ(ACCEL_PARAM_ERROR, accel_generate_state(&state, 1, 1, (accel_callback)0x1, 0));
 }
 
 TEST(AccelFuzzTest, accel_generate_state_null_callback) {
@@ -136,10 +129,10 @@ TEST(AccelFuzzTest, accel_generate_state_null_callback) {
     result = accel_generate_state(&state, 1, 1, NULL, 0);
 }
 
-
-TEST_CALLBACK(const int, AccelFuzzTest, accel_generate_state_valid_callback, myTest, accel_state *state, int gesture_id, int offset_found, bool *reset_gesture)
-    *reset_gesture = true;
-    return ACCEL_SUCCESS;
+TEST_CALLBACK(const int, AccelFuzzTest, accel_generate_state_valid_callback, myTest, accel_state *state, int gesture_id,
+              int offset_found, bool *reset_gesture)
+*reset_gesture = true;
+return ACCEL_SUCCESS;
 }
 
 TEST(AccelFuzzTest, accel_generate_state_valid_callback) {
@@ -148,18 +141,17 @@ TEST(AccelFuzzTest, accel_generate_state_valid_callback) {
 
     // Non-null callback, watch it iterate over this stuff.
     state = test_fabricate_1d_state_with_callback(
-        &TEST_CALLBACK_NAME(AccelFuzzTest, accel_generate_state_valid_callback, myTest),
-        10);
+        &TEST_CALLBACK_NAME(AccelFuzzTest, accel_generate_state_valid_callback, myTest), 10);
 
     EXPECT_EQ(ACCEL_SUCCESS, accel_start_record_gesture(state, &gesture_id));
 
-    for (int i=0; i<100; ++i) {
+    for (int i = 0; i < 100; ++i) {
         int data[1] = {i};
         EXPECT_EQ(ACCEL_SUCCESS, accel_process_timer_tick(state, data));
     }
     EXPECT_EQ(ACCEL_SUCCESS, accel_end_record_gesture(state, gesture_id));
 
-    for (int i=0; i<100; ++i) {
+    for (int i = 0; i < 100; ++i) {
         int data[1] = {i};
         EXPECT_EQ(ACCEL_SUCCESS, accel_process_timer_tick(state, data));
     }
@@ -231,7 +223,7 @@ TEST(AccelFuzzTest, accel_end_record_gesture_invalid_input) {
     EXPECT_EQ(0, accel_process_timer_tick(state, data));
 
     result = accel_end_record_gesture(state, gesture);
-    EXPECT_EQ(0, result)  << "gesture " << gesture << " couldn't be recorded correctly" << std::endl;
+    EXPECT_EQ(0, result) << "gesture " << gesture << " couldn't be recorded correctly" << std::endl;
     test_burn_state(&state);
 }
 
@@ -283,9 +275,9 @@ TEST(AccelFuzzTest, accel_find_most_likely_gesture_invalid_input) {
 
 TEST(AccelTest, accel_generate_and_destroy) {
     accel_state *state = NULL;
-    for (int i=1; i<10; ++i) {
+    for (int i = 1; i < 10; ++i) {
         EXPECT_EQ(VOID_NULL, state) << "i = " << i;
-        EXPECT_EQ(0, accel_generate_state(&state, 2*i, i, NULL, 0)) << "i = " << i;
+        EXPECT_EQ(0, accel_generate_state(&state, 2 * i, i, NULL, 0)) << "i = " << i;
         EXPECT_EQ(0, accel_destroy_state(&state)) << "i = " << i;
         EXPECT_EQ(VOID_NULL, state) << "i = " << i;
     }
@@ -296,13 +288,13 @@ TEST(AccelTest, start_recording_and_close_many_gestures) {
     state = test_fabricate_1d_state();
 
     int data[1] = {0};
-    for (int i=0; i<10; ++i) {
+    for (int i = 0; i < 10; ++i) {
         int gesture = 0;
         ASSERT_EQ(0, accel_start_record_gesture(state, &gesture));
         ASSERT_EQ(i, gesture);
         ASSERT_EQ(0, accel_process_timer_tick(state, data));
     }
-    for (int i=0; i<10; ++i) {
+    for (int i = 0; i < 10; ++i) {
         ASSERT_EQ(0, accel_end_record_gesture(state, i));
     }
     test_burn_state(&state);
@@ -317,7 +309,7 @@ TEST(AccelTest, record_incredibly_long_sequence) {
     EXPECT_EQ(0, gesture);
 
     int data[] = {1};
-    for (int i=0; i<10000; ++i) {
+    for (int i = 0; i < 10000; ++i) {
         EXPECT_EQ(0, accel_process_timer_tick(state, data));
     }
 
@@ -334,16 +326,16 @@ TEST(AccelTest, end_to_end_test_single_recording) {
     EXPECT_EQ(0, gesture);
 
     int data[] = {1};
-    for (int i=0; i<10; ++i) {
-        data[0] = i*100;
+    for (int i = 0; i < 10; ++i) {
+        data[0] = i * 100;
         EXPECT_EQ(0, accel_process_timer_tick(state, data));
     }
 
     EXPECT_EQ(0, accel_end_record_gesture(state, gesture));
 
     int prev_affinity = 0;
-    for (int i=0; i<10; ++i) {
-        data[0] = i*100;
+    for (int i = 0; i < 10; ++i) {
+        data[0] = i * 100;
         int gesture_found = 1;
         int affinity_of_gesture = 1;
         ASSERT_EQ(0, accel_process_timer_tick(state, data));
@@ -368,7 +360,7 @@ TEST(AccelTest, end_to_end_test_multiple_recordings) {
     EXPECT_EQ(0, first_gesture);
 
     int data[] = {1};
-    for (int i=0; i<10; ++i) {
+    for (int i = 0; i < 10; ++i) {
         data[0] = i;
         EXPECT_EQ(0, accel_process_timer_tick(state, data));
     }
@@ -379,16 +371,16 @@ TEST(AccelTest, end_to_end_test_multiple_recordings) {
     EXPECT_EQ(0, accel_start_record_gesture(state, &second_gesture));
     EXPECT_NE(first_gesture, second_gesture);
 
-    for (int i=0; i<10; ++i) {
-        data[0] = i*i;
+    for (int i = 0; i < 10; ++i) {
+        data[0] = i * i;
         EXPECT_EQ(0, accel_process_timer_tick(state, data));
     }
 
     EXPECT_EQ(0, accel_end_record_gesture(state, second_gesture));
 
     int prev_affinity = 0;
-    for (int i=0; i<10; ++i) {
-        data[0] = i*2;
+    for (int i = 0; i < 10; ++i) {
+        data[0] = i * 2;
         int gesture_found = 1;
         int affinity_of_gesture = 1;
         ASSERT_EQ(0, accel_process_timer_tick(state, data));
@@ -400,18 +392,62 @@ TEST(AccelTest, end_to_end_test_multiple_recordings) {
     test_burn_state(&state);
 }
 
-int main(int argc, char** argv) {
+TEST(AccelTest, test_fuzz_reset_affinities) {
+    accel_state *state = NULL;
+
+    // Null accel states.
+    EXPECT_EQ(ACCEL_PARAM_ERROR, accel_reset_affinities_for_gesture(NULL, 0));
+
+    // No recorded accelerations
+    state = test_fabricate_1d_state();
+    EXPECT_EQ(ACCEL_PARAM_ERROR, accel_reset_affinities_for_gesture(state, 0));
+
+    int gesture_id = 0;
+    EXPECT_EQ(ACCEL_SUCCESS, accel_start_record_gesture(state, &gesture_id));
+
+    // A recording gesture with no data.
+    EXPECT_EQ(ACCEL_PARAM_ERROR, accel_reset_affinities_for_gesture(state, gesture_id));
+
+    int data[1] = {0};
+    EXPECT_EQ(ACCEL_SUCCESS, accel_process_timer_tick(state, data));
+    EXPECT_EQ(ACCEL_SUCCESS, accel_process_timer_tick(state, data));
+    EXPECT_EQ(ACCEL_SUCCESS, accel_process_timer_tick(state, data));
+
+    // A recording gesture with some data.
+    EXPECT_EQ(ACCEL_PARAM_ERROR, accel_reset_affinities_for_gesture(state, gesture_id));
+
+    EXPECT_EQ(ACCEL_SUCCESS, accel_end_record_gesture(state, gesture_id));
+
+    // No ticks have been recorded.
+    EXPECT_EQ(ACCEL_SUCCESS, accel_reset_affinities_for_gesture(state, gesture_id));
+
+    int found_gesture = 1;
+    int found_distance = 1;
+    EXPECT_EQ(ACCEL_SUCCESS, accel_process_timer_tick(state, data));
+    EXPECT_EQ(ACCEL_SUCCESS, accel_find_most_likely_gesture(state, &found_gesture, &found_distance));
+
+    int after_reset_gesture = 1;
+    int after_reset_distance = 1;
+    EXPECT_EQ(ACCEL_SUCCESS, accel_reset_affinities_for_gesture(state, gesture_id));
+    EXPECT_EQ(ACCEL_SUCCESS, accel_find_most_likely_gesture(state, &after_reset_gesture, &after_reset_distance));
+
+    EXPECT_NE(found_distance, after_reset_distance);
+
+    test_burn_state(&state);
+}
+
+int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
 
     int returnValue;
 
-    //Do whatever setup here you will need for your tests here
+    // Do whatever setup here you will need for your tests here
     //
     //
 
-    returnValue =  RUN_ALL_TESTS();
+    returnValue = RUN_ALL_TESTS();
 
-    //Do Your teardown here if required
+    // Do Your teardown here if required
     //
     //
 
