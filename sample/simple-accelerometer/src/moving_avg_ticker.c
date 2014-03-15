@@ -3,8 +3,10 @@
 
 #include "moving_avg_ticker.h"
 
-#define PRECONDITION_NOT_NULL(foo) \
-    if (foo == NULL) { return MOVING_AVG_PARAM_ERROR; }
+#define PRECONDITION_NOT_NULL(foo)                                                                                     \
+    if (foo == NULL) {                                                                                                 \
+        return MOVING_AVG_PARAM_ERROR;                                                                                 \
+    }
 
 int precondition_valid_moving_avg_values(moving_avg_values *input) {
     PRECONDITION_NOT_NULL(input);
@@ -44,17 +46,17 @@ int allocate_moving_avg(int num_wbuf, int subtotal_sizes, moving_avg_values **al
     }
     size_t size = sizeof(moving_avg_values);
 
-    *allocated = (moving_avg_values *) malloc(size);
+    *allocated = (moving_avg_values *)malloc(size);
     if (allocated == NULL) {
         return MOVING_AVG_MALLOC_ERROR;
     }
     memset(*allocated, 0, size);
     (*allocated)->max_subtotal_size = subtotal_sizes;
 
-    int *wbuf = (int *) calloc(num_wbuf, sizeof(int));
+    int *wbuf = (int *)calloc(num_wbuf, sizeof(int));
     if (wbuf == NULL) {
         // Run away, fast!
-        free (allocated);
+        free(allocated);
         *allocated = NULL;
         return MOVING_AVG_MALLOC_ERROR;
     }
@@ -76,9 +78,11 @@ int reset_moving_avg(moving_avg_values *reset) {
     return 0;
 }
 
-int append_to_moving_avg(moving_avg_values *value, int appended, bool* is_at_end) {
+int append_to_moving_avg(moving_avg_values *value, int appended, bool *is_at_end) {
     int is_valid_return_value = precondition_valid_moving_avg_values(value);
-    if (is_valid_return_value != 0) {return is_valid_return_value;}
+    if (is_valid_return_value != 0) {
+        return is_valid_return_value;
+    }
 
     PRECONDITION_NOT_NULL(is_at_end);
 
@@ -100,15 +104,17 @@ int append_to_moving_avg(moving_avg_values *value, int appended, bool* is_at_end
 
 int get_latest_frame_moving_avg(moving_avg_values *value, int *frame) {
     int is_valid_return_value = precondition_valid_moving_avg_values(value);
-    if (is_valid_return_value != 0) {return is_valid_return_value;}
+    if (is_valid_return_value != 0) {
+        return is_valid_return_value;
+    }
 
     PRECONDITION_NOT_NULL(frame);
 
     float sum = 0;
-    for (int i=0; i<value->wbuf_len; ++i) {
+    for (int i = 0; i < value->wbuf_len; ++i) {
         sum += value->wbuf[i] * 1.0 / value->wbuf_len;
     }
-    *frame = (int) sum;
+    *frame = (int)sum;
     return 0;
 }
 
