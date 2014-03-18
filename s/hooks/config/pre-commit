@@ -1,0 +1,21 @@
+#!/bin/sh
+
+set -e
+
+echo -------------------------------------------
+echo --              Pre-commit               --
+echo -------------------------------------------
+
+# Goto root.
+pushd $(git rev-parse --show-toplevel || echo ".")
+
+# Make the individual scripts runnable
+find . -path ./s/hooks/auto/pre-commit/\*.sh -exec chmod +x "{}" \;
+
+find . -path ./s/hooks/auto/pre-commit/\*.sh -exec sh "{}" \;
+
+popd
+
+echo -------------------------------------------
+echo --                 Done!                 --
+echo -------------------------------------------
