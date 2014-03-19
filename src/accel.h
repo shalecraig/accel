@@ -12,7 +12,7 @@
 #define ACCEL_VERSION_GEN(major, minor, point, isBeta, isAlpha)                                                        \
     (4 * (100 * ((100 * major) + minor) + point) + 3 - (isAlpha ? 2 : 0) - (isBeta ? 1 : 0))
 
-#define ACCEL_VERSION_CODE ACCEL_VERSION_GEN(1, 0, 0, true, false)
+#define ACCEL_VERSION_CODE ACCEL_VERSION_GEN(1, 1, 0, false, true)
 
 struct internalAccelState;
 struct accelState;
