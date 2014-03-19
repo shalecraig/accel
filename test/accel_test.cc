@@ -2,7 +2,7 @@
 
 #include "../src/accel.h"
 
-#include "testutil.h"
+#include "callback_util.h"
 
 const void *VOID_NULL = NULL;
 
