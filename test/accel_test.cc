@@ -436,6 +436,10 @@ TEST(AccelTest, test_fuzz_reset_affinities) {
     test_burn_state(&state);
 }
 
+TEST(AccelVersionTest, 1_0_0_to_1_1_0_a) {
+    EXPECT_GT(ACCEL_VERSION_GEN(1, 1, 0, false, true), ACCEL_VERSION_GEN(1, 0, 0, true, false));
+}
+
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
 
