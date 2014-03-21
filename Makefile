@@ -11,6 +11,11 @@ TEST_OBJECTS            = $(subst test,bin,$(_TEST_OBJECTS_TMP))
 
 EXEC = tests
 
+# removed: -Wl,-z,relro -Wl,-z,now
+C_ARGS = -DIS_NOT_PEBBLE -pipe -m64 -ansi -fPIC -g -O3 -fno-exceptions -fstack-protector -fvisibility=hidden -W -Wall -Wno-unused-parameter -Wno-unused-function -Wno-unused-label -Wpointer-arith -Wformat -Wreturn-type -Wsign-compare -Wmultichar -Wformat-nonliteral -Winit-self -Wuninitialized -Wno-deprecated -Wformat-security -Werror -Wcomment -Wtrigraphs -Wundef -Wunused-macros -pedantic-errors -std=c99
+# removed: -lpthread, -Wl,-z,relro -Wl,-z,now
+CXX_ARGS = -DIS_NOT_PEBBLE -lpthread -pipe -m64 -ansi -fPIC -g -O3 -fno-exceptions -fstack-protector -fvisibility=hidden -W -Wall -Wno-unused-parameter -Wno-unused-function -Wno-unused-label -Wpointer-arith -Wformat -Wreturn-type -Wsign-compare -Wmultichar -Wformat-nonliteral -Winit-self -Wuninitialized -Wno-deprecated -Wformat-security -Wall
+
 default:
 	@make all
 
@@ -28,19 +33,19 @@ list:
 tests: bin/tests
 
 bin/tests: ${SOURCES_OBJECTS} ${TEST_OBJECTS} bin/libgtest.a bin
-	clang++ -Ilib/gtest-1.7.0/include ${SOURCES_OBJECTS} ${TEST_OBJECTS} bin/libgtest.a -o bin/tests
+	clang++ -Ilib/gtest-1.7.0/include ${SOURCES_OBJECTS} ${TEST_OBJECTS} bin/libgtest.a -lpthread -o bin/tests
 
 run: tests
 	./bin/tests
 
 bin/%.o : src/%.c bin
-	clang -DIS_NOT_PEBBLE -c $< -o $@
+	clang ${C_ARGS} -c $< -o $@
 
 bin/%.o : test/%.cc bin
-	clang++ -DIS_NOT_PEBBLE -Ilib/gtest-1.7.0/include -c $< -o $@
+	clang++ -Ilib/gtest-1.7.0/include ${CXX_ARGS} -c $< -o $@
 
 bin/libgtest.a: bin
-	clang++ -Ilib/gtest-1.7.0/include -Ilib/gtest-1.7.0 -c lib/gtest-1.7.0/src/gtest-all.cc -lpthread -o bin/libgtest.a
+	clang++ -Ilib/gtest-1.7.0/include -Ilib/gtest-1.7.0 -c lib/gtest-1.7.0/src/gtest-all.cc -o bin/libgtest.a
 
 bin:
 	mkdir -p bin

@@ -58,7 +58,7 @@ struct accelState;
  *                          refer to the ACCEL_MIN_RESERVED definition inside
  *                          their implementations.
  */
-typedef const int (*accel_callback)(struct accelState *state, int gesture_id, int offset_found, bool *reset_gesture);
+typedef int (*accel_callback)(struct accelState *state, int gesture_id, int offset_found, bool *reset_gesture);
 
 typedef struct accelState {
     int dimensions;
