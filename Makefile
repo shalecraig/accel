@@ -27,16 +27,16 @@ list:
 
 tests: bin/tests
 
-bin/tests: ${SOURCES_OBJECTS} ${TEST_OBJECTS} bin/libgtest.a
+bin/tests: ${SOURCES_OBJECTS} ${TEST_OBJECTS} bin/libgtest.a bin
 	clang++ -Ilib/gtest-1.7.0/include ${SOURCES_OBJECTS} ${TEST_OBJECTS} bin/libgtest.a -o bin/tests
 
 run: tests
 	./bin/tests
 
-bin/%.o : src/%.c
+bin/%.o : src/%.c bin
 	clang -DIS_NOT_PEBBLE -c $< -o $@
 
-bin/%.o : test/%.cc
+bin/%.o : test/%.cc bin
 	clang++ -DIS_NOT_PEBBLE -Ilib/gtest-1.7.0/include -c $< -o $@
 
 bin/libgtest.a: bin
