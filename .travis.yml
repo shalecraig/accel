@@ -3,7 +3,6 @@ compiler:
   - gcc
   - clang
 script:
-  - cd test/
   - make run
 branches:
   only:
