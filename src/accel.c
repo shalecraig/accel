@@ -341,16 +341,16 @@ int accel_end_record_gesture(accel_state *state, int gesture_id) {
         gesture->is_recorded = true;
     }
 
-    for (int i=0; i<gesture->recording_size; ++i) {
-        gesture->affinities[i] = INT16_MAX;
+    for (int i = 0; i < gesture->recording_size; ++i) {
+        gesture->offsets[i] = INT16_MAX;
     }
-    for (int d=0; d<state->dimensions; ++d) {
+    for (int d = 0; d < state->dimensions; ++d) {
         reset_moving_avg(gesture->moving_avg_values[d]);
     }
     return ACCEL_SUCCESS;
 }
 
-// TODO: check for malloc failure in this function.
+// TODO: gracefully handle malloc failure in this function.
 // TODO: this should return error types instead of being void.
 // Follow-up: find usages of this method.
 void handle_recording_tick(accel_gesture *gesture, int dimensions) {

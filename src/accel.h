@@ -145,7 +145,7 @@ int accel_find_most_likely_gesture(accel_state *state, int *gesture_id, int *dis
  * @param gesture_id Value that corresponds to a gesture currently being reset.
  * @return           ACCEL_SUCCESS if successful, an error code otherwise.
  */
-int accel_reset_affinities_for_gesture(accel_state *state, int gesture_id);
+// int accel_reset_affinities_for_gesture(accel_state *state, int gesture_id);
 
 #ifdef __cplusplus
 }
