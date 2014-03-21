@@ -33,7 +33,7 @@ list:
 tests: bin/tests
 
 bin/tests: ${SOURCES_OBJECTS} ${TEST_OBJECTS} bin/libgtest.a bin
-	clang++ -Ilib/gtest-1.7.0/include ${SOURCES_OBJECTS} ${TEST_OBJECTS} bin/libgtest.a -o bin/tests
+	clang++ -Ilib/gtest-1.7.0/include ${SOURCES_OBJECTS} ${TEST_OBJECTS} bin/libgtest.a -lpthread -o bin/tests
 
 run: tests
 	./bin/tests
@@ -42,7 +42,7 @@ bin/%.o : src/%.c bin
 	clang ${C_ARGS} -c $< -o $@
 
 bin/%.o : test/%.cc bin
-	clang++ ${CXX_ARGS} -Ilib/gtest-1.7.0/include -c $< -o $@
+	clang++ -Ilib/gtest-1.7.0/include ${CXX_ARGS} -c $< -o $@
 
 bin/libgtest.a: bin
 	clang++ -Ilib/gtest-1.7.0/include -Ilib/gtest-1.7.0 -c lib/gtest-1.7.0/src/gtest-all.cc -o bin/libgtest.a
