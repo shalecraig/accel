@@ -1,8 +1,210 @@
 #include "gtest/gtest.h"
 
 #include "../src/moving_avg_ticker.h"
+#include "../src/accel.h"
 
-const void *void_null = NULL;
+// TODO: use accel_test_util.h
+#include "callback_util.h"
+#include "util.h"
+
+accel_state *test_fabricate_state_with_callback(int dimensions, accel_callback callback, const int threshold) {
+    accel_state *state = NULL;
+    int result = accel_generate_state(&state, dimensions, 1, callback, threshold);
+    EXPECT_EQ(ACCEL_SUCCESS, result);
+    if (ACCEL_SUCCESS != result) {
+        int *myNull = NULL;
+        myNull = 0;
+    }
+    EXPECT_NE(VOID_NULL, state);
+    if (VOID_NULL == state) {
+        int *myNull = NULL;
+        myNull = 0;
+    }
+    return state;
+}
+
+accel_state *test_fabricate_1d_state_with_callback(accel_callback callback, const int threshold) {
+    return test_fabricate_state_with_callback(1, callback, threshold);
+}
+
+accel_state *test_fabricate_3d_state_with_callback(accel_callback callback, const int threshold) {
+    return test_fabricate_state_with_callback(3, callback, threshold);
+}
+
+accel_state *test_fabricate_state(int dimensions) { return test_fabricate_state_with_callback(dimensions, NULL, 0); }
+
+accel_state *test_fabricate_1d_state() { return test_fabricate_state(1); }
+
+accel_state *test_fabricate_3d_state() { return test_fabricate_state(3); }
+
+void test_burn_state(accel_state **state) {
+    int result = accel_destroy_state(state);
+    EXPECT_EQ(0, result);
+    EXPECT_EQ(VOID_NULL, *state);
+}
+
+TEST(AccelTest, accel_generate_and_destroy) {
+    accel_state *state = NULL;
+    for (int i = 1; i < 10; ++i) {
+        EXPECT_EQ(VOID_NULL, state) << "i = " << i;
+        EXPECT_EQ(0, accel_generate_state(&state, 2 * i, i, NULL, 0)) << "i = " << i;
+        EXPECT_EQ(0, accel_destroy_state(&state)) << "i = " << i;
+        EXPECT_EQ(VOID_NULL, state) << "i = " << i;
+    }
+}
+
+TEST(AccelTest, start_recording_and_close_many_gestures) {
+    accel_state *state = NULL;
+    state = test_fabricate_1d_state();
+
+    int data[1] = {0};
+    for (int i = 0; i < 10; ++i) {
+        int gesture = 0;
+        ASSERT_EQ(0, accel_start_record_gesture(state, &gesture));
+        ASSERT_EQ(i, gesture);
+        ASSERT_EQ(0, accel_process_timer_tick(state, data));
+    }
+    for (int i = 0; i < 10; ++i) {
+        ASSERT_EQ(0, accel_end_record_gesture(state, i));
+    }
+    test_burn_state(&state);
+}
+
+TEST(AccelTest, record_incredibly_long_sequence) {
+    accel_state *state = NULL;
+    state = test_fabricate_1d_state();
+
+    int gesture = 0;
+    EXPECT_EQ(0, accel_start_record_gesture(state, &gesture));
+    EXPECT_EQ(0, gesture);
+
+    int data[] = {1};
+    for (int i = 0; i < 10000; ++i) {
+        EXPECT_EQ(0, accel_process_timer_tick(state, data));
+    }
+
+    EXPECT_EQ(0, accel_end_record_gesture(state, gesture));
+    test_burn_state(&state);
+}
+
+TEST(AccelTest, end_to_end_test_single_recording) {
+    accel_state *state = NULL;
+    state = test_fabricate_1d_state();
+
+    int gesture = 0;
+    EXPECT_EQ(0, accel_start_record_gesture(state, &gesture));
+    EXPECT_EQ(0, gesture);
+
+    int data[] = {1};
+    for (int i = 0; i < 10; ++i) {
+        data[0] = i * 100;
+        EXPECT_EQ(0, accel_process_timer_tick(state, data));
+    }
+
+    EXPECT_EQ(0, accel_end_record_gesture(state, gesture));
+
+    int prev_affinity = 0;
+    for (int i = 0; i < 10; ++i) {
+        data[0] = i * 100;
+        int gesture_found = 1;
+        int affinity_of_gesture = 1;
+        ASSERT_EQ(0, accel_process_timer_tick(state, data));
+        ASSERT_EQ(0, accel_find_most_likely_gesture(state, &gesture_found, &affinity_of_gesture));
+        ASSERT_EQ(gesture, gesture_found);
+        if (i != 0) {
+            ASSERT_LT(affinity_of_gesture, prev_affinity) << "i=" << i;
+        }
+        prev_affinity = affinity_of_gesture;
+    }
+
+    test_burn_state(&state);
+}
+
+TEST(AccelTest, end_to_end_test_multiple_recordings) {
+    // g_1(x) = x, g_2(x) = x*x. Sample data is f(x) = 2x, we want to verify that g_1 is chosen over g_2.
+    accel_state *state = NULL;
+    state = test_fabricate_1d_state();
+
+    int first_gesture = 0;
+    EXPECT_EQ(0, accel_start_record_gesture(state, &first_gesture));
+    EXPECT_EQ(0, first_gesture);
+
+    int data[] = {1};
+    for (int i = 0; i < 10; ++i) {
+        data[0] = i;
+        EXPECT_EQ(0, accel_process_timer_tick(state, data));
+    }
+
+    EXPECT_EQ(0, accel_end_record_gesture(state, first_gesture));
+
+    int second_gesture = 0;
+    EXPECT_EQ(0, accel_start_record_gesture(state, &second_gesture));
+    EXPECT_NE(first_gesture, second_gesture);
+
+    for (int i = 0; i < 10; ++i) {
+        data[0] = i * i;
+        EXPECT_EQ(0, accel_process_timer_tick(state, data));
+    }
+
+    EXPECT_EQ(0, accel_end_record_gesture(state, second_gesture));
+
+    int prev_affinity = 0;
+    for (int i = 0; i < 10; ++i) {
+        data[0] = i * 2;
+        int gesture_found = 1;
+        int affinity_of_gesture = 1;
+        ASSERT_EQ(0, accel_process_timer_tick(state, data));
+        ASSERT_EQ(0, accel_find_most_likely_gesture(state, &gesture_found, &affinity_of_gesture));
+        ASSERT_EQ(first_gesture, gesture_found);
+        prev_affinity = affinity_of_gesture;
+    }
+
+    test_burn_state(&state);
+}
+
+TEST(AccelTest, test_fuzz_reset_affinities) {
+    accel_state *state = NULL;
+
+    // Null accel states.
+    EXPECT_EQ(ACCEL_PARAM_ERROR, accel_reset_affinities_for_gesture(NULL, 0));
+
+    // No recorded accelerations
+    state = test_fabricate_1d_state();
+    EXPECT_EQ(ACCEL_PARAM_ERROR, accel_reset_affinities_for_gesture(state, 0));
+
+    int gesture_id = 0;
+    EXPECT_EQ(ACCEL_SUCCESS, accel_start_record_gesture(state, &gesture_id));
+
+    // A recording gesture with no data.
+    EXPECT_EQ(ACCEL_PARAM_ERROR, accel_reset_affinities_for_gesture(state, gesture_id));
+
+    int data[1] = {0};
+    EXPECT_EQ(ACCEL_SUCCESS, accel_process_timer_tick(state, data));
+    EXPECT_EQ(ACCEL_SUCCESS, accel_process_timer_tick(state, data));
+    EXPECT_EQ(ACCEL_SUCCESS, accel_process_timer_tick(state, data));
+
+    // A recording gesture with some data.
+    EXPECT_EQ(ACCEL_PARAM_ERROR, accel_reset_affinities_for_gesture(state, gesture_id));
+
+    EXPECT_EQ(ACCEL_SUCCESS, accel_end_record_gesture(state, gesture_id));
+
+    // No ticks have been recorded.
+    EXPECT_EQ(ACCEL_SUCCESS, accel_reset_affinities_for_gesture(state, gesture_id));
+
+    int found_gesture = 1;
+    int found_distance = 1;
+    EXPECT_EQ(ACCEL_SUCCESS, accel_process_timer_tick(state, data));
+    EXPECT_EQ(ACCEL_SUCCESS, accel_find_most_likely_gesture(state, &found_gesture, &found_distance));
+
+    int after_reset_gesture = 1;
+    int after_reset_distance = 1;
+    EXPECT_EQ(ACCEL_SUCCESS, accel_reset_affinities_for_gesture(state, gesture_id));
+    EXPECT_EQ(ACCEL_SUCCESS, accel_find_most_likely_gesture(state, &after_reset_gesture, &after_reset_distance));
+
+    EXPECT_NE(found_distance, after_reset_distance);
+
+    test_burn_state(&state);
+}
 
 TEST(MovingAvgTicker, InvalidInputValues) {
 

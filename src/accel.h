@@ -1,6 +1,10 @@
 #ifndef ACCEL_H
 #define ACCEL_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdbool.h>
 
 #define ACCEL_SUCCESS 0
@@ -54,7 +58,7 @@ struct accelState;
  *                          refer to the ACCEL_MIN_RESERVED definition inside
  *                          their implementations.
  */
-typedef const int (*accel_callback)(accelState *state, int gesture_id, int offset_found, bool *reset_gesture);
+typedef const int (*accel_callback)(struct accelState *state, int gesture_id, int offset_found, bool *reset_gesture);
 
 typedef struct accelState {
     int dimensions;
@@ -142,5 +146,9 @@ int accel_find_most_likely_gesture(accel_state *state, int *gesture_id, int *dis
  * @return           ACCEL_SUCCESS if successful, an error code otherwise.
  */
 int accel_reset_affinities_for_gesture(accel_state *state, int gesture_id);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
