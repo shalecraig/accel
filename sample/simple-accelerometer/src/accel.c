@@ -44,36 +44,36 @@ typedef struct internalAccelState {
     accel_gesture **gestures;
 } internal_accel_state;
 
-#define PRECONDITION_NOT_NULL(foo_$)                                                                                   \
-    if (foo_$ == NULL) {                                                                                               \
+#define PRECONDITION_NOT_NULL(INPUT)                                                                                   \
+    if (INPUT == NULL) {                                                                                               \
         return ACCEL_PARAM_ERROR;                                                                                      \
     }
 
-#define PRECONDITION_NULL(foo_$)                                                                                       \
-    if (foo_$ != NULL) {                                                                                               \
+#define PRECONDITION_NULL(INPUT)                                                                                       \
+    if (INPUT != NULL) {                                                                                               \
         return ACCEL_PARAM_ERROR;                                                                                      \
     }
 
-#define PRECONDITION_VALID_STATE(state_$)                                                                              \
-    if (state_$ == NULL) {                                                                                             \
+#define PRECONDITION_VALID_STATE(INPUT_STATE)                                                                          \
+    if (INPUT_STATE == NULL) {                                                                                         \
         return ACCEL_PARAM_ERROR;                                                                                      \
     }                                                                                                                  \
-    if (state_$->state == NULL) {                                                                                      \
+    if (INPUT_STATE->state == NULL) {                                                                                  \
         return ACCEL_INTERNAL_ERROR;                                                                                   \
     }                                                                                                                  \
-    if (state_$->dimensions <= 0) {                                                                                    \
+    if (INPUT_STATE->dimensions <= 0) {                                                                                \
         return ACCEL_INTERNAL_ERROR;                                                                                   \
     }                                                                                                                  \
-    if (state_$->state->window_size <= 0) {                                                                            \
+    if (INPUT_STATE->state->window_size <= 0) {                                                                        \
         return ACCEL_INTERNAL_ERROR;                                                                                   \
     }                                                                                                                  \
-    if (state_$->state->num_gestures_saved < 0) {                                                                      \
+    if (INPUT_STATE->state->num_gestures_saved < 0) {                                                                  \
         return ACCEL_INTERNAL_ERROR;                                                                                   \
     }                                                                                                                  \
-    if (state_$->state->gestures == NULL && state_$->state->num_gestures_saved != 0) {                                 \
+    if (INPUT_STATE->state->gestures == NULL && INPUT_STATE->state->num_gestures_saved != 0) {                         \
         return ACCEL_INTERNAL_ERROR;                                                                                   \
     }                                                                                                                  \
-    if (state_$->state->gestures != NULL && state_$->state->num_gestures_saved == 0) {                                 \
+    if (INPUT_STATE->state->gestures != NULL && INPUT_STATE->state->num_gestures_saved == 0) {                         \
         return ACCEL_INTERNAL_ERROR;                                                                                   \
     }
 
@@ -82,18 +82,8 @@ typedef struct internalAccelState {
 #define ALPHA 1.0
 
 // TODO: include these from a header file?
-#define MAX(a, b)                                                                                                      \
-    ({                                                                                                                 \
-        __typeof__(a) _a = (a);                                                                                        \
-        __typeof__(b) _b = (b);                                                                                        \
-        _a > _b ? _a : _b;                                                                                             \
-    })
-#define MIN(a, b)                                                                                                      \
-    ({                                                                                                                 \
-        __typeof__(a) _a = (a);                                                                                        \
-        __typeof__(b) _b = (b);                                                                                        \
-        _a < _b ? _a : _b;                                                                                             \
-    })
+#define MIN(a, b) (((a) < (b)) ? (a) : (b))
+// #define MAX(a,b) (((a)>(b))?(a):(b))
 
 void accel_destroy_gesture(accel_gesture **gesture, int dimensions) {
     if (gesture == NULL || *gesture == NULL) {
@@ -341,10 +331,16 @@ int accel_end_record_gesture(accel_state *state, int gesture_id) {
         gesture->is_recorded = true;
     }
 
-    return reset_result;
+    for (int i = 0; i < gesture->recording_size; ++i) {
+        gesture->offsets[i] = INT16_MAX;
+    }
+    for (int d = 0; d < state->dimensions; ++d) {
+        reset_moving_avg(gesture->moving_avg_values[d]);
+    }
+    return ACCEL_SUCCESS;
 }
 
-// TODO: check for malloc failure in this function.
+// TODO: gracefully handle malloc failure in this function.
 // TODO: this should return error types instead of being void.
 // Follow-up: find usages of this method.
 void handle_recording_tick(accel_gesture *gesture, int dimensions) {
@@ -541,21 +537,4 @@ int accel_find_most_likely_gesture(accel_state *state, int *gesture_id, int *off
         return ACCEL_NO_VALID_GESTURE;
     }
     return ACCEL_SUCCESS;
-}
-
-int accel_reset_affinities_for_gesture(accel_state *state, int gesture_id) {
-    PRECONDITION_VALID_STATE(state);
-    internal_accel_state *ias = state->state;
-    if (ias->num_gestures_saved <= gesture_id || gesture_id < 0) {
-        return ACCEL_PARAM_ERROR;
-    }
-    accel_gesture *gest = ias->gestures[gesture_id];
-    if (gest == NULL) {
-        return ACCEL_INTERNAL_ERROR;
-    }
-    if (!gest->is_recorded || gest->is_recording) {
-        // Gesture is in the wrong state for resetting.
-        return ACCEL_PARAM_ERROR;
-    }
-    return reset_gesture(gest, state->dimensions);
 }

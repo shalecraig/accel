@@ -1,6 +1,10 @@
 #ifndef ACCEL_H
 #define ACCEL_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdbool.h>
 
 #define ACCEL_SUCCESS 0
@@ -12,7 +16,7 @@
 #define ACCEL_VERSION_GEN(major, minor, point, isBeta, isAlpha)                                                        \
     (4 * (100 * ((100 * major) + minor) + point) + 3 - (isAlpha ? 2 : 0) - (isBeta ? 1 : 0))
 
-#define ACCEL_VERSION_CODE ACCEL_VERSION_GEN(1, 0, 0, true, false)
+#define ACCEL_VERSION_CODE ACCEL_VERSION_GEN(1, 1, 0, false, true)
 
 struct internalAccelState;
 struct accelState;
@@ -54,7 +58,7 @@ struct accelState;
  *                          refer to the ACCEL_MIN_RESERVED definition inside
  *                          their implementations.
  */
-typedef const int (*accel_callback)(accelState *state, int gesture_id, int offset_found, bool *reset_gesture);
+typedef int (*accel_callback)(struct accelState *state, int gesture_id, int offset_found, bool *reset_gesture);
 
 typedef struct accelState {
     int dimensions;
@@ -141,6 +145,10 @@ int accel_find_most_likely_gesture(accel_state *state, int *gesture_id, int *dis
  * @param gesture_id Value that corresponds to a gesture currently being reset.
  * @return           ACCEL_SUCCESS if successful, an error code otherwise.
  */
-int accel_reset_affinities_for_gesture(accel_state *state, int gesture_id);
+// int accel_reset_affinities_for_gesture(accel_state *state, int gesture_id);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
