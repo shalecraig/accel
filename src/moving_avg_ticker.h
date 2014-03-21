@@ -1,6 +1,10 @@
 #ifndef ACCEL_AVG_TICKER
 #define ACCEL_AVG_TICKER
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "accel.h"
 
 #define MOVING_AVG_PARAM_ERROR ACCEL_PARAM_ERROR
@@ -27,5 +31,9 @@ int append_to_moving_avg(moving_avg_values *value, int appended, bool *isAtEnd);
 int get_latest_frame_moving_avg(moving_avg_values *value, int *frame);
 
 int free_moving_avg(moving_avg_values **value);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

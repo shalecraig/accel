@@ -1,6 +1,10 @@
 #ifndef ACCEL_PEBBLE_SUPPLEMENTARY
 #define ACCEL_PEBBLE_SUPPLEMENTARY
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -34,5 +38,9 @@ void *my_calloc(size_t num, size_t size) {
     memset(allocd, 0, num * size);
     return allocd;
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
