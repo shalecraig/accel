@@ -191,17 +191,25 @@ TEST(AccelTest, test_fuzz_reset_affinities) {
     // No ticks have been recorded.
     EXPECT_EQ(ACCEL_SUCCESS, accel_reset_affinities_for_gesture(state, gesture_id));
 
-    int found_gesture = 1;
-    int found_distance = 1;
-    EXPECT_EQ(ACCEL_SUCCESS, accel_process_timer_tick(state, data));
-    EXPECT_EQ(ACCEL_SUCCESS, accel_find_most_likely_gesture(state, &found_gesture, &found_distance));
-
-    int after_reset_gesture = 1;
+    int gesture = 1;
+    int initial_distance = 1;
+    int after_run_distance = 1;
     int after_reset_distance = 1;
-    EXPECT_EQ(ACCEL_SUCCESS, accel_reset_affinities_for_gesture(state, gesture_id));
-    EXPECT_EQ(ACCEL_SUCCESS, accel_find_most_likely_gesture(state, &after_reset_gesture, &after_reset_distance));
 
-    EXPECT_NE(found_distance, after_reset_distance);
+    EXPECT_EQ(ACCEL_SUCCESS, accel_find_most_likely_gesture(state, &gesture, &initial_distance));
+
+    EXPECT_EQ(ACCEL_SUCCESS, accel_process_timer_tick(state, data));
+    EXPECT_EQ(ACCEL_SUCCESS, accel_process_timer_tick(state, data));
+    EXPECT_EQ(ACCEL_SUCCESS, accel_process_timer_tick(state, data));
+    EXPECT_EQ(ACCEL_SUCCESS, accel_process_timer_tick(state, data));
+    EXPECT_EQ(ACCEL_SUCCESS, accel_process_timer_tick(state, data));
+    EXPECT_EQ(ACCEL_SUCCESS, accel_find_most_likely_gesture(state, &gesture, &after_run_distance));
+
+    EXPECT_EQ(ACCEL_SUCCESS, accel_reset_affinities_for_gesture(state, gesture_id));
+    EXPECT_EQ(ACCEL_SUCCESS, accel_find_most_likely_gesture(state, &gesture, &after_reset_distance));
+
+    EXPECT_EQ(initial_distance, after_reset_distance);
+    EXPECT_GE(after_reset_distance, after_run_distance);
 
     test_burn_state(&state);
 }
