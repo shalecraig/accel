@@ -62,7 +62,7 @@ TEST(AccelFuzzTest, generate_state_negative_or_zero_dimensions) {
     state = NULL;
     result = accel_generate_state(&state, 1, 1, NULL, 0);
     EXPECT_EQ(0, result);
-    // TODO: result's memory is leaked :s
+    accel_destroy_state(&state);
 }
 
 TEST(AccelFuzzTest, generate_state_invalid_threshold_with_callback_params) {
