@@ -11,7 +11,7 @@
 
 #define TEST_CALLBACK(returnSignature, testClass, testName, uniqueIdentifier, args...)                                 \
     /* count the number of times the callback was invoked. */                                                          \
-    uint generated_##testClass##_##testName##_##uniqueIdentifier##_counter = 0;                                        \
+    uint32_t generated_##testClass##_##testName##_##uniqueIdentifier##_counter = 0;                                    \
     /* define a method that proxies calls to the real method. */                                                       \
     returnSignature generated_##testClass##_##testName##_##uniqueIdentifier##_name(args) {                             \
         /* increment the counter */                                                                                    \
