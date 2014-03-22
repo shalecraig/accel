@@ -1,6 +1,18 @@
 #ifndef TEST_CALLBACK_UTIL_H
 #define TEST_CALLBACK_UTIL_H
 
+#ifndef IS_NOT_PEBBLE
+#ifndef PEBBLE
+#define PEBBLE
+#endif
+#endif
+
+#ifdef IS_NOT_PEBBLE
+#include <stdint.h>
+#else
+#error // no support yet.
+#endif
+
 // TODO: this is so hack.
 
 #define TEST_CALLBACK_NAME(testClass, testName, uniqueIdentifier)                                                      \
