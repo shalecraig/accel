@@ -459,19 +459,19 @@ TEST(MovingAvgTicker, InvalidInputValues) {
 TEST(MovingAvgTicker, AllocatesAndFreesCorrectly) {
     moving_avg_values *allocated = NULL;
     int retval = allocate_moving_avg(1, 1, &allocated);
-    EXPECT_NE(void_null, allocated);
-    EXPECT_NE(void_null, allocated->wbuf);
+    EXPECT_NE(VOID_NULL, allocated);
+    EXPECT_NE(VOID_NULL, allocated->wbuf);
     EXPECT_EQ(retval, 0);
 
     retval = free_moving_avg(&allocated);
     EXPECT_EQ(0, retval);
-    EXPECT_EQ(void_null, allocated);
+    EXPECT_EQ(VOID_NULL, allocated);
 }
 
 TEST(MovingAvgTicker, ResetsCorrectly) {
     moving_avg_values *allocated = NULL;
     int retval = allocate_moving_avg(1, 1, &allocated);
-    EXPECT_NE(void_null, allocated);
+    EXPECT_NE(VOID_NULL, allocated);
     EXPECT_EQ(0, retval);
 
     retval = reset_moving_avg(NULL);
@@ -484,7 +484,7 @@ TEST(MovingAvgTicker, ResetsCorrectly) {
 TEST(MovingAvgTicker, AppendsCorrectly1_1) {
     moving_avg_values *allocated = NULL;
     int retval = allocate_moving_avg(1, 1, &allocated);
-    EXPECT_NE(void_null, allocated);
+    EXPECT_NE(VOID_NULL, allocated);
     EXPECT_EQ(0, retval);
 
     bool is_at_end = false;
@@ -511,7 +511,7 @@ TEST(MovingAvgTicker, AppendsCorrectly1_1) {
 TEST(MovingAvgTicker, AppendsCorrectly2_1) {
     moving_avg_values *allocated = NULL;
     int retval = allocate_moving_avg(2, 1, &allocated);
-    EXPECT_NE(void_null, allocated);
+    EXPECT_NE(VOID_NULL, allocated);
     EXPECT_EQ(0, retval);
 
     bool is_at_end = false;
@@ -548,7 +548,7 @@ TEST(MovingAvgTicker, AppendsCorrectly2_1) {
 TEST(MovingAvgTicker, AppendsCorrectly1_2) {
     moving_avg_values *allocated = NULL;
     int retval = allocate_moving_avg(1, 2, &allocated);
-    EXPECT_NE(void_null, allocated);
+    EXPECT_NE(VOID_NULL, allocated);
     EXPECT_EQ(0, retval);
 
     bool is_at_end = false;
@@ -583,7 +583,7 @@ TEST(MovingAvgTicker, AppendsCorrectly1_2) {
 TEST(MovingAvgTicker, AppendsCorrectly2_2) {
     moving_avg_values *allocated = NULL;
     int retval = allocate_moving_avg(2, 2, &allocated);
-    EXPECT_NE(void_null, allocated);
+    EXPECT_NE(VOID_NULL, allocated);
     EXPECT_EQ(0, retval);
 
     bool is_at_end = false;
@@ -616,7 +616,7 @@ TEST(MovingAvgTicker, AppendsCorrectly2_2) {
 
     retval = free_moving_avg(&allocated);
     EXPECT_EQ(0, retval);
-    EXPECT_EQ(void_null, allocated);
+    EXPECT_EQ(VOID_NULL, allocated);
 }
 
 TEST(MovingAvgTicker, AppendToInvalid) {
@@ -631,7 +631,7 @@ TEST(MovingAvgTicker, AppendWithInvalidAtEnd) {
     moving_avg_values *allocated = NULL;
     retval = allocate_moving_avg(2, 2, &allocated);
     EXPECT_EQ(0, retval);
-    EXPECT_NE(void_null, allocated);
+    EXPECT_NE(VOID_NULL, allocated);
 
     retval = append_to_moving_avg(allocated, 1, (bool *)NULL);
     EXPECT_EQ(MOVING_AVG_PARAM_ERROR, retval);
@@ -648,7 +648,7 @@ TEST(MovingAvgTicker, InvalidLatestFrameParams) {
     moving_avg_values *allocated = NULL;
     retval = allocate_moving_avg(2, 2, &allocated);
     EXPECT_EQ(0, retval);
-    EXPECT_NE(void_null, allocated);
+    EXPECT_NE(VOID_NULL, allocated);
 
     retval = get_latest_frame_moving_avg(allocated, (int *)NULL);
     EXPECT_EQ(MOVING_AVG_PARAM_ERROR, retval);
@@ -681,9 +681,9 @@ TEST(MovingAvgTickerFuzzTest, allocate_moving_avg) {
     // Test with success, to validate that there was only one difference between this and the above tests.
     allocated = NULL;
     EXPECT_EQ(0, allocate_moving_avg(1, 1, &allocated));
-    EXPECT_NE(void_null, allocated);
+    EXPECT_NE(VOID_NULL, allocated);
     EXPECT_EQ(0, free_moving_avg(&allocated));
-    EXPECT_EQ(void_null, allocated);
+    EXPECT_EQ(VOID_NULL, allocated);
 }
 
 TEST(MovingAvgTickerFuzzTest, reset_moving_avg) {
@@ -741,18 +741,18 @@ TEST(MovingAvgTickerFuzzTest, free_moving_avg) {
 
     // Test with null wbuf
     EXPECT_EQ(0, allocate_moving_avg(1, 1, &allocated));
-    EXPECT_NE(void_null, allocated);
+    EXPECT_NE(VOID_NULL, allocated);
     free(allocated->wbuf);
     allocated->wbuf = NULL;
     // TODO: successfully completes, even with invalid input.
     EXPECT_EQ(0, free_moving_avg(&allocated));
-    EXPECT_EQ(void_null, allocated);
+    EXPECT_EQ(VOID_NULL, allocated);
 
     // Test normal path.
     EXPECT_EQ(0, allocate_moving_avg(1, 1, &allocated));
-    EXPECT_NE(void_null, allocated);
+    EXPECT_NE(VOID_NULL, allocated);
     EXPECT_EQ(0, free_moving_avg(&allocated));
-    EXPECT_EQ(void_null, allocated);
+    EXPECT_EQ(VOID_NULL, allocated);
 }
 
 int main(int argc, char **argv) {
