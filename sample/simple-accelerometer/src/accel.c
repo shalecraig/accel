@@ -77,6 +77,13 @@ typedef struct internalAccelState {
         return ACCEL_INTERNAL_ERROR;                                                                                   \
     }
 
+#define PRECONDITION_TRUE_PARAM(TRUE_COND)                                                                             \
+    {                                                                                                                  \
+        if (!TRUE_COND) {                                                                                              \
+            return ACCEL_PARAM_ERROR;                                                                                  \
+        }                                                                                                              \
+    }
+
 // Decay rate of values we choose to keep. 1.0 is no decay, 2.0 is a doubling every time we keep them.
 // TODO: should we store the offsets as floats instead?
 #define ALPHA 1.0
@@ -537,4 +544,17 @@ int accel_find_most_likely_gesture(accel_state *state, int *gesture_id, int *off
         return ACCEL_NO_VALID_GESTURE;
     }
     return ACCEL_SUCCESS;
+}
+
+int accel_reset_affinities_for_gesture(accel_state *state, int gesture_id) {
+    PRECONDITION_VALID_STATE(state);
+    PRECONDITION_NOT_NULL(state->state);
+    PRECONDITION_TRUE_PARAM((state->state->num_gestures_saved > gesture_id));
+
+    accel_gesture *gesture = state->state->gestures[gesture_id];
+
+    PRECONDITION_TRUE_PARAM(!gesture->is_recording);
+    PRECONDITION_TRUE_PARAM(gesture->is_recorded);
+
+    return reset_gesture(gesture, state->dimensions);
 }
