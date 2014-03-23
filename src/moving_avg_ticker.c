@@ -8,6 +8,7 @@
         return MOVING_AVG_PARAM_ERROR;                                                                                 \
     }
 
+// TODO: make this into a macro.
 int precondition_valid_moving_avg_values(moving_avg_values *input) {
     PRECONDITION_NOT_NULL(input);
 
@@ -29,7 +30,7 @@ int precondition_valid_moving_avg_values(moving_avg_values *input) {
     if (input->max_subtotal_size <= 0) {
         return MOVING_AVG_INTERNAL_ERROR;
     }
-    return 0;
+    return MOVING_AVG_SUCCESS;
 }
 
 int allocate_moving_avg(int num_wbuf, int subtotal_sizes, moving_avg_values **allocated) {
@@ -62,12 +63,12 @@ int allocate_moving_avg(int num_wbuf, int subtotal_sizes, moving_avg_values **al
     }
     (*allocated)->wbuf = wbuf;
     (*allocated)->wbuf_len = num_wbuf;
-    return 0;
+    return MOVING_AVG_SUCCESS;
 }
 
 int reset_moving_avg(moving_avg_values *reset) {
     int value = precondition_valid_moving_avg_values(reset);
-    if (value != 0) {
+    if (value != MOVING_AVG_SUCCESS) {
         return value;
     }
 
@@ -75,12 +76,12 @@ int reset_moving_avg(moving_avg_values *reset) {
     reset->wbuf_end = reset->wbuf_len - 1;
     reset->subtotal = 0;
     reset->subtotal_size = 0;
-    return 0;
+    return MOVING_AVG_SUCCESS;
 }
 
 int append_to_moving_avg(moving_avg_values *value, int appended, bool *is_at_end) {
     int is_valid_return_value = precondition_valid_moving_avg_values(value);
-    if (is_valid_return_value != 0) {
+    if (is_valid_return_value != MOVING_AVG_SUCCESS) {
         return is_valid_return_value;
     }
 
@@ -90,7 +91,7 @@ int append_to_moving_avg(moving_avg_values *value, int appended, bool *is_at_end
     value->subtotal += appended;
     if (value->subtotal_size != value->max_subtotal_size) {
         *is_at_end = false;
-        return 0;
+        return MOVING_AVG_SUCCESS;
     }
 
     value->wbuf_end = (value->wbuf_end + 1) % value->wbuf_len;
@@ -99,12 +100,12 @@ int append_to_moving_avg(moving_avg_values *value, int appended, bool *is_at_end
     value->subtotal = 0;
     value->subtotal_size = 0;
     *is_at_end = true;
-    return 0;
+    return MOVING_AVG_SUCCESS;
 }
 
 int get_latest_frame_moving_avg(moving_avg_values *value, int *frame) {
     int is_valid_return_value = precondition_valid_moving_avg_values(value);
-    if (is_valid_return_value != 0) {
+    if (is_valid_return_value != MOVING_AVG_SUCCESS) {
         return is_valid_return_value;
     }
 
@@ -115,7 +116,7 @@ int get_latest_frame_moving_avg(moving_avg_values *value, int *frame) {
         sum += value->wbuf[i] * 1.0 / value->wbuf_len;
     }
     *frame = (int)sum;
-    return 0;
+    return MOVING_AVG_SUCCESS;
 }
 
 int free_moving_avg(moving_avg_values **value) {
@@ -128,5 +129,5 @@ int free_moving_avg(moving_avg_values **value) {
     }
     free(*value);
     *value = NULL;
-    return 0;
+    return MOVING_AVG_SUCCESS;
 }
