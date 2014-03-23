@@ -670,9 +670,6 @@ TEST(MovingAvgTickerFuzzTest, allocate_moving_avg) {
     // Test with zero num_wbuf
     EXPECT_EQ(MOVING_AVG_PARAM_ERROR, allocate_moving_avg(0, 1, &allocated));
 
-    // Test with negative subtotal_size
-    EXPECT_EQ(MOVING_AVG_PARAM_ERROR, allocate_moving_avg(1, -1, &allocated));
-
     // Test with zero subtotal_size
     EXPECT_EQ(MOVING_AVG_PARAM_ERROR, allocate_moving_avg(1, 0, &allocated));
 
