@@ -33,7 +33,7 @@ static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
 
 static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
     if (state == NULL) {
-        int result = accel_generate_state(&state, 3, 1);
+        int result = accel_generate_state(&state, 3, 1, NULL, 0);
         if (result == ACCEL_SUCCESS) {
             text_layer_set_text(text_layer, "Allocated Successfuly");
         } else {
