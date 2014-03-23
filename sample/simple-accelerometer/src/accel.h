@@ -1,6 +1,12 @@
 #ifndef ACCEL_H
 #define ACCEL_H
 
+#ifndef IS_NOT_PEBBLE
+#ifndef PEBBLE
+#define PEBBLE
+#endif
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
