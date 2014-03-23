@@ -1,5 +1,4 @@
-# TODO: update this.
-PHONY = default echo/objects echo/sources list tests run bin clean
+PHONY = default echo/objects echo/sources list tests bin/tests run bin clean
 
 SOURCES_C               = $(wildcard src/*.c)
 TEST_CC                 = $(wildcard test/*.cc)

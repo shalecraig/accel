@@ -88,9 +88,10 @@ typedef struct internalAccelState {
 // TODO: should we store the offsets as floats instead?
 #define ALPHA 1.0
 
-// TODO: include these from a header file?
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 // #define MAX(a,b) (((a)>(b))?(a):(b))
+
+// TODO: write tests for "internal" functions.
 
 void accel_destroy_gesture(accel_gesture **gesture, int dimensions) {
     if (gesture == NULL || *gesture == NULL) {
@@ -123,11 +124,10 @@ void accel_destroy_gesture(accel_gesture **gesture, int dimensions) {
     *gesture = NULL;
 }
 
-int accel_generate_gesture(accel_state *state, accel_gesture **gesture) {
+int internal_accel_generate_gesture(accel_state *state, accel_gesture **gesture) {
     PRECONDITION_VALID_STATE(state);
     PRECONDITION_NOT_NULL(gesture);
 
-    // TODO: write a test for this value.
     PRECONDITION_NULL((*gesture));
 
     size_t gesture_size = sizeof(accel_gesture);
@@ -260,7 +260,7 @@ int accel_start_record_gesture(accel_state *state, int *gesture) {
 
     state->state->gestures[*gesture] = NULL;
 
-    int result = accel_generate_gesture(state, &(state->state->gestures[*gesture]));
+    int result = internal_accel_generate_gesture(state, &(state->state->gestures[*gesture]));
     if (result != ACCEL_SUCCESS) {
         *gesture = -1;
         if (state->state->num_gestures_saved == 1) {
