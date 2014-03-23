@@ -162,7 +162,6 @@ int accel_generate_gesture(accel_state *state, accel_gesture **gesture) {
     return ACCEL_SUCCESS;
 }
 
-// TODO: needs direct testing with invalid objects.
 int accel_generate_state(accel_state **state, int dimensions, int window_size, accel_callback callback,
                          const int threshold) {
     PRECONDITION_NOT_NULL(state);
@@ -368,7 +367,7 @@ void handle_recording_tick(accel_gesture *gesture, int dimensions) {
     gesture->normalized_recording[gesture->recording_size] = (int *)malloc(sizeof(int) * dimensions);
     for (int i = 0; i < dimensions; ++i) {
         // TODO: fix this int/float business.
-        // TODO: check resultant output.
+        // TODO: complain about invalid return values.
         get_latest_frame_moving_avg(gesture->moving_avg_values[i],
                                     &(gesture->normalized_recording[gesture->recording_size][i]));
         gesture->normalized_recording[gesture->recording_size][i] =
@@ -516,7 +515,7 @@ int accel_find_most_likely_gesture(accel_state *state, int *gesture_id, int *off
     for (int i = 0; i < state->state->num_gestures_saved; ++i) {
         accel_gesture *gesture = state->state->gestures[i];
 
-        // TODO: this should be tested.
+        // TODO: Should this be tested?
         if (gesture == NULL) {
             return ACCEL_INTERNAL_ERROR;
         }

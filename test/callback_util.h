@@ -1,6 +1,18 @@
 #ifndef TEST_CALLBACK_UTIL_H
 #define TEST_CALLBACK_UTIL_H
 
+#ifndef IS_NOT_PEBBLE
+#ifndef PEBBLE
+#define PEBBLE
+#endif
+#endif
+
+#ifdef IS_NOT_PEBBLE
+#include <stdint.h>
+#else
+#error // no support yet.
+#endif
+
 // TODO: this is so hack.
 
 #define TEST_CALLBACK_NAME(testClass, testName, uniqueIdentifier)                                                      \
@@ -11,7 +23,7 @@
 
 #define TEST_CALLBACK(returnSignature, testClass, testName, uniqueIdentifier, args...)                                 \
     /* count the number of times the callback was invoked. */                                                          \
-    uint generated_##testClass##_##testName##_##uniqueIdentifier##_counter = 0;                                        \
+    uint32_t generated_##testClass##_##testName##_##uniqueIdentifier##_counter = 0;                                    \
     /* define a method that proxies calls to the real method. */                                                       \
     returnSignature generated_##testClass##_##testName##_##uniqueIdentifier##_name(args) {                             \
         /* increment the counter */                                                                                    \

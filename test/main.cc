@@ -43,6 +43,237 @@ void test_burn_state(accel_state **state) {
     EXPECT_EQ(VOID_NULL, *state);
 }
 
+TEST(AccelFuzzTest, generate_state_null_state) {
+    int result = accel_generate_state(NULL, 3, 1, NULL, 0);
+    EXPECT_EQ(result, ACCEL_PARAM_ERROR);
+}
+
+TEST(AccelFuzzTest, generate_state_negative_or_zero_dimensions) {
+    accel_state *state = NULL;
+    // 0 dimensions must fail
+    int result = accel_generate_state(&state, 0, 1, NULL, 0);
+    EXPECT_EQ(ACCEL_PARAM_ERROR, result);
+
+    // -1 dimension must fail
+    result = accel_generate_state(&state, -1, 1, NULL, 0);
+    EXPECT_EQ(ACCEL_PARAM_ERROR, result);
+
+    // 1 dimension must succeed.
+    state = NULL;
+    result = accel_generate_state(&state, 1, 1, NULL, 0);
+    EXPECT_EQ(0, result);
+    accel_destroy_state(&state);
+}
+
+TEST(AccelFuzzTest, generate_state_invalid_threshold_with_callback_params) {
+    accel_state *state = NULL;
+    accel_callback nonNullCallback = (accel_callback)1;
+
+    // Fails for negatives.
+    int result = accel_generate_state(&state, 1, 1, nonNullCallback, -1);
+    EXPECT_EQ(ACCEL_PARAM_ERROR, result);
+
+    // Fails for zero.
+    result = accel_generate_state(&state, 1, 1, nonNullCallback, 0);
+    EXPECT_EQ(ACCEL_PARAM_ERROR, result);
+
+    // Succeeds for 1.
+    result = accel_generate_state(&state, 1, 1, nonNullCallback, 1);
+    EXPECT_EQ(ACCEL_SUCCESS, result);
+}
+
+TEST(AccelFuzzTest, generate_state_invalid_window_size) {
+    accel_state *state = NULL;
+    int result = 0;
+
+    // Size 0 must fail
+    result = accel_generate_state(&state, 1, 0, NULL, 0);
+    EXPECT_EQ(ACCEL_PARAM_ERROR, result);
+
+    // Size -1 must fail
+    result = accel_generate_state(&state, 1, -1, NULL, 0);
+    EXPECT_EQ(ACCEL_PARAM_ERROR, result);
+
+    // Size 1 must succeed
+    result = accel_generate_state(&state, 1, 1, NULL, 0);
+    EXPECT_EQ(0, result);
+    EXPECT_NE(VOID_NULL, state);
+}
+
+TEST(AccelFuzzTest, generate_state_threshold_fuzzing) {
+    accel_state *state = NULL;
+
+    // Threshold of 1 with a non-null callback succeeds
+    EXPECT_EQ(NULL, state);
+    EXPECT_EQ(ACCEL_SUCCESS, accel_generate_state(&state, 1, 1, (accel_callback)0x1, 1));
+    accel_destroy_state(&state);
+
+    // Threshold of 1 with a null callback fails
+    EXPECT_EQ(NULL, state);
+    EXPECT_EQ(ACCEL_PARAM_ERROR, accel_generate_state(&state, 1, 1, (accel_callback)NULL, 1));
+
+    // Threshold of 0 with a null callback succeeds
+    EXPECT_EQ(NULL, state);
+    EXPECT_EQ(ACCEL_SUCCESS, accel_generate_state(&state, 1, 1, (accel_callback)NULL, 0));
+    accel_destroy_state(&state);
+
+    // Threshold of 0 with a non-null callback fails
+    EXPECT_EQ(NULL, state);
+    EXPECT_EQ(ACCEL_PARAM_ERROR, accel_generate_state(&state, 1, 1, (accel_callback)0x1, 0));
+}
+
+TEST(AccelFuzzTest, accel_generate_state_null_callback) {
+    int result = 0;
+    accel_state *state = NULL;
+
+    // Null callback must be successful
+    result = accel_generate_state(&state, 1, 1, NULL, 0);
+}
+
+TEST_CALLBACK(int, AccelFuzzTest, accel_generate_state_valid_callback, myTest, accel_state *state, int gesture_id,
+              int offset_found, bool *reset_gesture)
+*reset_gesture = true;
+return ACCEL_SUCCESS;
+}
+
+TEST(AccelFuzzTest, accel_generate_state_valid_callback) {
+    int gesture_id = 0;
+    accel_state *state = NULL;
+
+    // Non-null callback, watch it iterate over this stuff.
+    state = test_fabricate_1d_state_with_callback(
+        &TEST_CALLBACK_NAME(AccelFuzzTest, accel_generate_state_valid_callback, myTest), 10);
+
+    EXPECT_EQ(ACCEL_SUCCESS, accel_start_record_gesture(state, &gesture_id));
+
+    for (int i = 0; i < 100; ++i) {
+        int data[1] = {i};
+        EXPECT_EQ(ACCEL_SUCCESS, accel_process_timer_tick(state, data));
+    }
+    EXPECT_EQ(ACCEL_SUCCESS, accel_end_record_gesture(state, gesture_id));
+
+    for (int i = 0; i < 100; ++i) {
+        int data[1] = {i};
+        EXPECT_EQ(ACCEL_SUCCESS, accel_process_timer_tick(state, data));
+    }
+    EXPECT_GT(TEST_CALLBACK_COUNTER(AccelFuzzTest, accel_generate_state_valid_callback, myTest), (uint32_t)0);
+}
+
+TEST(AccelFuzzTest, accel_destroy_state_invalid_input) {
+    int result = 0;
+
+    // Destroying x (x = NULL) will fail.
+    result = accel_destroy_state(NULL);
+    EXPECT_EQ(ACCEL_PARAM_ERROR, result);
+
+    // Destroying x (*x = NULL) will fail.
+    accel_state *state = NULL;
+    result = accel_destroy_state(&state);
+    EXPECT_EQ(ACCEL_PARAM_ERROR, result);
+
+    // Destroying x (*x != NULL) should succeed.
+    state = test_fabricate_1d_state();
+
+    // Destroy the state
+    result = accel_destroy_state(&state);
+    EXPECT_EQ(0, result);
+    EXPECT_EQ(VOID_NULL, state);
+}
+
+TEST(AccelFuzzTest, accel_start_record_gesture_invalid_input) {
+    int result = 0;
+    int gesture_id = 0;
+    result = accel_start_record_gesture(NULL, &gesture_id);
+    EXPECT_EQ(ACCEL_PARAM_ERROR, result);
+
+    accel_state *state = test_fabricate_1d_state();
+
+    result = accel_start_record_gesture(state, NULL);
+    EXPECT_EQ(ACCEL_PARAM_ERROR, result);
+
+    test_burn_state(&state);
+}
+
+TEST(AccelFuzzTest, accel_end_record_gesture_invalid_input) {
+    int result = 0;
+    accel_state *state = NULL;
+
+    // Null state:
+    result = accel_end_record_gesture(NULL, 1);
+    EXPECT_EQ(ACCEL_PARAM_ERROR, result);
+
+    // Negative index:
+    state = test_fabricate_1d_state();
+    result = accel_end_record_gesture(state, -1);
+    EXPECT_EQ(ACCEL_PARAM_ERROR, result);
+    test_burn_state(&state);
+
+    // Unused index:
+    state = test_fabricate_1d_state();
+    result = accel_end_record_gesture(state, 1);
+    EXPECT_EQ(ACCEL_PARAM_ERROR, result);
+    test_burn_state(&state);
+
+    // Verify it works for valid indexes.
+    state = test_fabricate_1d_state();
+    int gesture = 1234;
+    result = accel_start_record_gesture(state, &gesture);
+    EXPECT_NE(1234, gesture);
+    EXPECT_EQ(0, result);
+    int data[1] = {1};
+    EXPECT_EQ(0, accel_process_timer_tick(state, data));
+
+    result = accel_end_record_gesture(state, gesture);
+    EXPECT_EQ(0, result) << "gesture " << gesture << " couldn't be recorded correctly" << std::endl;
+    test_burn_state(&state);
+}
+
+TEST(AccelFuzzTest, accel_process_timer_tick_invalid_input) {
+    int result = 0;
+    int accel_data = 0;
+    accel_state *state = NULL;
+
+    // Null state value.
+    result = accel_process_timer_tick(NULL, &accel_data);
+    EXPECT_EQ(ACCEL_PARAM_ERROR, result);
+
+    // Null array input.
+    state = test_fabricate_1d_state();
+    result = accel_process_timer_tick(state, NULL);
+    EXPECT_EQ(ACCEL_PARAM_ERROR, result);
+    test_burn_state(&state);
+}
+
+TEST(AccelFuzzTest, accel_find_most_likely_gesture_invalid_input) {
+    int result = 0;
+    int gesture_id = 0;
+    int affinity = 0;
+    accel_state *state = NULL;
+
+    // Null state:
+    result = accel_find_most_likely_gesture(NULL, &gesture_id, &affinity);
+    EXPECT_EQ(ACCEL_PARAM_ERROR, result);
+
+    // Null gesture id is passed in.
+    state = test_fabricate_1d_state();
+    result = accel_find_most_likely_gesture(state, NULL, &affinity);
+    EXPECT_EQ(ACCEL_PARAM_ERROR, result);
+    test_burn_state(&state);
+
+    // Null affinity is passed in.
+    state = test_fabricate_1d_state();
+    result = accel_find_most_likely_gesture(state, &gesture_id, NULL);
+    EXPECT_EQ(ACCEL_PARAM_ERROR, result);
+    test_burn_state(&state);
+
+    // No tests exist, but otherwise valid parameters.
+    state = test_fabricate_1d_state();
+    result = accel_find_most_likely_gesture(state, &gesture_id, &affinity);
+    EXPECT_EQ(ACCEL_NO_VALID_GESTURE, gesture_id);
+    EXPECT_EQ(ACCEL_NO_VALID_GESTURE, affinity);
+    EXPECT_EQ(ACCEL_NO_VALID_GESTURE, result);
+}
+
 TEST(AccelTest, accel_generate_and_destroy) {
     accel_state *state = NULL;
     for (int i = 1; i < 10; ++i) {
@@ -236,19 +467,19 @@ TEST(MovingAvgTicker, InvalidInputValues) {
 TEST(MovingAvgTicker, AllocatesAndFreesCorrectly) {
     moving_avg_values *allocated = NULL;
     int retval = allocate_moving_avg(1, 1, &allocated);
-    EXPECT_NE(void_null, allocated);
-    EXPECT_NE(void_null, allocated->wbuf);
+    EXPECT_NE(VOID_NULL, allocated);
+    EXPECT_NE(VOID_NULL, allocated->wbuf);
     EXPECT_EQ(retval, 0);
 
     retval = free_moving_avg(&allocated);
     EXPECT_EQ(0, retval);
-    EXPECT_EQ(void_null, allocated);
+    EXPECT_EQ(VOID_NULL, allocated);
 }
 
 TEST(MovingAvgTicker, ResetsCorrectly) {
     moving_avg_values *allocated = NULL;
     int retval = allocate_moving_avg(1, 1, &allocated);
-    EXPECT_NE(void_null, allocated);
+    EXPECT_NE(VOID_NULL, allocated);
     EXPECT_EQ(0, retval);
 
     retval = reset_moving_avg(NULL);
@@ -261,7 +492,7 @@ TEST(MovingAvgTicker, ResetsCorrectly) {
 TEST(MovingAvgTicker, AppendsCorrectly1_1) {
     moving_avg_values *allocated = NULL;
     int retval = allocate_moving_avg(1, 1, &allocated);
-    EXPECT_NE(void_null, allocated);
+    EXPECT_NE(VOID_NULL, allocated);
     EXPECT_EQ(0, retval);
 
     bool is_at_end = false;
@@ -288,7 +519,7 @@ TEST(MovingAvgTicker, AppendsCorrectly1_1) {
 TEST(MovingAvgTicker, AppendsCorrectly2_1) {
     moving_avg_values *allocated = NULL;
     int retval = allocate_moving_avg(2, 1, &allocated);
-    EXPECT_NE(void_null, allocated);
+    EXPECT_NE(VOID_NULL, allocated);
     EXPECT_EQ(0, retval);
 
     bool is_at_end = false;
@@ -325,7 +556,7 @@ TEST(MovingAvgTicker, AppendsCorrectly2_1) {
 TEST(MovingAvgTicker, AppendsCorrectly1_2) {
     moving_avg_values *allocated = NULL;
     int retval = allocate_moving_avg(1, 2, &allocated);
-    EXPECT_NE(void_null, allocated);
+    EXPECT_NE(VOID_NULL, allocated);
     EXPECT_EQ(0, retval);
 
     bool is_at_end = false;
@@ -360,7 +591,7 @@ TEST(MovingAvgTicker, AppendsCorrectly1_2) {
 TEST(MovingAvgTicker, AppendsCorrectly2_2) {
     moving_avg_values *allocated = NULL;
     int retval = allocate_moving_avg(2, 2, &allocated);
-    EXPECT_NE(void_null, allocated);
+    EXPECT_NE(VOID_NULL, allocated);
     EXPECT_EQ(0, retval);
 
     bool is_at_end = false;
@@ -393,7 +624,7 @@ TEST(MovingAvgTicker, AppendsCorrectly2_2) {
 
     retval = free_moving_avg(&allocated);
     EXPECT_EQ(0, retval);
-    EXPECT_EQ(void_null, allocated);
+    EXPECT_EQ(VOID_NULL, allocated);
 }
 
 TEST(MovingAvgTicker, AppendToInvalid) {
@@ -408,7 +639,7 @@ TEST(MovingAvgTicker, AppendWithInvalidAtEnd) {
     moving_avg_values *allocated = NULL;
     retval = allocate_moving_avg(2, 2, &allocated);
     EXPECT_EQ(0, retval);
-    EXPECT_NE(void_null, allocated);
+    EXPECT_NE(VOID_NULL, allocated);
 
     retval = append_to_moving_avg(allocated, 1, (bool *)NULL);
     EXPECT_EQ(MOVING_AVG_PARAM_ERROR, retval);
@@ -425,7 +656,7 @@ TEST(MovingAvgTicker, InvalidLatestFrameParams) {
     moving_avg_values *allocated = NULL;
     retval = allocate_moving_avg(2, 2, &allocated);
     EXPECT_EQ(0, retval);
-    EXPECT_NE(void_null, allocated);
+    EXPECT_NE(VOID_NULL, allocated);
 
     retval = get_latest_frame_moving_avg(allocated, (int *)NULL);
     EXPECT_EQ(MOVING_AVG_PARAM_ERROR, retval);
@@ -458,9 +689,9 @@ TEST(MovingAvgTickerFuzzTest, allocate_moving_avg) {
     // Test with success, to validate that there was only one difference between this and the above tests.
     allocated = NULL;
     EXPECT_EQ(0, allocate_moving_avg(1, 1, &allocated));
-    EXPECT_NE(void_null, allocated);
+    EXPECT_NE(VOID_NULL, allocated);
     EXPECT_EQ(0, free_moving_avg(&allocated));
-    EXPECT_EQ(void_null, allocated);
+    EXPECT_EQ(VOID_NULL, allocated);
 }
 
 TEST(MovingAvgTickerFuzzTest, reset_moving_avg) {
@@ -518,18 +749,18 @@ TEST(MovingAvgTickerFuzzTest, free_moving_avg) {
 
     // Test with null wbuf
     EXPECT_EQ(0, allocate_moving_avg(1, 1, &allocated));
-    EXPECT_NE(void_null, allocated);
+    EXPECT_NE(VOID_NULL, allocated);
     free(allocated->wbuf);
     allocated->wbuf = NULL;
     // TODO: successfully completes, even with invalid input.
     EXPECT_EQ(0, free_moving_avg(&allocated));
-    EXPECT_EQ(void_null, allocated);
+    EXPECT_EQ(VOID_NULL, allocated);
 
     // Test normal path.
     EXPECT_EQ(0, allocate_moving_avg(1, 1, &allocated));
-    EXPECT_NE(void_null, allocated);
+    EXPECT_NE(VOID_NULL, allocated);
     EXPECT_EQ(0, free_moving_avg(&allocated));
-    EXPECT_EQ(void_null, allocated);
+    EXPECT_EQ(VOID_NULL, allocated);
 }
 
 int main(int argc, char **argv) {
