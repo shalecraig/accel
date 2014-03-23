@@ -1,3 +1,5 @@
 test_executable
 accel_test
 moving_avg_ticker_test
+
+*.dSYM

@@ -1,6 +1,10 @@
 #ifndef ACCEL_PEBBLE_SUPPLEMENTARY
 #define ACCEL_PEBBLE_SUPPLEMENTARY
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -18,7 +22,8 @@ void *my_realloc(void *old_ptr, size_t new_size, size_t old_size) {
     }
     void *p = malloc(new_size);
 
-    if (!p) return NULL;
+    if (!p)
+        return NULL;
 
     size_t min_size = new_size < old_size ? new_size : old_size;
     memcpy(p, old_ptr, min_size);
@@ -27,10 +32,15 @@ void *my_realloc(void *old_ptr, size_t new_size, size_t old_size) {
 }
 
 void *my_calloc(size_t num, size_t size) {
-    void * allocd = malloc(num * size);
-    if (allocd == NULL) return allocd;
+    void *allocd = malloc(num * size);
+    if (allocd == NULL)
+        return allocd;
     memset(allocd, 0, num * size);
     return allocd;
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
