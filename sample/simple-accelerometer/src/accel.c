@@ -1,9 +1,3 @@
-#ifndef IS_NOT_PEBBLE
-#ifndef PEBBLE
-#define PEBBLE
-#endif
-#endif
-
 #ifdef PEBBLE
 #include <pebble.h>
 #include <pebble_makeup.h>
