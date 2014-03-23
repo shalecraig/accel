@@ -667,9 +667,6 @@ TEST(MovingAvgTicker, InvalidLatestFrameParams) {
 TEST(MovingAvgTickerFuzzTest, allocate_moving_avg) {
     moving_avg_values *allocated = NULL;
 
-    // Test with negative num_wbuf
-    EXPECT_EQ(MOVING_AVG_PARAM_ERROR, allocate_moving_avg(-1, 1, &allocated));
-
     // Test with zero num_wbuf
     EXPECT_EQ(MOVING_AVG_PARAM_ERROR, allocate_moving_avg(0, 1, &allocated));
 

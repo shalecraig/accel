@@ -33,7 +33,7 @@ int precondition_valid_moving_avg_values(moving_avg_values *input) {
     return MOVING_AVG_SUCCESS;
 }
 
-int allocate_moving_avg(int num_wbuf, int subtotal_sizes, moving_avg_values **allocated) {
+int allocate_moving_avg(uint32_t num_wbuf, int subtotal_sizes, moving_avg_values **allocated) {
     PRECONDITION_NOT_NULL(allocated);
     if (*allocated != NULL) {
         return MOVING_AVG_PARAM_ERROR;
@@ -54,7 +54,7 @@ int allocate_moving_avg(int num_wbuf, int subtotal_sizes, moving_avg_values **al
     memset(*allocated, 0, size);
     (*allocated)->max_subtotal_size = subtotal_sizes;
 
-    int *wbuf = (int *)calloc(num_wbuf, sizeof(int));
+    uint32_t *wbuf = (uint32_t *)calloc(num_wbuf, sizeof(uint32_t));
     if (wbuf == NULL) {
         // Run away, fast!
         free(allocated);
