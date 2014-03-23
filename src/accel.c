@@ -88,7 +88,6 @@ typedef struct internalAccelState {
 // TODO: should we store the offsets as floats instead?
 #define ALPHA 1.0
 
-// TODO: include these from a header file?
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 // #define MAX(a,b) (((a)>(b))?(a):(b))
 
