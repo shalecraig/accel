@@ -8,6 +8,7 @@ extern "C" {
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdint.h>
 
 void *my_realloc(void *old_ptr, size_t new_size, size_t old_size) {
     if (new_size == old_size) {

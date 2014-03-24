@@ -7,11 +7,7 @@ extern "C" {
 
 #include "accel.h"
 
-#ifdef PEBBLE
-#error // no support yet.
-#else
 #include <stdint.h>
-#endif
 
 #define MOVING_AVG_SUCCESS ACCEL_SUCCESS
 #define MOVING_AVG_PARAM_ERROR ACCEL_PARAM_ERROR

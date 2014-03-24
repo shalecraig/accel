@@ -86,6 +86,7 @@ typedef struct internalAccelState {
 // #define MAX(a,b) (((a)>(b))?(a):(b))
 
 // TODO: write tests for "internal" functions.
+
 void accel_destroy_gesture(accel_gesture **gesture, uint32_t dimensions) {
     if (gesture == NULL || *gesture == NULL) {
         return;
