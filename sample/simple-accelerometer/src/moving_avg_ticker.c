@@ -15,10 +15,7 @@ int precondition_valid_moving_avg_values(moving_avg_values *input) {
     if (input->wbuf == NULL) {
         return MOVING_AVG_INTERNAL_ERROR;
     }
-    if (input->wbuf_end < 0) {
-        return MOVING_AVG_INTERNAL_ERROR;
-    }
-    if (input->wbuf_len <= 0) {
+    if (input->wbuf_len == 0) {
         return MOVING_AVG_INTERNAL_ERROR;
     }
     if (input->subtotal_size >= input->max_subtotal_size) {
@@ -77,7 +74,7 @@ int reset_moving_avg(moving_avg_values *reset) {
     return MOVING_AVG_SUCCESS;
 }
 
-int append_to_moving_avg(moving_avg_values *value, int appended, bool *is_at_end) {
+int append_to_moving_avg(moving_avg_values *value, int32_t appended, bool *is_at_end) {
     int is_valid_return_value = precondition_valid_moving_avg_values(value);
     if (is_valid_return_value != MOVING_AVG_SUCCESS) {
         return is_valid_return_value;
@@ -101,7 +98,7 @@ int append_to_moving_avg(moving_avg_values *value, int appended, bool *is_at_end
     return MOVING_AVG_SUCCESS;
 }
 
-int get_latest_frame_moving_avg(moving_avg_values *value, int *frame) {
+int get_latest_frame_moving_avg(moving_avg_values *value, int32_t *frame) {
     int is_valid_return_value = precondition_valid_moving_avg_values(value);
     if (is_valid_return_value != MOVING_AVG_SUCCESS) {
         return is_valid_return_value;
@@ -109,11 +106,12 @@ int get_latest_frame_moving_avg(moving_avg_values *value, int *frame) {
 
     PRECONDITION_NOT_NULL(frame);
 
+    // TODO: this can be cleaned up.
     float sum = 0;
-    for (int i = 0; i < value->wbuf_len; ++i) {
+    for (uint32_t i = 0; i < value->wbuf_len; ++i) {
         sum += value->wbuf[i] * 1.0 / value->wbuf_len;
     }
-    *frame = (int)sum;
+    *frame = (int32_t)sum;
     return MOVING_AVG_SUCCESS;
 }
 
