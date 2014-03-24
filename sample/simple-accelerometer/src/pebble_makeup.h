@@ -5,6 +5,13 @@
 extern "C" {
 #endif
 
+// TODO: Refactor and rearrange what goes into this file.
+
+/**
+ * This file contains all code required to use the accel library source that is
+ * not provided by the pebble environment.
+ */
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
