@@ -12,7 +12,7 @@ EXEC = tests
 
 # Pebble args: -std=c99 -fdata-sections -g -Wall -Wextra -Werror -Wno-unused-parameter -Wno-error=unused-function -Wno-error=unused-variable -fPIE -DRELEASE -Os
 # removed: -Wl,-z,relro -Wl,-z,now
-C_ARGS = -DIS_NOT_PEBBLE -DRELEASE -pipe -m64 -ansi -fPIC -fPIE -g -Os -ffunction-sections -fno-exceptions -fstack-protector-all -fvisibility=hidden -W -Wall -Wextra -Wunused-parameter -Wunused-function -Wunused-label -Wpointer-arith -Wformat -Wreturn-type -Wsign-compare -Wmultichar -Wformat-nonliteral -Winit-self -Wuninitialized -Wdeprecated -Wformat-security -Werror -Wcomment -Wtrigraphs -Wundef -Wunused-macros -pedantic-errors -std=c99
+C_ARGS = -DIS_NOT_PEBBLE -DRELEASE -pipe -m64 -ansi -fPIC -fPIE -g -Os -ffunction-sections -fno-exceptions -fstack-protector-all -fvisibility=hidden -W -Wall -Wextra -Wunused-parameter -Wunused-function -Wunused-label -Wpointer-arith -Wformat -Wreturn-type -Wsign-compare -Wmultichar -Wformat-nonliteral -Winit-self -Wuninitialized -Wdeprecated -Wformat-security -Werror -Wcomment -Wtrigraphs -Wundef -Wunused-macros -pedantic-errors -std=c99  -fsanitize-undefined-trap-on-error
 # removed: -lpthread, -Wl,-z,relro -Wl,-z,now
 CXX_ARGS = -DIS_NOT_PEBBLE -lpthread -pipe -m64 -ansi -fPIC -g -O3 -fno-exceptions -fstack-protector -fvisibility=hidden -W -Wall -Wno-unused-parameter -Wno-unused-function -Wno-unused-label -Wpointer-arith -Wformat -Wreturn-type -Wsign-compare -Wmultichar -Wformat-nonliteral -Winit-self -Wuninitialized -Wno-deprecated -Wformat-security -Wall
 
