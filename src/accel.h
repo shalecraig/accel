@@ -62,7 +62,7 @@ struct accelState;
 typedef int (*accel_callback)(struct accelState *state, int gesture_id, int offset_found, bool *reset_gesture);
 
 typedef struct accelState {
-    int dimensions;
+    uint16_t dimensions;
 
     accel_callback callback;
     struct internalAccelState *state;
@@ -85,7 +85,7 @@ typedef struct accelState {
  *                     gestures must be before the callback is called.
  * @return             ACCEL_SUCCESS if successful, an error code otherwise.
  */
-int accel_generate_state(accel_state **state, int dimensions, int window_size, accel_callback callback,
+int accel_generate_state(accel_state **state, uint16_t dimensions, int window_size, accel_callback callback,
                          const int threshold);
 
 /**
