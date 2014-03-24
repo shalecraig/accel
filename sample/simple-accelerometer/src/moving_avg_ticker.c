@@ -58,7 +58,7 @@ int allocate_moving_avg(uint32_t num_wbuf, uint32_t subtotal_sizes, moving_avg_v
     memset(*allocated, 0, size);
     (*allocated)->max_subtotal_size = subtotal_sizes;
 
-    int32_t *wbuf = (int32_t *)calloc(num_wbuf, sizeof(int32_t));
+    int16_t *wbuf = (int16_t *)calloc(num_wbuf, sizeof(int16_t));
     if (wbuf == NULL) {
         // Run away, fast!
         free(allocated);
@@ -83,7 +83,7 @@ int reset_moving_avg(moving_avg_values *reset) {
     return MOVING_AVG_SUCCESS;
 }
 
-int append_to_moving_avg(moving_avg_values *value, int appended, bool *is_at_end) {
+int append_to_moving_avg(moving_avg_values *value, int16_t appended, bool *is_at_end) {
     int is_valid_return_value = precondition_valid_moving_avg_values(value);
     if (is_valid_return_value != MOVING_AVG_SUCCESS) {
         return is_valid_return_value;
@@ -117,6 +117,7 @@ int get_latest_frame_moving_avg(moving_avg_values *value, int *frame) {
 
     float sum = 0;
     for (uint32_t i = 0; i < value->wbuf_len; ++i) {
+        // TODO: divide the outside value by value->wbuf_len
         sum += value->wbuf[i] * 1.0 / value->wbuf_len;
     }
     *frame = (int)sum;
