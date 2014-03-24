@@ -1,5 +1,5 @@
 # TODO: update this.
-PHONY = default echo/objects echo/sources list tests run bin clean
+PHONY = default echo/objects echo/sources list tests bin/tests run bin clean
 
 SOURCES_C               = $(wildcard src/*.c)
 TEST_CC                 = $(wildcard test/*.cc)
@@ -12,7 +12,7 @@ TEST_OBJECTS            = $(subst test,bin,$(_TEST_OBJECTS_TMP))
 EXEC = tests
 
 # removed: -Wl,-z,relro -Wl,-z,now
-C_ARGS = -DIS_NOT_PEBBLE -pipe -m64 -ansi -fPIC -g -O3 -fno-exceptions -fstack-protector -fvisibility=hidden -W -Wall -Wno-unused-parameter -Wno-unused-function -Wno-unused-label -Wpointer-arith -Wformat -Wreturn-type -Wsign-compare -Wmultichar -Wformat-nonliteral -Winit-self -Wuninitialized -Wno-deprecated -Wformat-security -Werror -Wcomment -Wtrigraphs -Wundef -Wunused-macros -pedantic-errors -std=c99
+C_ARGS =  -DIS_NOT_PEBBLE -DRELEASE -pipe -m64 -ansi -fPIC -fPIE -g -Os -ffunction-sections -fno-exceptions -fstack-protector-all -fvisibility=hidden -W -Wall -Wextra -Wunused-parameter -Wunused-function -Wunused-label -Wpointer-arith -Wformat -Wreturn-type -Wsign-compare -Wmultichar -Wformat-nonliteral -Winit-self -Wuninitialized -Wdeprecated -Wformat-security -Werror -Wcomment -Wtrigraphs -Wundef -Wunused-macros -pedantic-errors -std=c99
 # removed: -lpthread, -Wl,-z,relro -Wl,-z,now
 CXX_ARGS = -DIS_NOT_PEBBLE -lpthread -pipe -m64 -ansi -fPIC -g -O3 -fno-exceptions -fstack-protector -fvisibility=hidden -W -Wall -Wno-unused-parameter -Wno-unused-function -Wno-unused-label -Wpointer-arith -Wformat -Wreturn-type -Wsign-compare -Wmultichar -Wformat-nonliteral -Winit-self -Wuninitialized -Wno-deprecated -Wformat-security -Wall
 
