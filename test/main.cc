@@ -54,10 +54,6 @@ TEST(AccelFuzzTest, generate_state_negative_or_zero_dimensions) {
     int result = accel_generate_state(&state, 0, 1, NULL, 0);
     EXPECT_EQ(ACCEL_PARAM_ERROR, result);
 
-    // -1 dimension must fail
-    result = accel_generate_state(&state, -1, 1, NULL, 0);
-    EXPECT_EQ(ACCEL_PARAM_ERROR, result);
-
     // 1 dimension must succeed.
     state = NULL;
     result = accel_generate_state(&state, 1, 1, NULL, 0);
