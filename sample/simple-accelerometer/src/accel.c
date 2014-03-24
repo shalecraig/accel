@@ -12,8 +12,8 @@
 #define my_calloc(a, b) calloc(a, b)
 #endif
 
-#ifndef INT16_MAX
-#define INT16_MAX 0x7fff
+#ifndef INT32_MAX
+#define INT32_MAX 0x7fffffff
 #endif
 
 // cbrt is defined and importable for everybody!
@@ -33,7 +33,7 @@ typedef struct {
     int32_t **normalized_recording;
 
     moving_avg_values **moving_avg_values;
-    int *offsets;
+    int32_t *offsets;
 } accel_gesture;
 
 typedef struct internalAccelState {
@@ -290,7 +290,7 @@ int32_t normalize(int32_t sum) { return (int32_t)cbrt(sum); }
 int reset_gesture(accel_gesture *gest, const uint16_t dimensions) {
     PRECONDITION_NOT_NULL(gest);
     for (int i = 0; i < gest->recording_size; ++i) {
-        gest->offsets[i] = INT16_MAX;
+        gest->offsets[i] = INT32_MAX;
     }
     for (uint16_t d = 0; d < dimensions; ++d) {
         reset_moving_avg(gest->moving_avg_values[d]);
@@ -324,7 +324,7 @@ int accel_end_record_gesture(accel_state *state, int gesture_id) {
         return ACCEL_PARAM_ERROR;
     }
 
-    gesture->offsets = (int *)malloc(gesture->recording_size * sizeof(int));
+    gesture->offsets = (int32_t *)malloc(gesture->recording_size * sizeof(int32_t));
     if (gesture->offsets == NULL) {
         return ACCEL_MALLOC_ERROR;
     }
@@ -339,7 +339,7 @@ int accel_end_record_gesture(accel_state *state, int gesture_id) {
     }
 
     for (int i = 0; i < gesture->recording_size; ++i) {
-        gesture->offsets[i] = INT16_MAX;
+        gesture->offsets[i] = INT32_MAX;
     }
     for (uint16_t d = 0; d < state->dimensions; ++d) {
         reset_moving_avg(gesture->moving_avg_values[d]);
@@ -377,7 +377,7 @@ void handle_recording_tick(accel_gesture *gesture, uint16_t dimensions) {
     ++gesture->recording_size;
 }
 
-int handle_evaluation_tick(accel_state *state, accel_gesture *gesture, int gesture_id) {
+int handle_evaluation_tick(accel_state *state, accel_gesture *gesture, int16_t gesture_id) {
     // TODO: load the input at the beginning instead of gesture->recording_size times.
     PRECONDITION_NOT_NULL(gesture);
     uint16_t dimensions = state->dimensions;
@@ -390,9 +390,9 @@ int handle_evaluation_tick(accel_state *state, accel_gesture *gesture, int gestu
     while (i != 0) {
         --i;
 
-        int cost = 0;
+        int32_t cost = 0;
         for (uint16_t d = 0; d < dimensions; ++d) {
-            int recording_i_d = gesture->normalized_recording[i][d];
+            int32_t recording_i_d = gesture->normalized_recording[i][d];
             int32_t input_i_d = 0;
             // TODO: complain about invalid return values.
             get_latest_frame_moving_avg(gesture->moving_avg_values[d], &input_i_d);
@@ -411,9 +411,9 @@ int handle_evaluation_tick(accel_state *state, accel_gesture *gesture, int gestu
         }
     }
     for (i = 1; i < gesture->recording_size; ++i) {
-        int cost = 0;
+        int32_t cost = 0;
         for (uint16_t d = 0; d < dimensions; ++d) {
-            int recording_i_d = gesture->normalized_recording[i][d];
+            int32_t recording_i_d = gesture->normalized_recording[i][d];
             int32_t input_i_d = 0;
             // TODO: complain about invalid return values.
             get_latest_frame_moving_avg(gesture->moving_avg_values[d], &input_i_d);
@@ -430,7 +430,7 @@ int handle_evaluation_tick(accel_state *state, accel_gesture *gesture, int gestu
         if (state->state->threshold <= 0) {
             return ACCEL_PARAM_ERROR;
         }
-        float avg_affinity = gesture->offsets[gesture->recording_size - 1] * 1.0 / gesture->recording_size;
+        int32_t avg_affinity = gesture->offsets[gesture->recording_size - 1] * 1.0 / gesture->recording_size;
         if (avg_affinity < state->state->threshold) {
             bool reset;
             int retval = state->callback(state, gesture_id, avg_affinity, &reset);
@@ -493,7 +493,8 @@ int accel_process_timer_tick(accel_state *state, int *accel_data) {
     return retcode;
 }
 
-int accel_find_most_likely_gesture(accel_state *state, int *gesture_id, int *offset) {
+// TODO: change signature in header file
+int accel_find_most_likely_gesture(accel_state *state, int *gesture_id, int32_t *offset) {
     PRECONDITION_VALID_STATE(state);
     PRECONDITION_NOT_NULL(gesture_id);
     PRECONDITION_NOT_NULL(offset);
@@ -541,6 +542,7 @@ int accel_find_most_likely_gesture(accel_state *state, int *gesture_id, int *off
         }
     }
     if (*gesture_id == ACCEL_NO_VALID_GESTURE || *offset == ACCEL_NO_VALID_GESTURE) {
+        // TODO: assert both of these are valid.
         return ACCEL_NO_VALID_GESTURE;
     }
     return ACCEL_SUCCESS;

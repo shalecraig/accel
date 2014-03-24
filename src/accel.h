@@ -28,7 +28,7 @@ struct accelState;
  *
  * A simple accel_callback is as follows:
  *
- * const int my_callback(accel_state *state, int gesture_id, int offset_found, bool *reset_gesture) {
+ * int my_callback(accel_state *state, const int gesture_id, const int offset_found, bool *reset_gesture) {
  *     int retval = ACCEL_SUCCESS;
  *     if (gesture_id == 1) {
  *         *reset_gesture = true;
@@ -59,7 +59,8 @@ struct accelState;
  *                          refer to the ACCEL_MIN_RESERVED definition inside
  *                          their implementations.
  */
-typedef int (*accel_callback)(struct accelState *state, int gesture_id, int offset_found, bool *reset_gesture);
+typedef int (*accel_callback)(struct accelState *state, const int16_t gesture_id, const int32_t offset_found,
+                              bool *reset_gesture);
 
 typedef struct accelState {
     uint16_t dimensions;
@@ -136,7 +137,7 @@ int accel_process_timer_tick(accel_state *state, int *accel_data);
  *                    distance corresponding to the returned gesture.
  * @return            ACCEL_SUCCESS if successful, an error code otherwise.
  */
-int accel_find_most_likely_gesture(accel_state *state, int *gesture_id, int *distance);
+int accel_find_most_likely_gesture(accel_state *state, int *gesture_id, int32_t *distance);
 
 /**
  * For a given state and recorded gesture, resets the gesture's offset state

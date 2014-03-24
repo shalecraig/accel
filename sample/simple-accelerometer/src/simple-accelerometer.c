@@ -1,4 +1,5 @@
 #include <pebble.h>
+#include <stdint.h>
 
 #include "accel.h"
 
@@ -60,9 +61,9 @@ static void down_click_handler(ClickRecognizerRef recognizer, void *context) {
         text_layer_set_text(text_layer, "Successful tick");
 
         int gesture_id = 0;
-        int distance = 0;
+        int32_t distance = 0;
         accel_find_most_likely_gesture(state, &gesture_id, &distance);
-        APP_LOG(APP_LOG_LEVEL_INFO, "Distance: %i, gesture: %i", distance, gesture_id);
+        APP_LOG(APP_LOG_LEVEL_INFO, "Distance: %ld, gesture: %i", distance, gesture_id);
     } else {
         text_layer_set_text(text_layer, "Non-successful tick");
     }

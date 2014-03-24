@@ -126,8 +126,8 @@ TEST(AccelFuzzTest, accel_generate_state_null_callback) {
     result = accel_generate_state(&state, 1, 1, NULL, 0);
 }
 
-TEST_CALLBACK(int, AccelFuzzTest, accel_generate_state_valid_callback, myTest, accel_state *state, int gesture_id,
-              int offset_found, bool *reset_gesture)
+TEST_CALLBACK(int, AccelFuzzTest, accel_generate_state_valid_callback, myTest, accel_state *state, int16_t gesture_id,
+              int32_t offset_found, bool *reset_gesture)
 *reset_gesture = true;
 return ACCEL_SUCCESS;
 }
@@ -339,7 +339,7 @@ TEST(AccelTest, end_to_end_test_single_recording) {
         ASSERT_EQ(0, accel_find_most_likely_gesture(state, &gesture_found, &affinity_of_gesture));
         ASSERT_EQ(gesture, gesture_found);
         if (i != 0) {
-            ASSERT_LT(affinity_of_gesture, prev_affinity) << "i=" << i;
+            EXPECT_LT(affinity_of_gesture, prev_affinity) << "i=" << i;
         }
         prev_affinity = affinity_of_gesture;
     }
@@ -419,7 +419,7 @@ TEST(AccelTest, test_fuzz_reset_affinities) {
     EXPECT_EQ(ACCEL_SUCCESS, accel_reset_affinities_for_gesture(state, gesture_id));
 
     int gesture = 1;
-    int initial_distance = 1;
+    int32_t initial_distance = 1;
     int after_run_distance = 1;
     int after_reset_distance = 1;
 
