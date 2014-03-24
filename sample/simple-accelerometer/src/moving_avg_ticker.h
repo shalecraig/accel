@@ -5,6 +5,8 @@
 extern "C" {
 #endif
 
+#include <stdint.h>
+
 #include "accel.h"
 
 #define MOVING_AVG_SUCCESS ACCEL_SUCCESS
@@ -14,16 +16,16 @@ extern "C" {
 
 typedef struct moving_avg_values {
     // Circular buffer
-    int *wbuf;
-    int wbuf_end;
-    int wbuf_len;
+    int32_t *wbuf;
+    uint32_t wbuf_end;
+    uint32_t wbuf_len;
 
-    int subtotal;
-    int subtotal_size;
-    int max_subtotal_size;
+    int32_t subtotal;
+    uint32_t subtotal_size;
+    uint32_t max_subtotal_size;
 } moving_avg_values;
 
-int allocate_moving_avg(int num_wbuf, int subtotal_sizes, moving_avg_values **allocated);
+int allocate_moving_avg(uint32_t num_wbuf, uint32_t subtotal_sizes, moving_avg_values **allocated);
 
 int reset_moving_avg(moving_avg_values *reset);
 

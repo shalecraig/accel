@@ -3,8 +3,14 @@
 
 #include "moving_avg_ticker.h"
 
+// TODO: move this (and the accel stuff) into a header file.
 #define PRECONDITION_NOT_NULL(foo)                                                                                     \
     if (foo == NULL) {                                                                                                 \
+        return MOVING_AVG_PARAM_ERROR;                                                                                 \
+    }
+
+#define PRECONDITION_NULL(foo)                                                                                         \
+    if (foo != NULL) {                                                                                                 \
         return MOVING_AVG_PARAM_ERROR;                                                                                 \
     }
 
@@ -15,13 +21,10 @@ int precondition_valid_moving_avg_values(moving_avg_values *input) {
     if (input->wbuf == NULL) {
         return MOVING_AVG_INTERNAL_ERROR;
     }
-    if (input->wbuf_end < 0) {
+    if (input->wbuf_len == 0) {
         return MOVING_AVG_INTERNAL_ERROR;
     }
-    if (input->wbuf_len <= 0) {
-        return MOVING_AVG_INTERNAL_ERROR;
-    }
-    if (input->subtotal_size < 0) {
+    if (input->wbuf_len < input->wbuf_end) {
         return MOVING_AVG_INTERNAL_ERROR;
     }
     if (input->subtotal_size >= input->max_subtotal_size) {
@@ -33,16 +36,17 @@ int precondition_valid_moving_avg_values(moving_avg_values *input) {
     return MOVING_AVG_SUCCESS;
 }
 
-int allocate_moving_avg(int num_wbuf, int subtotal_sizes, moving_avg_values **allocated) {
+int allocate_moving_avg(uint32_t num_wbuf, uint32_t subtotal_sizes, moving_avg_values **allocated) {
     PRECONDITION_NOT_NULL(allocated);
+    PRECONDITION_NULL(*allocated);
+
     if (*allocated != NULL) {
         return MOVING_AVG_PARAM_ERROR;
     }
-    // TODO: use an unsigned int instead.
-    if (num_wbuf <= 0) {
+    if (num_wbuf == 0) {
         return MOVING_AVG_PARAM_ERROR;
     }
-    if (subtotal_sizes <= 0) {
+    if (subtotal_sizes == 0) {
         return MOVING_AVG_PARAM_ERROR;
     }
     size_t size = sizeof(moving_avg_values);
@@ -54,7 +58,7 @@ int allocate_moving_avg(int num_wbuf, int subtotal_sizes, moving_avg_values **al
     memset(*allocated, 0, size);
     (*allocated)->max_subtotal_size = subtotal_sizes;
 
-    int *wbuf = (int *)calloc(num_wbuf, sizeof(int));
+    int32_t *wbuf = (int32_t *)calloc(num_wbuf, sizeof(int32_t));
     if (wbuf == NULL) {
         // Run away, fast!
         free(allocated);
@@ -63,7 +67,7 @@ int allocate_moving_avg(int num_wbuf, int subtotal_sizes, moving_avg_values **al
     }
     (*allocated)->wbuf = wbuf;
     (*allocated)->wbuf_len = num_wbuf;
-    return MOVING_AVG_SUCCESS;
+    return precondition_valid_moving_avg_values(*allocated);
 }
 
 int reset_moving_avg(moving_avg_values *reset) {
@@ -112,7 +116,7 @@ int get_latest_frame_moving_avg(moving_avg_values *value, int *frame) {
     PRECONDITION_NOT_NULL(frame);
 
     float sum = 0;
-    for (int i = 0; i < value->wbuf_len; ++i) {
+    for (uint32_t i = 0; i < value->wbuf_len; ++i) {
         sum += value->wbuf[i] * 1.0 / value->wbuf_len;
     }
     *frame = (int)sum;
