@@ -21,10 +21,10 @@ extern "C" {
 typedef struct moving_avg_values {
     // Circular buffer
     uint32_t *wbuf;
-    int wbuf_end;
-    int wbuf_len;
+    uint32_t wbuf_end;
+    uint32_t wbuf_len;
 
-    int subtotal;
+    int32_t subtotal;
     uint32_t subtotal_size;
     uint32_t max_subtotal_size;
 } moving_avg_values;
@@ -33,9 +33,9 @@ int allocate_moving_avg(uint32_t num_wbuf, uint32_t subtotal_sizes, moving_avg_v
 
 int reset_moving_avg(moving_avg_values *reset);
 
-int append_to_moving_avg(moving_avg_values *value, int appended, bool *isAtEnd);
+int append_to_moving_avg(moving_avg_values *value, int32_t appended, bool *isAtEnd);
 
-int get_latest_frame_moving_avg(moving_avg_values *value, int *frame);
+int get_latest_frame_moving_avg(moving_avg_values *value, int32_t *frame);
 
 int free_moving_avg(moving_avg_values **value);
 
