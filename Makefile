@@ -12,9 +12,9 @@ TEST_OBJECTS            = $(subst test,bin,$(_TEST_OBJECTS_TMP))
 EXEC = tests
 
 # removed: -Wl,-z,relro -Wl,-z,now
-C_ARGS =  -DIS_NOT_PEBBLE -DRELEASE -pipe -m64 -ansi -fPIC -fPIE -g -Os -ffunction-sections -fno-exceptions -fstack-protector-all -fvisibility=hidden -W -Wall -Wextra -Wunused-parameter -Wunused-function -Wunused-label -Wpointer-arith -Wformat -Wreturn-type -Wsign-compare -Wmultichar -Wformat-nonliteral -Winit-self -Wuninitialized -Wdeprecated -Wformat-security -Werror -Wcomment -Wtrigraphs -Wundef -Wunused-macros -pedantic-errors -std=c99
+C_ARGS =  -ansi -DIS_NOT_PEBBLE -DRELEASE -ffunction-sections -fno-exceptions -fPIC -fPIE -fstack-protector-all -fstrict-overflow -fvisibility=hidden -g -m64 -Os -pedantic-errors -pipe -std=c99 -W -Wall -Wbad-function-cast -Wc++-compat -Wcast-qual -Wcomment -Wconversion -Wdeprecated -Werror -Wextra -Wfloat-equal -Wformat -Wformat-nonliteral -Wformat-security -Wformat-y2k -Winit-self -Wmissing-include-dirs -Wmultichar -Wnested-externs -Wold-style-definition -Wpacked -Wpadded -Wpointer-arith -Wredundant-decls -Wreturn-type -Wsign-compare -Wstack-protector -Wstrict-prototypes -Wswitch-default -Wswitch-enum -Wtrigraphs -Wundef -Wuninitialized -Wuninitialized -Wunused-function -Wunused-label -Wunused-macros -Wunused-parameter -Wvariadic-macros -Wwrite-strings
 # removed: -lpthread, -Wl,-z,relro -Wl,-z,now
-CXX_ARGS = -DIS_NOT_PEBBLE -lpthread -pipe -m64 -ansi -fPIC -g -O3 -fno-exceptions -fstack-protector -fvisibility=hidden -W -Wall -Wno-unused-parameter -Wno-unused-function -Wno-unused-label -Wpointer-arith -Wformat -Wreturn-type -Wsign-compare -Wmultichar -Wformat-nonliteral -Winit-self -Wuninitialized -Wno-deprecated -Wformat-security -Wall
+CXX_ARGS = -DIS_NOT_PEBBLE -fno-exceptions -fPIC -fstack-protector -fvisibility=hidden -g -lpthread -m64 -O3 -pipe -W -Wall -Wextra -Wextra-tokens -Wconversion -Wformat -Wformat-nonliteral -Wformat-security -Winit-self -Wmultichar -Wno-deprecated -Wno-unused-function -Wno-unused-label -Wno-unused-parameter -Wpointer-arith -Wreturn-type -Wsign-compare -Wuninitialized -Wcast-qual -Wsign-compare -Wsign-conversion -Wlogical-op
 
 default:
 	@make all
