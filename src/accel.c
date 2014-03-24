@@ -24,7 +24,7 @@ typedef struct {
     bool is_recorded;
 
     int recording_size;
-    int **normalized_recording;
+    int32_t **normalized_recording;
 
     moving_avg_values **moving_avg_values;
     int *offsets;
@@ -279,7 +279,7 @@ int accel_start_record_gesture(accel_state *state, int *gesture) {
 // The uWave paper suggests a mapping from [-20, 20]->[-15, 15], but cube root
 // should to work better for variable ranges.
 // TODO: revisit this decision.
-int normalize(int sum) { return (int)cbrt(sum); }
+int normalize(int32_t sum) { return (int32_t)cbrt(sum); }
 
 int reset_gesture(accel_gesture *gest, const uint32_t dimensions) {
     PRECONDITION_NOT_NULL(gest);
@@ -351,15 +351,15 @@ void handle_recording_tick(accel_gesture *gesture, uint32_t dimensions) {
     // TODO: grow exponentially, not linearly. Linear growth allocates too frequently.
     if (gesture->recording_size != 0) {
         gesture->normalized_recording =
-            (int **)my_realloc(gesture->normalized_recording, (gesture->recording_size + 1) * sizeof(int *),
-                               gesture->recording_size * sizeof(int *));
+            (int32_t **)my_realloc(gesture->normalized_recording, (gesture->recording_size + 1) * sizeof(int32_t *),
+                                   gesture->recording_size * sizeof(int32_t *));
         if (gesture->normalized_recording == NULL) {
             return;
         }
     } else {
-        gesture->normalized_recording = (int **)malloc(sizeof(int *));
+        gesture->normalized_recording = (int32_t **)malloc(sizeof(int32_t *));
     }
-    gesture->normalized_recording[gesture->recording_size] = (int *)malloc(sizeof(int) * dimensions);
+    gesture->normalized_recording[gesture->recording_size] = (int32_t *)malloc(sizeof(int32_t) * dimensions);
     for (uint32_t i = 0; i < dimensions; ++i) {
         // TODO: fix this int/float business.
         // TODO: complain about invalid return values.
@@ -387,7 +387,7 @@ int handle_evaluation_tick(accel_state *state, accel_gesture *gesture, int gestu
         int cost = 0;
         for (uint32_t d = 0; d < dimensions; ++d) {
             int recording_i_d = gesture->normalized_recording[i][d];
-            int input_i_d = 0;
+            int32_t input_i_d = 0;
             // TODO: complain about invalid return values.
             get_latest_frame_moving_avg(gesture->moving_avg_values[d], &input_i_d);
             input_i_d = normalize(input_i_d);
@@ -408,7 +408,7 @@ int handle_evaluation_tick(accel_state *state, accel_gesture *gesture, int gestu
         int cost = 0;
         for (uint32_t d = 0; d < dimensions; ++d) {
             int recording_i_d = gesture->normalized_recording[i][d];
-            int input_i_d = 0;
+            int32_t input_i_d = 0;
             // TODO: complain about invalid return values.
             get_latest_frame_moving_avg(gesture->moving_avg_values[d], &input_i_d);
             if (recording_i_d > input_i_d) {
