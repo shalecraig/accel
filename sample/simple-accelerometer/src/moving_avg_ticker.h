@@ -5,9 +5,9 @@
 extern "C" {
 #endif
 
-#include "accel.h"
-
 #include <stdint.h>
+
+#include "accel.h"
 
 #define MOVING_AVG_SUCCESS ACCEL_SUCCESS
 #define MOVING_AVG_PARAM_ERROR ACCEL_PARAM_ERROR
