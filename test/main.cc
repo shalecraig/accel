@@ -54,10 +54,6 @@ TEST(AccelFuzzTest, generate_state_negative_or_zero_dimensions) {
     int result = accel_generate_state(&state, 0, 1, NULL, 0);
     EXPECT_EQ(ACCEL_PARAM_ERROR, result);
 
-    // -1 dimension must fail
-    result = accel_generate_state(&state, -1, 1, NULL, 0);
-    EXPECT_EQ(ACCEL_PARAM_ERROR, result);
-
     // 1 dimension must succeed.
     state = NULL;
     result = accel_generate_state(&state, 1, 1, NULL, 0);
@@ -88,10 +84,6 @@ TEST(AccelFuzzTest, generate_state_invalid_window_size) {
 
     // Size 0 must fail
     result = accel_generate_state(&state, 1, 0, NULL, 0);
-    EXPECT_EQ(ACCEL_PARAM_ERROR, result);
-
-    // Size -1 must fail
-    result = accel_generate_state(&state, 1, -1, NULL, 0);
     EXPECT_EQ(ACCEL_PARAM_ERROR, result);
 
     // Size 1 must succeed
@@ -666,9 +658,6 @@ TEST(MovingAvgTicker, InvalidLatestFrameParams) {
 
 TEST(MovingAvgTickerFuzzTest, allocate_moving_avg) {
     moving_avg_values *allocated = NULL;
-
-    // Test with negative num_wbuf
-    EXPECT_EQ(MOVING_AVG_PARAM_ERROR, allocate_moving_avg(-1, 1, &allocated));
 
     // Test with zero num_wbuf
     EXPECT_EQ(MOVING_AVG_PARAM_ERROR, allocate_moving_avg(0, 1, &allocated));

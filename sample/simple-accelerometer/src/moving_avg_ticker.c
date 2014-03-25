@@ -33,7 +33,7 @@ int precondition_valid_moving_avg_values(moving_avg_values *input) {
     return MOVING_AVG_SUCCESS;
 }
 
-int allocate_moving_avg(int num_wbuf, int subtotal_sizes, moving_avg_values **allocated) {
+int allocate_moving_avg(uint16_t num_wbuf, int subtotal_sizes, moving_avg_values **allocated) {
     PRECONDITION_NOT_NULL(allocated);
     if (*allocated != NULL) {
         return MOVING_AVG_PARAM_ERROR;

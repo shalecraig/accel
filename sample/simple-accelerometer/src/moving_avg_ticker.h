@@ -23,7 +23,7 @@ typedef struct moving_avg_values {
     int max_subtotal_size;
 } moving_avg_values;
 
-int allocate_moving_avg(int num_wbuf, int subtotal_sizes, moving_avg_values **allocated);
+int allocate_moving_avg(uint16_t num_wbuf, int subtotal_sizes, moving_avg_values **allocated);
 
 int reset_moving_avg(moving_avg_values *reset);
 
