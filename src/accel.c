@@ -31,7 +31,7 @@ typedef struct {
 
     // TODO: uint32_t needed instead?
     uint16_t recording_size;
-    int **normalized_recording;
+    int32_t **normalized_recording;
 
     moving_avg_values **moving_avg_values;
     int *offsets;
@@ -382,15 +382,15 @@ void handle_recording_tick(accel_gesture *gesture, uint32_t dimensions) {
     // TODO: grow exponentially, not linearly. Linear growth allocates too frequently.
     if (gesture->recording_size != 0) {
         gesture->normalized_recording =
-            (int **)my_realloc(gesture->normalized_recording, (gesture->recording_size + 1) * sizeof(int *),
-                               gesture->recording_size * sizeof(int *));
+            (int32_t **)my_realloc(gesture->normalized_recording, (gesture->recording_size + 1) * sizeof(int32_t *),
+                                   gesture->recording_size * sizeof(int32_t *));
         if (gesture->normalized_recording == NULL) {
             return;
         }
     } else {
-        gesture->normalized_recording = (int **)malloc(sizeof(int *));
+        gesture->normalized_recording = (int32_t **)malloc(sizeof(int32_t *));
     }
-    gesture->normalized_recording[gesture->recording_size] = (int *)malloc(sizeof(int) * dimensions);
+    gesture->normalized_recording[gesture->recording_size] = (int32_t *)malloc(sizeof(int32_t) * dimensions);
     for (uint32_t i = 0; i < dimensions; ++i) {
         // TODO: fix this int/float business.
         // TODO: complain about invalid return values.

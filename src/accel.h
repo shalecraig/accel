@@ -6,6 +6,7 @@ extern "C" {
 #endif
 
 #include <stdbool.h>
+#include <stdint.h>
 
 #define ACCEL_SUCCESS 0
 #define ACCEL_PARAM_ERROR -1

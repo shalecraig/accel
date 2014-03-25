@@ -5,6 +5,8 @@
 extern "C" {
 #endif
 
+#include <stdint.h>
+
 #include "accel.h"
 
 #define MOVING_AVG_SUCCESS ACCEL_SUCCESS
@@ -29,7 +31,7 @@ int reset_moving_avg(moving_avg_values *reset);
 
 int append_to_moving_avg(moving_avg_values *value, int appended, bool *isAtEnd);
 
-int get_latest_frame_moving_avg(moving_avg_values *value, int *frame);
+int get_latest_frame_moving_avg(moving_avg_values *value, int32_t *frame);
 
 int free_moving_avg(moving_avg_values **value);
 

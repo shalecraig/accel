@@ -103,7 +103,7 @@ int append_to_moving_avg(moving_avg_values *value, int appended, bool *is_at_end
     return MOVING_AVG_SUCCESS;
 }
 
-int get_latest_frame_moving_avg(moving_avg_values *value, int *frame) {
+int get_latest_frame_moving_avg(moving_avg_values *value, int32_t *frame) {
     int is_valid_return_value = precondition_valid_moving_avg_values(value);
     if (is_valid_return_value != MOVING_AVG_SUCCESS) {
         return is_valid_return_value;
@@ -115,7 +115,7 @@ int get_latest_frame_moving_avg(moving_avg_values *value, int *frame) {
     for (int i = 0; i < value->wbuf_len; ++i) {
         sum += value->wbuf[i] * 1.0 / value->wbuf_len;
     }
-    *frame = (int)sum;
+    *frame = (int32_t)sum;
     return MOVING_AVG_SUCCESS;
 }
 
