@@ -86,7 +86,7 @@ typedef struct internalAccelState {
 
 // Decay rate of values we choose to keep. 1.0 is no decay, 2.0 is a doubling every time we keep them.
 // TODO: should we store the offsets as floats instead?
-#define ALPHA 1.0
+#define ALPHA ((float) 1.0)
 
 // TODO: include these from a header file?
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
