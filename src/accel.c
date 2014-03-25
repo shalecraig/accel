@@ -526,10 +526,6 @@ int accel_find_most_likely_gesture(accel_state *state, int *gesture_id, int *off
     *gesture_id = ACCEL_NO_VALID_GESTURE;
     *offset = ACCEL_NO_VALID_GESTURE;
 
-    if (state->state->num_gestures_saved < 0) {
-        return ACCEL_INTERNAL_ERROR;
-    }
-
     if (state->state->num_gestures_saved == 0) {
         return ACCEL_NO_VALID_GESTURE;
     }
