@@ -12,10 +12,6 @@
 #define my_calloc(a, b) (calloc(a, b))
 #endif
 
-#ifndef INT16_MAX
-#define INT16_MAX 0x7fff
-#endif
-
 // cbrt is defined and importable for everybody!
 #include <math.h>
 #include <stdlib.h>
