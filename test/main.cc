@@ -65,12 +65,8 @@ TEST(AccelFuzzTest, generate_state_invalid_threshold_with_callback_params) {
     accel_state *state = NULL;
     accel_callback nonNullCallback = (accel_callback)1;
 
-    // Fails for negatives.
-    int result = accel_generate_state(&state, 1, 1, nonNullCallback, -1);
-    EXPECT_EQ(ACCEL_PARAM_ERROR, result);
-
     // Fails for zero.
-    result = accel_generate_state(&state, 1, 1, nonNullCallback, 0);
+    int result = accel_generate_state(&state, 1, 1, nonNullCallback, 0);
     EXPECT_EQ(ACCEL_PARAM_ERROR, result);
 
     // Succeeds for 1.

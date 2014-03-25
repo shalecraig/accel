@@ -87,7 +87,7 @@ typedef struct accelState {
  * @return             ACCEL_SUCCESS if successful, an error code otherwise.
  */
 int accel_generate_state(accel_state **state, uint32_t dimensions, uint16_t window_size, accel_callback callback,
-                         const int threshold);
+                         const uint32_t threshold);
 
 /**
  * Destroys the state object at the pointer pointed to by the state pointer.

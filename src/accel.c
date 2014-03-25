@@ -37,7 +37,7 @@ typedef struct internalAccelState {
     // TODO: uint32_t needed instead?
     uint16_t num_gestures_saved;
     uint16_t window_size;
-    int threshold;
+    uint32_t threshold;
 
     accel_gesture **gestures;
 } internal_accel_state;
@@ -162,7 +162,7 @@ int accel_generate_gesture(accel_state *state, accel_gesture **gesture) {
 }
 
 int accel_generate_state(accel_state **state, uint32_t dimensions, uint16_t window_size, accel_callback callback,
-                         const int threshold) {
+                         const uint32_t threshold) {
     PRECONDITION_NOT_NULL(state);
 
     // TODO: write a test for this value.
@@ -174,10 +174,10 @@ int accel_generate_state(accel_state **state, uint32_t dimensions, uint16_t wind
     if (window_size <= 0) {
         return ACCEL_PARAM_ERROR;
     }
-    if (threshold <= 0 && callback != NULL) {
+    if (threshold == 0 && callback != NULL) {
         return ACCEL_PARAM_ERROR;
     }
-    if (threshold > 0 && callback == NULL) {
+    if (threshold != 0 && callback == NULL) {
         return ACCEL_PARAM_ERROR;
     }
 
@@ -448,7 +448,7 @@ int handle_evaluation_tick(accel_state *state, accel_gesture *gesture, int gestu
         gesture->offsets[i] = MIN(gesture->offsets[i], gesture->offsets[i - 1] + cost);
     }
     if (state->callback != NULL) {
-        if (state->state->threshold <= 0) {
+        if (state->state->threshold == 0) {
             return ACCEL_PARAM_ERROR;
         }
         float avg_affinity = ((float)gesture->offsets[gesture->recording_size - 1]) / gesture->recording_size;
