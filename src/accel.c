@@ -8,8 +8,8 @@
 #include <pebble.h>
 #include <pebble_makeup.h>
 #else
-#define my_realloc(a, b, c) realloc(a, b)
-#define my_calloc(a, b) calloc(a, b)
+#define my_realloc(a, b, c) (realloc(a, b))
+#define my_calloc(a, b) (calloc(a, b))
 #endif
 
 #ifndef INT16_MAX
@@ -86,7 +86,7 @@ typedef struct internalAccelState {
 
 // Decay rate of values we choose to keep. 1.0 is no decay, 2.0 is a doubling every time we keep them.
 // TODO: should we store the offsets as floats instead?
-#define ALPHA ((float) 1.0)
+#define ALPHA ((float)1.0)
 
 // TODO: include these from a header file?
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
