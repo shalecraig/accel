@@ -30,7 +30,7 @@ typedef struct {
     int32_t **normalized_recording;
 
     moving_avg_values **moving_avg_values;
-    int *offsets;
+    int32_t *offsets;
 } accel_gesture;
 
 typedef struct internalAccelState {
@@ -345,7 +345,7 @@ int accel_end_record_gesture(accel_state *state, int gesture_id) {
         return ACCEL_PARAM_ERROR;
     }
 
-    gesture->offsets = (int *)malloc(gesture->recording_size * sizeof(int));
+    gesture->offsets = (int32_t *)malloc(gesture->recording_size * sizeof(int32_t));
     if (gesture->offsets == NULL) {
         return ACCEL_MALLOC_ERROR;
     }
