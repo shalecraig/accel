@@ -39,7 +39,7 @@ accel_state *test_fabricate_3d_state() { return test_fabricate_state(3); }
 
 void test_burn_state(accel_state **state) {
     int result = accel_destroy_state(state);
-    EXPECT_EQ(0, result);
+    EXPECT_EQ(ACCEL_SUCCESS, result);
     EXPECT_EQ(VOID_NULL, *state);
 }
 
@@ -54,14 +54,10 @@ TEST(AccelFuzzTest, generate_state_negative_or_zero_dimensions) {
     int result = accel_generate_state(&state, 0, 1, NULL, 0);
     EXPECT_EQ(ACCEL_PARAM_ERROR, result);
 
-    // -1 dimension must fail
-    result = accel_generate_state(&state, -1, 1, NULL, 0);
-    EXPECT_EQ(ACCEL_PARAM_ERROR, result);
-
     // 1 dimension must succeed.
     state = NULL;
     result = accel_generate_state(&state, 1, 1, NULL, 0);
-    EXPECT_EQ(0, result);
+    EXPECT_EQ(ACCEL_SUCCESS, result);
     accel_destroy_state(&state);
 }
 
@@ -69,12 +65,8 @@ TEST(AccelFuzzTest, generate_state_invalid_threshold_with_callback_params) {
     accel_state *state = NULL;
     accel_callback nonNullCallback = (accel_callback)1;
 
-    // Fails for negatives.
-    int result = accel_generate_state(&state, 1, 1, nonNullCallback, -1);
-    EXPECT_EQ(ACCEL_PARAM_ERROR, result);
-
     // Fails for zero.
-    result = accel_generate_state(&state, 1, 1, nonNullCallback, 0);
+    int result = accel_generate_state(&state, 1, 1, nonNullCallback, 0);
     EXPECT_EQ(ACCEL_PARAM_ERROR, result);
 
     // Succeeds for 1.
@@ -90,13 +82,9 @@ TEST(AccelFuzzTest, generate_state_invalid_window_size) {
     result = accel_generate_state(&state, 1, 0, NULL, 0);
     EXPECT_EQ(ACCEL_PARAM_ERROR, result);
 
-    // Size -1 must fail
-    result = accel_generate_state(&state, 1, -1, NULL, 0);
-    EXPECT_EQ(ACCEL_PARAM_ERROR, result);
-
     // Size 1 must succeed
     result = accel_generate_state(&state, 1, 1, NULL, 0);
-    EXPECT_EQ(0, result);
+    EXPECT_EQ(ACCEL_SUCCESS, result);
     EXPECT_NE(VOID_NULL, state);
 }
 
@@ -137,7 +125,7 @@ return ACCEL_SUCCESS;
 }
 
 TEST(AccelFuzzTest, accel_generate_state_valid_callback) {
-    int gesture_id = 0;
+    uint16_t gesture_id = 0;
     accel_state *state = NULL;
 
     // Non-null callback, watch it iterate over this stuff.
@@ -176,13 +164,13 @@ TEST(AccelFuzzTest, accel_destroy_state_invalid_input) {
 
     // Destroy the state
     result = accel_destroy_state(&state);
-    EXPECT_EQ(0, result);
+    EXPECT_EQ(ACCEL_SUCCESS, result);
     EXPECT_EQ(VOID_NULL, state);
 }
 
 TEST(AccelFuzzTest, accel_start_record_gesture_invalid_input) {
     int result = 0;
-    int gesture_id = 0;
+    uint16_t gesture_id = 0;
     result = accel_start_record_gesture(NULL, &gesture_id);
     EXPECT_EQ(ACCEL_PARAM_ERROR, result);
 
@@ -216,15 +204,15 @@ TEST(AccelFuzzTest, accel_end_record_gesture_invalid_input) {
 
     // Verify it works for valid indexes.
     state = test_fabricate_1d_state();
-    int gesture = 1234;
+    uint16_t gesture = 1234;
     result = accel_start_record_gesture(state, &gesture);
     EXPECT_NE(1234, gesture);
-    EXPECT_EQ(0, result);
+    EXPECT_EQ(ACCEL_SUCCESS, result);
     int data[1] = {1};
-    EXPECT_EQ(0, accel_process_timer_tick(state, data));
+    EXPECT_EQ(ACCEL_SUCCESS, accel_process_timer_tick(state, data));
 
     result = accel_end_record_gesture(state, gesture);
-    EXPECT_EQ(0, result) << "gesture " << gesture << " couldn't be recorded correctly" << std::endl;
+    EXPECT_EQ(ACCEL_SUCCESS, result) << "gesture " << gesture << " couldn't be recorded correctly" << std::endl;
     test_burn_state(&state);
 }
 
@@ -246,7 +234,7 @@ TEST(AccelFuzzTest, accel_process_timer_tick_invalid_input) {
 
 TEST(AccelFuzzTest, accel_find_most_likely_gesture_invalid_input) {
     int result = 0;
-    int gesture_id = 0;
+    uint16_t gesture_id = 0;
     int affinity = 0;
     accel_state *state = NULL;
 
@@ -269,7 +257,7 @@ TEST(AccelFuzzTest, accel_find_most_likely_gesture_invalid_input) {
     // No tests exist, but otherwise valid parameters.
     state = test_fabricate_1d_state();
     result = accel_find_most_likely_gesture(state, &gesture_id, &affinity);
-    EXPECT_EQ(ACCEL_NO_VALID_GESTURE, gesture_id);
+    EXPECT_EQ(UINT16_MAX, gesture_id);
     EXPECT_EQ(ACCEL_NO_VALID_GESTURE, affinity);
     EXPECT_EQ(ACCEL_NO_VALID_GESTURE, result);
 }
@@ -278,8 +266,8 @@ TEST(AccelTest, accel_generate_and_destroy) {
     accel_state *state = NULL;
     for (int i = 1; i < 10; ++i) {
         EXPECT_EQ(VOID_NULL, state) << "i = " << i;
-        EXPECT_EQ(0, accel_generate_state(&state, 2 * i, i, NULL, 0)) << "i = " << i;
-        EXPECT_EQ(0, accel_destroy_state(&state)) << "i = " << i;
+        EXPECT_EQ(ACCEL_SUCCESS, accel_generate_state(&state, 2 * i, i, NULL, 0)) << "i = " << i;
+        EXPECT_EQ(ACCEL_SUCCESS, accel_destroy_state(&state)) << "i = " << i;
         EXPECT_EQ(VOID_NULL, state) << "i = " << i;
     }
 }
@@ -290,7 +278,7 @@ TEST(AccelTest, start_recording_and_close_many_gestures) {
 
     int data[1] = {0};
     for (int i = 0; i < 10; ++i) {
-        int gesture = 0;
+        uint16_t gesture = 0;
         ASSERT_EQ(0, accel_start_record_gesture(state, &gesture));
         ASSERT_EQ(i, gesture);
         ASSERT_EQ(0, accel_process_timer_tick(state, data));
@@ -305,16 +293,16 @@ TEST(AccelTest, record_incredibly_long_sequence) {
     accel_state *state = NULL;
     state = test_fabricate_1d_state();
 
-    int gesture = 0;
-    EXPECT_EQ(0, accel_start_record_gesture(state, &gesture));
-    EXPECT_EQ(0, gesture);
+    uint16_t gesture = 0;
+    EXPECT_EQ(ACCEL_SUCCESS, accel_start_record_gesture(state, &gesture));
+    EXPECT_EQ(ACCEL_SUCCESS, gesture);
 
     int data[] = {1};
     for (int i = 0; i < 10000; ++i) {
-        EXPECT_EQ(0, accel_process_timer_tick(state, data));
+        EXPECT_EQ(ACCEL_SUCCESS, accel_process_timer_tick(state, data));
     }
 
-    EXPECT_EQ(0, accel_end_record_gesture(state, gesture));
+    EXPECT_EQ(ACCEL_SUCCESS, accel_end_record_gesture(state, gesture));
     test_burn_state(&state);
 }
 
@@ -322,22 +310,22 @@ TEST(AccelTest, end_to_end_test_single_recording) {
     accel_state *state = NULL;
     state = test_fabricate_1d_state();
 
-    int gesture = 0;
-    EXPECT_EQ(0, accel_start_record_gesture(state, &gesture));
-    EXPECT_EQ(0, gesture);
+    uint16_t gesture = 0;
+    EXPECT_EQ(ACCEL_SUCCESS, accel_start_record_gesture(state, &gesture));
+    EXPECT_EQ(ACCEL_SUCCESS, gesture);
 
     int data[] = {1};
     for (int i = 0; i < 10; ++i) {
         data[0] = i * 100;
-        EXPECT_EQ(0, accel_process_timer_tick(state, data));
+        EXPECT_EQ(ACCEL_SUCCESS, accel_process_timer_tick(state, data));
     }
 
-    EXPECT_EQ(0, accel_end_record_gesture(state, gesture));
+    EXPECT_EQ(ACCEL_SUCCESS, accel_end_record_gesture(state, gesture));
 
     int prev_affinity = 0;
     for (int i = 0; i < 10; ++i) {
         data[0] = i * 100;
-        int gesture_found = 1;
+        uint16_t gesture_found = 1;
         int affinity_of_gesture = 1;
         ASSERT_EQ(0, accel_process_timer_tick(state, data));
         ASSERT_EQ(0, accel_find_most_likely_gesture(state, &gesture_found, &affinity_of_gesture));
@@ -356,33 +344,33 @@ TEST(AccelTest, end_to_end_test_multiple_recordings) {
     accel_state *state = NULL;
     state = test_fabricate_1d_state();
 
-    int first_gesture = 0;
-    EXPECT_EQ(0, accel_start_record_gesture(state, &first_gesture));
-    EXPECT_EQ(0, first_gesture);
+    uint16_t first_gesture = 0;
+    EXPECT_EQ(ACCEL_SUCCESS, accel_start_record_gesture(state, &first_gesture));
+    EXPECT_EQ(ACCEL_SUCCESS, first_gesture);
 
     int data[] = {1};
     for (int i = 0; i < 10; ++i) {
         data[0] = i;
-        EXPECT_EQ(0, accel_process_timer_tick(state, data));
+        EXPECT_EQ(ACCEL_SUCCESS, accel_process_timer_tick(state, data));
     }
 
-    EXPECT_EQ(0, accel_end_record_gesture(state, first_gesture));
+    EXPECT_EQ(ACCEL_SUCCESS, accel_end_record_gesture(state, first_gesture));
 
-    int second_gesture = 0;
-    EXPECT_EQ(0, accel_start_record_gesture(state, &second_gesture));
+    uint16_t second_gesture = 0;
+    EXPECT_EQ(ACCEL_SUCCESS, accel_start_record_gesture(state, &second_gesture));
     EXPECT_NE(first_gesture, second_gesture);
 
     for (int i = 0; i < 10; ++i) {
         data[0] = i * i;
-        EXPECT_EQ(0, accel_process_timer_tick(state, data));
+        EXPECT_EQ(ACCEL_SUCCESS, accel_process_timer_tick(state, data));
     }
 
-    EXPECT_EQ(0, accel_end_record_gesture(state, second_gesture));
+    EXPECT_EQ(ACCEL_SUCCESS, accel_end_record_gesture(state, second_gesture));
 
     int prev_affinity = 0;
     for (int i = 0; i < 10; ++i) {
         data[0] = i * 2;
-        int gesture_found = 1;
+        uint16_t gesture_found = 1;
         int affinity_of_gesture = 1;
         ASSERT_EQ(0, accel_process_timer_tick(state, data));
         ASSERT_EQ(0, accel_find_most_likely_gesture(state, &gesture_found, &affinity_of_gesture));
@@ -403,7 +391,7 @@ TEST(AccelTest, test_fuzz_reset_affinities) {
     state = test_fabricate_1d_state();
     EXPECT_EQ(ACCEL_PARAM_ERROR, accel_reset_affinities_for_gesture(state, 0));
 
-    int gesture_id = 0;
+    uint16_t gesture_id = 0;
     EXPECT_EQ(ACCEL_SUCCESS, accel_start_record_gesture(state, &gesture_id));
 
     // A recording gesture with no data.
@@ -422,7 +410,7 @@ TEST(AccelTest, test_fuzz_reset_affinities) {
     // No ticks have been recorded.
     EXPECT_EQ(ACCEL_SUCCESS, accel_reset_affinities_for_gesture(state, gesture_id));
 
-    int gesture = 1;
+    uint16_t gesture = 1;
     int initial_distance = 1;
     int after_run_distance = 1;
     int after_reset_distance = 1;
@@ -472,7 +460,7 @@ TEST(MovingAvgTicker, AllocatesAndFreesCorrectly) {
     EXPECT_EQ(retval, 0);
 
     retval = free_moving_avg(&allocated);
-    EXPECT_EQ(0, retval);
+    EXPECT_EQ(MOVING_AVG_SUCCESS, retval);
     EXPECT_EQ(VOID_NULL, allocated);
 }
 
@@ -480,39 +468,39 @@ TEST(MovingAvgTicker, ResetsCorrectly) {
     moving_avg_values *allocated = NULL;
     int retval = allocate_moving_avg(1, 1, &allocated);
     EXPECT_NE(VOID_NULL, allocated);
-    EXPECT_EQ(0, retval);
+    EXPECT_EQ(MOVING_AVG_SUCCESS, retval);
 
     retval = reset_moving_avg(NULL);
     EXPECT_EQ(MOVING_AVG_PARAM_ERROR, retval);
 
     retval = reset_moving_avg(allocated);
-    EXPECT_EQ(0, retval);
+    EXPECT_EQ(MOVING_AVG_SUCCESS, retval);
 }
 
 TEST(MovingAvgTicker, AppendsCorrectly1_1) {
     moving_avg_values *allocated = NULL;
     int retval = allocate_moving_avg(1, 1, &allocated);
     EXPECT_NE(VOID_NULL, allocated);
-    EXPECT_EQ(0, retval);
+    EXPECT_EQ(MOVING_AVG_SUCCESS, retval);
 
     bool is_at_end = false;
     retval = append_to_moving_avg(allocated, 1, &is_at_end);
-    EXPECT_EQ(0, retval);
+    EXPECT_EQ(MOVING_AVG_SUCCESS, retval);
     EXPECT_TRUE(is_at_end);
 
     int frame = 0;
     retval = get_latest_frame_moving_avg(allocated, &frame);
-    EXPECT_EQ(0, retval);
+    EXPECT_EQ(MOVING_AVG_SUCCESS, retval);
     EXPECT_EQ(1, frame);
 
     is_at_end = false;
     retval = append_to_moving_avg(allocated, 2, &is_at_end);
-    EXPECT_EQ(0, retval);
+    EXPECT_EQ(MOVING_AVG_SUCCESS, retval);
     EXPECT_TRUE(is_at_end);
 
     frame = 0;
     retval = get_latest_frame_moving_avg(allocated, &frame);
-    EXPECT_EQ(0, retval);
+    EXPECT_EQ(MOVING_AVG_SUCCESS, retval);
     EXPECT_EQ(2, frame);
 }
 
@@ -520,36 +508,36 @@ TEST(MovingAvgTicker, AppendsCorrectly2_1) {
     moving_avg_values *allocated = NULL;
     int retval = allocate_moving_avg(2, 1, &allocated);
     EXPECT_NE(VOID_NULL, allocated);
-    EXPECT_EQ(0, retval);
+    EXPECT_EQ(MOVING_AVG_SUCCESS, retval);
 
     bool is_at_end = false;
     retval = append_to_moving_avg(allocated, 2, &is_at_end);
-    EXPECT_EQ(0, retval);
+    EXPECT_EQ(MOVING_AVG_SUCCESS, retval);
     EXPECT_TRUE(is_at_end);
 
     int frame = 0;
     retval = get_latest_frame_moving_avg(allocated, &frame);
-    EXPECT_EQ(0, retval);
+    EXPECT_EQ(MOVING_AVG_SUCCESS, retval);
     EXPECT_EQ(1, frame);
 
     is_at_end = false;
     retval = append_to_moving_avg(allocated, 4, &is_at_end);
-    EXPECT_EQ(0, retval);
+    EXPECT_EQ(MOVING_AVG_SUCCESS, retval);
     EXPECT_TRUE(is_at_end);
 
     frame = 0;
     retval = get_latest_frame_moving_avg(allocated, &frame);
-    EXPECT_EQ(0, retval);
+    EXPECT_EQ(MOVING_AVG_SUCCESS, retval);
     EXPECT_EQ(3, frame);
 
     is_at_end = false;
     retval = append_to_moving_avg(allocated, 2, &is_at_end);
-    EXPECT_EQ(0, retval);
+    EXPECT_EQ(MOVING_AVG_SUCCESS, retval);
     EXPECT_TRUE(is_at_end);
 
     frame = 0;
     retval = get_latest_frame_moving_avg(allocated, &frame);
-    EXPECT_EQ(0, retval);
+    EXPECT_EQ(MOVING_AVG_SUCCESS, retval);
     EXPECT_EQ(3, frame);
 }
 
@@ -557,34 +545,34 @@ TEST(MovingAvgTicker, AppendsCorrectly1_2) {
     moving_avg_values *allocated = NULL;
     int retval = allocate_moving_avg(1, 2, &allocated);
     EXPECT_NE(VOID_NULL, allocated);
-    EXPECT_EQ(0, retval);
+    EXPECT_EQ(MOVING_AVG_SUCCESS, retval);
 
     bool is_at_end = false;
     retval = append_to_moving_avg(allocated, 1, &is_at_end);
-    EXPECT_EQ(0, retval);
+    EXPECT_EQ(MOVING_AVG_SUCCESS, retval);
     EXPECT_FALSE(is_at_end);
 
     retval = append_to_moving_avg(allocated, 1, &is_at_end);
-    EXPECT_EQ(0, retval);
+    EXPECT_EQ(MOVING_AVG_SUCCESS, retval);
     EXPECT_TRUE(is_at_end);
 
     int frame = 0;
     retval = get_latest_frame_moving_avg(allocated, &frame);
-    EXPECT_EQ(0, retval);
+    EXPECT_EQ(MOVING_AVG_SUCCESS, retval);
     EXPECT_EQ(2, frame);
 
     is_at_end = false;
     retval = append_to_moving_avg(allocated, 2, &is_at_end);
-    EXPECT_EQ(0, retval);
+    EXPECT_EQ(MOVING_AVG_SUCCESS, retval);
     EXPECT_FALSE(is_at_end);
 
     retval = append_to_moving_avg(allocated, 2, &is_at_end);
-    EXPECT_EQ(0, retval);
+    EXPECT_EQ(MOVING_AVG_SUCCESS, retval);
     EXPECT_TRUE(is_at_end);
 
     frame = 0;
     retval = get_latest_frame_moving_avg(allocated, &frame);
-    EXPECT_EQ(0, retval);
+    EXPECT_EQ(MOVING_AVG_SUCCESS, retval);
     EXPECT_EQ(4, frame);
 }
 
@@ -592,38 +580,38 @@ TEST(MovingAvgTicker, AppendsCorrectly2_2) {
     moving_avg_values *allocated = NULL;
     int retval = allocate_moving_avg(2, 2, &allocated);
     EXPECT_NE(VOID_NULL, allocated);
-    EXPECT_EQ(0, retval);
+    EXPECT_EQ(MOVING_AVG_SUCCESS, retval);
 
     bool is_at_end = false;
     retval = append_to_moving_avg(allocated, 1, &is_at_end);
-    EXPECT_EQ(0, retval);
+    EXPECT_EQ(MOVING_AVG_SUCCESS, retval);
     EXPECT_FALSE(is_at_end);
 
     retval = append_to_moving_avg(allocated, 1, &is_at_end);
-    EXPECT_EQ(0, retval);
+    EXPECT_EQ(MOVING_AVG_SUCCESS, retval);
     EXPECT_TRUE(is_at_end);
 
     int frame = 0;
     retval = get_latest_frame_moving_avg(allocated, &frame);
-    EXPECT_EQ(0, retval);
+    EXPECT_EQ(MOVING_AVG_SUCCESS, retval);
     EXPECT_EQ(1, frame);
 
     is_at_end = false;
     retval = append_to_moving_avg(allocated, 2, &is_at_end);
-    EXPECT_EQ(0, retval);
+    EXPECT_EQ(MOVING_AVG_SUCCESS, retval);
     EXPECT_FALSE(is_at_end);
 
     retval = append_to_moving_avg(allocated, 2, &is_at_end);
-    EXPECT_EQ(0, retval);
+    EXPECT_EQ(MOVING_AVG_SUCCESS, retval);
     EXPECT_TRUE(is_at_end);
 
     frame = 0;
     retval = get_latest_frame_moving_avg(allocated, &frame);
-    EXPECT_EQ(0, retval);
+    EXPECT_EQ(MOVING_AVG_SUCCESS, retval);
     EXPECT_EQ(3, frame);
 
     retval = free_moving_avg(&allocated);
-    EXPECT_EQ(0, retval);
+    EXPECT_EQ(MOVING_AVG_SUCCESS, retval);
     EXPECT_EQ(VOID_NULL, allocated);
 }
 
@@ -638,13 +626,13 @@ TEST(MovingAvgTicker, AppendWithInvalidAtEnd) {
     int retval = 0;
     moving_avg_values *allocated = NULL;
     retval = allocate_moving_avg(2, 2, &allocated);
-    EXPECT_EQ(0, retval);
+    EXPECT_EQ(MOVING_AVG_SUCCESS, retval);
     EXPECT_NE(VOID_NULL, allocated);
 
     retval = append_to_moving_avg(allocated, 1, (bool *)NULL);
     EXPECT_EQ(MOVING_AVG_PARAM_ERROR, retval);
 
-    EXPECT_EQ(0, free_moving_avg(&allocated));
+    EXPECT_EQ(MOVING_AVG_SUCCESS, free_moving_avg(&allocated));
 }
 
 TEST(MovingAvgTicker, InvalidLatestFrameParams) {
@@ -655,20 +643,17 @@ TEST(MovingAvgTicker, InvalidLatestFrameParams) {
 
     moving_avg_values *allocated = NULL;
     retval = allocate_moving_avg(2, 2, &allocated);
-    EXPECT_EQ(0, retval);
+    EXPECT_EQ(MOVING_AVG_SUCCESS, retval);
     EXPECT_NE(VOID_NULL, allocated);
 
     retval = get_latest_frame_moving_avg(allocated, (int *)NULL);
     EXPECT_EQ(MOVING_AVG_PARAM_ERROR, retval);
 
-    EXPECT_EQ(0, free_moving_avg(&allocated));
+    EXPECT_EQ(MOVING_AVG_SUCCESS, free_moving_avg(&allocated));
 }
 
 TEST(MovingAvgTickerFuzzTest, allocate_moving_avg) {
     moving_avg_values *allocated = NULL;
-
-    // Test with negative num_wbuf
-    EXPECT_EQ(MOVING_AVG_PARAM_ERROR, allocate_moving_avg(-1, 1, &allocated));
 
     // Test with zero num_wbuf
     EXPECT_EQ(MOVING_AVG_PARAM_ERROR, allocate_moving_avg(0, 1, &allocated));
@@ -688,9 +673,9 @@ TEST(MovingAvgTickerFuzzTest, allocate_moving_avg) {
 
     // Test with success, to validate that there was only one difference between this and the above tests.
     allocated = NULL;
-    EXPECT_EQ(0, allocate_moving_avg(1, 1, &allocated));
+    EXPECT_EQ(MOVING_AVG_SUCCESS, allocate_moving_avg(1, 1, &allocated));
     EXPECT_NE(VOID_NULL, allocated);
-    EXPECT_EQ(0, free_moving_avg(&allocated));
+    EXPECT_EQ(MOVING_AVG_SUCCESS, free_moving_avg(&allocated));
     EXPECT_EQ(VOID_NULL, allocated);
 }
 
@@ -703,7 +688,7 @@ TEST(MovingAvgTickerFuzzTest, append_to_moving_avg) {
     // Setup:
     bool is_at_end = false;
     moving_avg_values *allocated = NULL;
-    EXPECT_EQ(0, allocate_moving_avg(1, 1, &allocated));
+    EXPECT_EQ(MOVING_AVG_SUCCESS, allocate_moving_avg(1, 1, &allocated));
 
     // Test with null pointer
     EXPECT_EQ(MOVING_AVG_PARAM_ERROR, append_to_moving_avg(NULL, 1, &is_at_end));
@@ -712,16 +697,16 @@ TEST(MovingAvgTickerFuzzTest, append_to_moving_avg) {
     EXPECT_EQ(MOVING_AVG_PARAM_ERROR, append_to_moving_avg(allocated, 1, NULL));
 
     // Test with all valid input
-    EXPECT_EQ(0, append_to_moving_avg(allocated, 1, &is_at_end));
+    EXPECT_EQ(MOVING_AVG_SUCCESS, append_to_moving_avg(allocated, 1, &is_at_end));
 
     // Cleanup:
-    EXPECT_EQ(0, free_moving_avg(&allocated));
+    EXPECT_EQ(MOVING_AVG_SUCCESS, free_moving_avg(&allocated));
 }
 
 TEST(MovingAvgTickerFuzzTest, get_latest_frame_moving_avg) {
     int frame = 0;
     moving_avg_values *allocated = NULL;
-    EXPECT_EQ(0, allocate_moving_avg(1, 1, &allocated));
+    EXPECT_EQ(MOVING_AVG_SUCCESS, allocate_moving_avg(1, 1, &allocated));
 
     // Both are NULL
     EXPECT_EQ(MOVING_AVG_PARAM_ERROR, get_latest_frame_moving_avg(NULL, NULL));
@@ -733,10 +718,10 @@ TEST(MovingAvgTickerFuzzTest, get_latest_frame_moving_avg) {
     EXPECT_EQ(MOVING_AVG_PARAM_ERROR, get_latest_frame_moving_avg(allocated, NULL));
 
     // Validate it works to justify the above unit tests
-    EXPECT_EQ(0, get_latest_frame_moving_avg(allocated, &frame));
+    EXPECT_EQ(MOVING_AVG_SUCCESS, get_latest_frame_moving_avg(allocated, &frame));
 
     // Cleanup
-    EXPECT_EQ(0, free_moving_avg(&allocated));
+    EXPECT_EQ(MOVING_AVG_SUCCESS, free_moving_avg(&allocated));
 }
 
 TEST(MovingAvgTickerFuzzTest, free_moving_avg) {
@@ -748,18 +733,18 @@ TEST(MovingAvgTickerFuzzTest, free_moving_avg) {
     EXPECT_EQ(MOVING_AVG_PARAM_ERROR, free_moving_avg(&allocated));
 
     // Test with null wbuf
-    EXPECT_EQ(0, allocate_moving_avg(1, 1, &allocated));
+    EXPECT_EQ(MOVING_AVG_SUCCESS, allocate_moving_avg(1, 1, &allocated));
     EXPECT_NE(VOID_NULL, allocated);
     free(allocated->wbuf);
     allocated->wbuf = NULL;
     // TODO: successfully completes, even with invalid input.
-    EXPECT_EQ(0, free_moving_avg(&allocated));
+    EXPECT_EQ(MOVING_AVG_SUCCESS, free_moving_avg(&allocated));
     EXPECT_EQ(VOID_NULL, allocated);
 
     // Test normal path.
-    EXPECT_EQ(0, allocate_moving_avg(1, 1, &allocated));
+    EXPECT_EQ(MOVING_AVG_SUCCESS, allocate_moving_avg(1, 1, &allocated));
     EXPECT_NE(VOID_NULL, allocated);
-    EXPECT_EQ(0, free_moving_avg(&allocated));
+    EXPECT_EQ(MOVING_AVG_SUCCESS, free_moving_avg(&allocated));
     EXPECT_EQ(VOID_NULL, allocated);
 }
 

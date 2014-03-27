@@ -1,4 +1,5 @@
 #include <pebble.h>
+#include <stdint.h>
 
 #include "accel.h"
 
@@ -6,7 +7,7 @@ static Window *window;
 static TextLayer *text_layer;
 static accel_state *state = NULL;
 
-static int recording_gesture = 0;
+static uint16_t recording_gesture = 0;
 static bool recording = false;
 
 static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
@@ -59,7 +60,7 @@ static void down_click_handler(ClickRecognizerRef recognizer, void *context) {
     if (result == ACCEL_SUCCESS) {
         text_layer_set_text(text_layer, "Successful tick");
 
-        int gesture_id = 0;
+        uint16_t gesture_id = 0;
         int distance = 0;
         accel_find_most_likely_gesture(state, &gesture_id, &distance);
         APP_LOG(APP_LOG_LEVEL_INFO, "Distance: %i, gesture: %i", distance, gesture_id);
