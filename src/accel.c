@@ -12,7 +12,7 @@
 #define my_calloc(a, b) (calloc(a, b))
 #endif
 
-// cbrt is defined and importable for everybody!
+// cbrt/abs is defined and importable for everybody!
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -395,7 +395,7 @@ void handle_recording_tick(accel_gesture *gesture, uint32_t dimensions) {
     ++(gesture->recording_size);
 }
 
-int handle_evaluation_tick(accel_state *state, accel_gesture *gesture, int gesture_id) {
+int handle_evaluation_tick(accel_state *state, accel_gesture *gesture, uint16_t gesture_id) {
     // TODO: load the input at the beginning instead of gesture->recording_size times.
     PRECONDITION_NOT_NULL(gesture);
     uint32_t dimensions = state->dimensions;
@@ -449,9 +449,12 @@ int handle_evaluation_tick(accel_state *state, accel_gesture *gesture, int gestu
             return ACCEL_PARAM_ERROR;
         }
         float avg_affinity = ((float)gesture->offsets[gesture->recording_size - 1]) / gesture->recording_size;
+        if (avg_affinity < 0) {
+            return ACCEL_INTERNAL_ERROR;
+        }
         if (avg_affinity < state->state->threshold) {
             bool reset;
-            int retval = state->callback(state, gesture_id, (int32_t)avg_affinity, &reset);
+            int retval = state->callback(state, gesture_id, (uint32_t)(avg_affinity), &reset);
             if (reset == true) {
                 reset_gesture(gesture, dimensions);
             }
@@ -466,7 +469,7 @@ int accel_process_timer_tick(accel_state *state, int *accel_data) {
     PRECONDITION_NOT_NULL(accel_data);
 
     int retcode = ACCEL_SUCCESS;
-    for (int gesture_id = 0; gesture_id < state->state->num_gestures_saved; ++gesture_id) {
+    for (uint16_t gesture_id = 0; gesture_id < state->state->num_gestures_saved; ++gesture_id) {
         accel_gesture *gesture = state->state->gestures[gesture_id];
         if (gesture == NULL) {
             retcode = ACCEL_INTERNAL_ERROR;
@@ -561,7 +564,7 @@ int accel_find_most_likely_gesture(accel_state *state, uint16_t *gesture_id, int
     return ACCEL_SUCCESS;
 }
 
-int accel_reset_affinities_for_gesture(accel_state *state, int gesture_id) {
+int accel_reset_affinities_for_gesture(accel_state *state, uint16_t gesture_id) {
     PRECONDITION_VALID_STATE(state);
     PRECONDITION_NOT_NULL(state->state);
     PRECONDITION_TRUE_PARAM((state->state->num_gestures_saved > gesture_id));
