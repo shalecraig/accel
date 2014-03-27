@@ -59,7 +59,8 @@ struct accelState;
  *                          refer to the ACCEL_MIN_RESERVED definition inside
  *                          their implementations.
  */
-typedef int (*accel_callback)(struct accelState *state, int gesture_id, int offset_found, bool *reset_gesture);
+typedef int (*accel_callback)(struct accelState *state, uint16_t gesture_id, uint32_t offset_found,
+                              bool *reset_gesture);
 
 // TODO: define this as a partial-type instead of exposing some fields.
 typedef struct accelState {
@@ -137,6 +138,7 @@ int accel_process_timer_tick(accel_state *state, int *accel_data);
  *                    distance corresponding to the returned gesture.
  * @return            ACCEL_SUCCESS if successful, an error code otherwise.
  */
+// TODO: rename distance to offset
 int accel_find_most_likely_gesture(accel_state *state, uint16_t *gesture_id, int *distance);
 
 /**
@@ -147,7 +149,7 @@ int accel_find_most_likely_gesture(accel_state *state, uint16_t *gesture_id, int
  * @param gesture_id Value that corresponds to a gesture currently being reset.
  * @return           ACCEL_SUCCESS if successful, an error code otherwise.
  */
-int accel_reset_affinities_for_gesture(accel_state *state, int gesture_id);
+int accel_reset_affinities_for_gesture(accel_state *state, uint16_t gesture_id);
 
 #ifdef __cplusplus
 }

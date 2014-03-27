@@ -118,8 +118,8 @@ TEST(AccelFuzzTest, accel_generate_state_null_callback) {
     result = accel_generate_state(&state, 1, 1, NULL, 0);
 }
 
-TEST_CALLBACK(int, AccelFuzzTest, accel_generate_state_valid_callback, myTest, accel_state *state, int gesture_id,
-              int offset_found, bool *reset_gesture)
+TEST_CALLBACK(int, AccelFuzzTest, accel_generate_state_valid_callback, myTest, accel_state *state, uint16_t gesture_id,
+              uint32_t offset_found, bool *reset_gesture)
 *reset_gesture = true;
 return ACCEL_SUCCESS;
 }
@@ -657,9 +657,6 @@ TEST(MovingAvgTickerFuzzTest, allocate_moving_avg) {
 
     // Test with zero num_wbuf
     EXPECT_EQ(MOVING_AVG_PARAM_ERROR, allocate_moving_avg(0, 1, &allocated));
-
-    // Test with negative subtotal_size
-    EXPECT_EQ(MOVING_AVG_PARAM_ERROR, allocate_moving_avg(1, -1, &allocated));
 
     // Test with zero subtotal_size
     EXPECT_EQ(MOVING_AVG_PARAM_ERROR, allocate_moving_avg(1, 0, &allocated));
