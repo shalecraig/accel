@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+
+    <title>Accel by shalecraig</title>
+  </head>
+
+  <body>
+
+    <header>
+      <div class="container">
+        <h1>Accel</h1>
+        <h2>Accel is a simple library written in C that uses accelerometer data to find gestures in realtime.</h2>
+
+        <section id="downloads">
+          <a href="https://github.com/shalecraig/accel/zipball/master" class="btn">Download as .zip</a>
+          <a href="https://github.com/shalecraig/accel/tarball/master" class="btn">Download as .tar.gz</a>
+          <a href="https://github.com/shalecraig/accel" class="btn btn-github"><span class="icon"></span>View on GitHub</a>
+        </section>
+      </div>
+    </header>
+
+    <div class="container">
+      <section id="main_content">
+        <h1>
+<a name="accel-" class="anchor" href="#accel-"><span class="octicon octicon-link"></span></a>accel <a href="https://travis-ci.org/shalecraig/accel"><img src="https://travis-ci.org/shalecraig/accel.png?branch=master" alt="Build Status"></a>
+</h1>
+
+<hr><h4>
+<a name="what-is-accel" class="anchor" href="#what-is-accel"><span class="octicon octicon-link"></span></a>What is accel?</h4>
+
+<p>Accel is a simple library written in C that uses accelerometer data to find gestures in realtime. 
+Though it is written with the Pebble in mind, it should work with other embedded devices as well.</p>
+
+<h2>
+<a name="api-overview" class="anchor" href="#api-overview"><span class="octicon octicon-link"></span></a>API Overview</h2>
+
+<h3>
+<a name="return-types" class="anchor" href="#return-types"><span class="octicon octicon-link"></span></a>Return types</h3>
+
+<p>All methods in the accel API return a success value or error codes.</p>
+
+<p>Return values are as follows:</p>
+
+<ul>
+<li>
+<code>ACCEL_SUCCESS</code> - the method being called is successful.</li>
+<li>
+<code>ACCEL_PARAM_ERROR</code> - parameters being passed are invalid.</li>
+<li>
+<code>ACCEL_MALLOC_ERROR</code> - returned when malloc fails</li>
+<li>
+<code>ACCEL_NO_VALID_GESTURE</code> - when gestures are queried, this value is returned when there are no applicable gestures.</li>
+<li>
+<code>ACCEL_INTERNAL_ERROR</code> - there is an internal error in the accel library, usually due to consistency issues in parameter attributes. It's best to report these.</li>
+</ul><h3>
+<a name="methods" class="anchor" href="#methods"><span class="octicon octicon-link"></span></a>Methods</h3>
+
+<ul>
+<li>
+<code>int accel_generate_state(accel_state **state, int dimensions, int window_size)</code>
+
+<ul>
+<li>Generates and sets up a valid <code>accel_state</code> object that tracks input of <code>dimensions</code> dimensions, using a rolling window of size <code>window_size</code> to smooth measurements.</li>
+</ul>
+</li>
+<li>
+<code>int accel_destroy_state(accel_state **state)</code>
+
+<ul>
+<li>Destroys any <code>accel_state</code> objects passed in, and resets <code>state</code> to point to the <code>NULL</code> value.</li>
+</ul>
+</li>
+<li>
+<code>int accel_start_record_gesture(accel_state *state, int *gesture)</code>
+
+<ul>
+<li>Starts to record a gesture, saving the gesture id to <code>gesture</code>.</li>
+</ul>
+</li>
+<li>
+<code>int accel_end_record_gesture(accel_state *state, int gesture_id)</code>
+
+<ul>
+<li>Completes recording the gesture at gesture id <code>gesture_id</code>.</li>
+</ul>
+</li>
+<li>
+<code>int accel_process_timer_tick(accel_state *state, int *accel_data)</code>
+
+<ul>
+<li>Called whenever a tick happens, this allows <code>accel</code> to update projected most-likely gestures.</li>
+</ul>
+</li>
+<li>
+<code>int accel_find_most_likely_gesture(accel_state *state, int *gesture_id, int *distance)</code>
+
+<ul>
+<li>Returns the id of the gesture that is most likely to have occurred.</li>
+</ul>
+</li>
+</ul><h2>
+<a name="using-accel-in-your-project" class="anchor" href="#using-accel-in-your-project"><span class="octicon octicon-link"></span></a>Using accel in Your Project</h2>
+
+<h3>
+<a name="getting-the-accel-source-code" class="anchor" href="#getting-the-accel-source-code"><span class="octicon octicon-link"></span></a>Getting the accel Source Code</h3>
+
+<p>Getting the accel source is easy. Simply clone the github repository as follows:</p>
+
+<pre><code>git clone https://github.com/shalecraig/accel.git
+</code></pre>
+
+<h3>
+<a name="using-accel-in-pebble-projects" class="anchor" href="#using-accel-in-pebble-projects"><span class="octicon octicon-link"></span></a>Using accel in Pebble Projects</h3>
+
+<p>Simply copy all files from the <code>accel/src</code> directory in accel into the <code>accel/src</code> directory in your pebble app. The <code>pebble build</code> command will find the newly added files, so everything should work smoothly.</p>
+
+<pre><code>cp accel/src/* myproject/src/
+</code></pre>
+
+<p>A sample of library usage is in the <code>accel/samples</code> directory.</p>
+
+<h3>
+<a name="using-accel-in-other-projects" class="anchor" href="#using-accel-in-other-projects"><span class="octicon octicon-link"></span></a>Using accel in Other Projects</h3>
+
+<p>The source code is in the <code>accel/src</code> directory. Simply include <code>accel.h</code> and make sure you compile all files. If you needed to make changes, feel free to submit pull requests to <a href="https://github.com/shalecraig/accel">the accel repo</a>.</p>
+
+<h2>
+<a name="running-tests" class="anchor" href="#running-tests"><span class="octicon octicon-link"></span></a>Running tests</h2>
+
+<p>After going to the test directory (<code>cd test/</code>), running <code>make run</code> should execute tests successfully.</p>
+
+<p>TODO: As of right now, C tests are compiled by the C++ compiler. We should fix this.</p>
+
+<h2>
+<a name="current-version" class="anchor" href="#current-version"><span class="octicon octicon-link"></span></a>Current Version</h2>
+
+<p>The accel version is currently 1.0.0b.
+This version is defined in <code>accel.h</code> as <code>ACCEL_VERSION_CODE</code> , which is generated using the <code>ACCEL_VERSION_GEN</code> macro.</p>
+
+<h1>
+<a name="attribution" class="anchor" href="#attribution"><span class="octicon octicon-link"></span></a>Attribution</h1>
+
+<p>Gesture recognition adapted from:</p>
+
+<ul>
+<li>Jiayang Liu, Zhen Wang, Lin Zhong, Jehan Wickramasuriya, and Venu Vasudevan, "uWave: Accelerometer-based personalized gesture recognition and its applications," in Proc. IEEE Int. Conf. Pervasive Computing and Communication (PerCom), March 2009.</li>
+</ul>
+      </section>
+    </div>
+
+    
+  </body>
+</html>
