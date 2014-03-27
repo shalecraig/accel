@@ -3,22 +3,19 @@
 
 #include "moving_avg_ticker.h"
 
-#define PRECONDITION_NOT_NULL(foo) \
-    if (foo == NULL) { return MOVING_AVG_PARAM_ERROR; }
+#define PRECONDITION_NOT_NULL(foo)                                                                                     \
+    if (foo == NULL) {                                                                                                 \
+        return MOVING_AVG_PARAM_ERROR;                                                                                 \
+    }
 
+// TODO: make this into a macro.
 int precondition_valid_moving_avg_values(moving_avg_values *input) {
     PRECONDITION_NOT_NULL(input);
 
     if (input->wbuf == NULL) {
         return MOVING_AVG_INTERNAL_ERROR;
     }
-    if (input->wbuf_end < 0) {
-        return MOVING_AVG_INTERNAL_ERROR;
-    }
     if (input->wbuf_len <= 0) {
-        return MOVING_AVG_INTERNAL_ERROR;
-    }
-    if (input->subtotal_size < 0) {
         return MOVING_AVG_INTERNAL_ERROR;
     }
     if (input->subtotal_size >= input->max_subtotal_size) {
@@ -27,10 +24,10 @@ int precondition_valid_moving_avg_values(moving_avg_values *input) {
     if (input->max_subtotal_size <= 0) {
         return MOVING_AVG_INTERNAL_ERROR;
     }
-    return 0;
+    return MOVING_AVG_SUCCESS;
 }
 
-int allocate_moving_avg(int num_wbuf, int subtotal_sizes, moving_avg_values **allocated) {
+int allocate_moving_avg(uint16_t num_wbuf, uint16_t subtotal_sizes, moving_avg_values **allocated) {
     PRECONDITION_NOT_NULL(allocated);
     if (*allocated != NULL) {
         return MOVING_AVG_PARAM_ERROR;
@@ -44,28 +41,28 @@ int allocate_moving_avg(int num_wbuf, int subtotal_sizes, moving_avg_values **al
     }
     size_t size = sizeof(moving_avg_values);
 
-    *allocated = (moving_avg_values *) malloc(size);
+    *allocated = (moving_avg_values *)malloc(size);
     if (allocated == NULL) {
         return MOVING_AVG_MALLOC_ERROR;
     }
     memset(*allocated, 0, size);
     (*allocated)->max_subtotal_size = subtotal_sizes;
 
-    int *wbuf = (int *) calloc(num_wbuf, sizeof(int));
+    moving_avg_data_type *wbuf = (moving_avg_data_type *)calloc(num_wbuf, sizeof(moving_avg_data_type));
     if (wbuf == NULL) {
         // Run away, fast!
-        free (allocated);
+        free(allocated);
         *allocated = NULL;
         return MOVING_AVG_MALLOC_ERROR;
     }
     (*allocated)->wbuf = wbuf;
     (*allocated)->wbuf_len = num_wbuf;
-    return 0;
+    return MOVING_AVG_SUCCESS;
 }
 
 int reset_moving_avg(moving_avg_values *reset) {
     int value = precondition_valid_moving_avg_values(reset);
-    if (value != 0) {
+    if (value != MOVING_AVG_SUCCESS) {
         return value;
     }
 
@@ -73,12 +70,14 @@ int reset_moving_avg(moving_avg_values *reset) {
     reset->wbuf_end = reset->wbuf_len - 1;
     reset->subtotal = 0;
     reset->subtotal_size = 0;
-    return 0;
+    return MOVING_AVG_SUCCESS;
 }
 
-int append_to_moving_avg(moving_avg_values *value, int appended, bool* is_at_end) {
+int append_to_moving_avg(moving_avg_values *value, moving_avg_data_type appended, bool *is_at_end) {
     int is_valid_return_value = precondition_valid_moving_avg_values(value);
-    if (is_valid_return_value != 0) {return is_valid_return_value;}
+    if (is_valid_return_value != MOVING_AVG_SUCCESS) {
+        return is_valid_return_value;
+    }
 
     PRECONDITION_NOT_NULL(is_at_end);
 
@@ -86,7 +85,7 @@ int append_to_moving_avg(moving_avg_values *value, int appended, bool* is_at_end
     value->subtotal += appended;
     if (value->subtotal_size != value->max_subtotal_size) {
         *is_at_end = false;
-        return 0;
+        return MOVING_AVG_SUCCESS;
     }
 
     value->wbuf_end = (value->wbuf_end + 1) % value->wbuf_len;
@@ -95,21 +94,23 @@ int append_to_moving_avg(moving_avg_values *value, int appended, bool* is_at_end
     value->subtotal = 0;
     value->subtotal_size = 0;
     *is_at_end = true;
-    return 0;
+    return MOVING_AVG_SUCCESS;
 }
 
-int get_latest_frame_moving_avg(moving_avg_values *value, int *frame) {
+int get_latest_frame_moving_avg(moving_avg_values *value, moving_avg_data_type *frame) {
     int is_valid_return_value = precondition_valid_moving_avg_values(value);
-    if (is_valid_return_value != 0) {return is_valid_return_value;}
+    if (is_valid_return_value != MOVING_AVG_SUCCESS) {
+        return is_valid_return_value;
+    }
 
     PRECONDITION_NOT_NULL(frame);
 
     float sum = 0;
-    for (int i=0; i<value->wbuf_len; ++i) {
+    for (uint16_t i = 0; i < value->wbuf_len; ++i) {
         sum += value->wbuf[i] * 1.0 / value->wbuf_len;
     }
-    *frame = (int) sum;
-    return 0;
+    *frame = (int32_t)sum;
+    return MOVING_AVG_SUCCESS;
 }
 
 int free_moving_avg(moving_avg_values **value) {
@@ -122,5 +123,5 @@ int free_moving_avg(moving_avg_values **value) {
     }
     free(*value);
     *value = NULL;
-    return 0;
+    return MOVING_AVG_SUCCESS;
 }

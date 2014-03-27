@@ -3,12 +3,7 @@ compiler:
   - gcc
   - clang
 script:
-  - cd test/
   - make run
-branches:
-  only:
-    - master
-    - 1.8.7
 notifications:
   recipients:
     - shalecraig@gmail.com
