@@ -98,30 +98,30 @@ int accel_generate_state(accel_state **state, uint32_t dimensions, uint16_t wind
 int accel_destroy_state(accel_state **state);
 
 /**
- * Starts recording a accel gesture
+ * Starts recording an accel gesture
  * @param  state   A pointer to a non-NULL state variable that holds recording
  *                 metadata.
  * @param  gesture Non-NULL pointer that will be populated with the gesture id.
  * @return         ACCEL_SUCCESS if successful, an error code otherwise.
  */
-int accel_start_record_gesture(accel_state *state, int *gesture);
+int accel_start_record_gesture(accel_state *state, uint16_t *gesture);
 
 /**
- * Ends recording a accel gesture
+ * Ends recording an accel gesture
  * @param state      A pointer to a non-NULL state variable that holds recording
  *                   metadata.
  * @param gesture_id Value that corresponds to a gesture currently being
  *                   recorded.
  * @return           ACCEL_SUCCESS if successful, an error code otherwise.
  */
-int accel_end_record_gesture(accel_state *state, int gesture_id);
+int accel_end_record_gesture(accel_state *state, uint16_t gesture_id);
 
 /**
- * Updates the state variable's current state based on the accel data array
- * passed in.
+ * Updates the state variable's current state based on the raw accelerometer
+ * data array passed in.
  * @param  state      A pointer to a non-NULL state variable that holds
  *                    recording metadata.
- * @param  accel_data An with accelerometer data.
+ * @param  accel_data A state->dimensions array with accelerometer data.
  * @return            ACCEL_SUCCESS if successful, an error code otherwise.
  */
 int accel_process_timer_tick(accel_state *state, int *accel_data);
@@ -137,7 +137,7 @@ int accel_process_timer_tick(accel_state *state, int *accel_data);
  *                    distance corresponding to the returned gesture.
  * @return            ACCEL_SUCCESS if successful, an error code otherwise.
  */
-int accel_find_most_likely_gesture(accel_state *state, int *gesture_id, int *distance);
+int accel_find_most_likely_gesture(accel_state *state, uint16_t *gesture_id, int *distance);
 
 /**
  * For a given state and recorded gesture, resets the gesture's offset state

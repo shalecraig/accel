@@ -237,7 +237,7 @@ int accel_destroy_state(accel_state **state) {
     return ACCEL_SUCCESS;
 }
 
-int accel_start_record_gesture(accel_state *state, int *gesture) {
+int accel_start_record_gesture(accel_state *state, uint16_t *gesture) {
     PRECONDITION_VALID_STATE(state);
     PRECONDITION_NOT_NULL(gesture);
 
@@ -261,7 +261,6 @@ int accel_start_record_gesture(accel_state *state, int *gesture) {
 
     int result = accel_generate_gesture(state, &(state->state->gestures[*gesture]));
     if (result != ACCEL_SUCCESS) {
-        *gesture = -1;
         if (state->state->num_gestures_saved == 1) {
             free(state->state->gestures);
             state->state->gestures = NULL;
@@ -284,7 +283,7 @@ int accel_start_record_gesture(accel_state *state, int *gesture) {
 // http://www.hackersdelight.org/hdcodetxt/icbrt.c.txt
 uint32_t icbrt1(uint32_t x) {
     int32_t s;
-    unsigned y, b;
+    uint32_t y, b;
 
     y = 0;
     for (s = 30; s >= 0; s = s - 3) {
@@ -303,9 +302,9 @@ uint32_t icbrt1(uint32_t x) {
 // TODO: revisit this decision.
 int32_t normalize(int32_t sum) {
     if (sum < 0) {
-        return -1 * (int32_t)icbrt1((uint32_t)(-sum));
+        return (int)-cbrtf(-((float)sum));
     }
-    return (int32_t)icbrt1((uint32_t)sum);
+    return -(int)-cbrtf(((float)sum));
 }
 
 int reset_gesture(accel_gesture *gest, const uint32_t dimensions) {
@@ -320,14 +319,12 @@ int reset_gesture(accel_gesture *gest, const uint32_t dimensions) {
 }
 
 // TODO: does this work for zero recorded timestamps?
-int accel_end_record_gesture(accel_state *state, int gesture_id) {
+int accel_end_record_gesture(accel_state *state, uint16_t gesture_id) {
     PRECONDITION_VALID_STATE(state);
 
-    // TODO: use an unsigned int instead so we don't need to check for this type of error.
-    if (gesture_id < 0) {
-        return ACCEL_PARAM_ERROR;
-    }
     internal_accel_state *istate = state->state;
+    // TODO: gesture_id == istate->num_gestures_saved is incorrect.
+    // Write a test for it and fix it.
     if (gesture_id > istate->num_gestures_saved) {
         return ACCEL_PARAM_ERROR;
     }
@@ -514,12 +511,12 @@ int accel_process_timer_tick(accel_state *state, int *accel_data) {
     return retcode;
 }
 
-int accel_find_most_likely_gesture(accel_state *state, int *gesture_id, int *offset) {
+int accel_find_most_likely_gesture(accel_state *state, uint16_t *gesture_id, int *offset) {
     PRECONDITION_VALID_STATE(state);
     PRECONDITION_NOT_NULL(gesture_id);
     PRECONDITION_NOT_NULL(offset);
 
-    *gesture_id = ACCEL_NO_VALID_GESTURE;
+    *gesture_id = UINT16_MAX;
     *offset = ACCEL_NO_VALID_GESTURE;
 
     if (state->state->num_gestures_saved == 0) {
@@ -530,7 +527,7 @@ int accel_find_most_likely_gesture(accel_state *state, int *gesture_id, int *off
         return ACCEL_INTERNAL_ERROR;
     }
 
-    for (int i = 0; i < state->state->num_gestures_saved; ++i) {
+    for (uint16_t i = 0; i < state->state->num_gestures_saved; ++i) {
         accel_gesture *gesture = state->state->gestures[i];
 
         // TODO: Should this be tested?
@@ -538,7 +535,8 @@ int accel_find_most_likely_gesture(accel_state *state, int *gesture_id, int *off
             return ACCEL_INTERNAL_ERROR;
         }
 
-        if ((*gesture_id == ACCEL_NO_VALID_GESTURE || *offset == ACCEL_NO_VALID_GESTURE) && *gesture_id != *offset) {
+        // Both should be the default or changed at the same time. We have a programming error otherwise.
+        if ((*gesture_id == UINT16_MAX) != (*offset == ACCEL_NO_VALID_GESTURE)) {
             return ACCEL_INTERNAL_ERROR;
         }
 
@@ -557,7 +555,7 @@ int accel_find_most_likely_gesture(accel_state *state, int *gesture_id, int *off
             *gesture_id = i;
         }
     }
-    if (*gesture_id == ACCEL_NO_VALID_GESTURE || *offset == ACCEL_NO_VALID_GESTURE) {
+    if (*gesture_id == UINT16_MAX || *offset == ACCEL_NO_VALID_GESTURE) {
         return ACCEL_NO_VALID_GESTURE;
     }
     return ACCEL_SUCCESS;

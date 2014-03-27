@@ -18,7 +18,7 @@ typedef struct moving_avg_values {
     // Circular buffer
     int *wbuf;
     int wbuf_end;
-    int wbuf_len;
+    uint16_t wbuf_len;
 
     int subtotal;
     int subtotal_size;

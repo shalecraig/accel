@@ -125,7 +125,7 @@ return ACCEL_SUCCESS;
 }
 
 TEST(AccelFuzzTest, accel_generate_state_valid_callback) {
-    int gesture_id = 0;
+    uint16_t gesture_id = 0;
     accel_state *state = NULL;
 
     // Non-null callback, watch it iterate over this stuff.
@@ -170,7 +170,7 @@ TEST(AccelFuzzTest, accel_destroy_state_invalid_input) {
 
 TEST(AccelFuzzTest, accel_start_record_gesture_invalid_input) {
     int result = 0;
-    int gesture_id = 0;
+    uint16_t gesture_id = 0;
     result = accel_start_record_gesture(NULL, &gesture_id);
     EXPECT_EQ(ACCEL_PARAM_ERROR, result);
 
@@ -204,7 +204,7 @@ TEST(AccelFuzzTest, accel_end_record_gesture_invalid_input) {
 
     // Verify it works for valid indexes.
     state = test_fabricate_1d_state();
-    int gesture = 1234;
+    uint16_t gesture = 1234;
     result = accel_start_record_gesture(state, &gesture);
     EXPECT_NE(1234, gesture);
     EXPECT_EQ(ACCEL_SUCCESS, result);
@@ -234,7 +234,7 @@ TEST(AccelFuzzTest, accel_process_timer_tick_invalid_input) {
 
 TEST(AccelFuzzTest, accel_find_most_likely_gesture_invalid_input) {
     int result = 0;
-    int gesture_id = 0;
+    uint16_t gesture_id = 0;
     int affinity = 0;
     accel_state *state = NULL;
 
@@ -257,7 +257,7 @@ TEST(AccelFuzzTest, accel_find_most_likely_gesture_invalid_input) {
     // No tests exist, but otherwise valid parameters.
     state = test_fabricate_1d_state();
     result = accel_find_most_likely_gesture(state, &gesture_id, &affinity);
-    EXPECT_EQ(ACCEL_NO_VALID_GESTURE, gesture_id);
+    EXPECT_EQ(UINT16_MAX, gesture_id);
     EXPECT_EQ(ACCEL_NO_VALID_GESTURE, affinity);
     EXPECT_EQ(ACCEL_NO_VALID_GESTURE, result);
 }
@@ -278,7 +278,7 @@ TEST(AccelTest, start_recording_and_close_many_gestures) {
 
     int data[1] = {0};
     for (int i = 0; i < 10; ++i) {
-        int gesture = 0;
+        uint16_t gesture = 0;
         ASSERT_EQ(0, accel_start_record_gesture(state, &gesture));
         ASSERT_EQ(i, gesture);
         ASSERT_EQ(0, accel_process_timer_tick(state, data));
@@ -293,7 +293,7 @@ TEST(AccelTest, record_incredibly_long_sequence) {
     accel_state *state = NULL;
     state = test_fabricate_1d_state();
 
-    int gesture = 0;
+    uint16_t gesture = 0;
     EXPECT_EQ(ACCEL_SUCCESS, accel_start_record_gesture(state, &gesture));
     EXPECT_EQ(ACCEL_SUCCESS, gesture);
 
@@ -310,7 +310,7 @@ TEST(AccelTest, end_to_end_test_single_recording) {
     accel_state *state = NULL;
     state = test_fabricate_1d_state();
 
-    int gesture = 0;
+    uint16_t gesture = 0;
     EXPECT_EQ(ACCEL_SUCCESS, accel_start_record_gesture(state, &gesture));
     EXPECT_EQ(ACCEL_SUCCESS, gesture);
 
@@ -325,7 +325,7 @@ TEST(AccelTest, end_to_end_test_single_recording) {
     int prev_affinity = 0;
     for (int i = 0; i < 10; ++i) {
         data[0] = i * 100;
-        int gesture_found = 1;
+        uint16_t gesture_found = 1;
         int affinity_of_gesture = 1;
         ASSERT_EQ(0, accel_process_timer_tick(state, data));
         ASSERT_EQ(0, accel_find_most_likely_gesture(state, &gesture_found, &affinity_of_gesture));
@@ -344,7 +344,7 @@ TEST(AccelTest, end_to_end_test_multiple_recordings) {
     accel_state *state = NULL;
     state = test_fabricate_1d_state();
 
-    int first_gesture = 0;
+    uint16_t first_gesture = 0;
     EXPECT_EQ(ACCEL_SUCCESS, accel_start_record_gesture(state, &first_gesture));
     EXPECT_EQ(ACCEL_SUCCESS, first_gesture);
 
@@ -356,7 +356,7 @@ TEST(AccelTest, end_to_end_test_multiple_recordings) {
 
     EXPECT_EQ(ACCEL_SUCCESS, accel_end_record_gesture(state, first_gesture));
 
-    int second_gesture = 0;
+    uint16_t second_gesture = 0;
     EXPECT_EQ(ACCEL_SUCCESS, accel_start_record_gesture(state, &second_gesture));
     EXPECT_NE(first_gesture, second_gesture);
 
@@ -370,7 +370,7 @@ TEST(AccelTest, end_to_end_test_multiple_recordings) {
     int prev_affinity = 0;
     for (int i = 0; i < 10; ++i) {
         data[0] = i * 2;
-        int gesture_found = 1;
+        uint16_t gesture_found = 1;
         int affinity_of_gesture = 1;
         ASSERT_EQ(0, accel_process_timer_tick(state, data));
         ASSERT_EQ(0, accel_find_most_likely_gesture(state, &gesture_found, &affinity_of_gesture));
@@ -391,7 +391,7 @@ TEST(AccelTest, test_fuzz_reset_affinities) {
     state = test_fabricate_1d_state();
     EXPECT_EQ(ACCEL_PARAM_ERROR, accel_reset_affinities_for_gesture(state, 0));
 
-    int gesture_id = 0;
+    uint16_t gesture_id = 0;
     EXPECT_EQ(ACCEL_SUCCESS, accel_start_record_gesture(state, &gesture_id));
 
     // A recording gesture with no data.
@@ -410,7 +410,7 @@ TEST(AccelTest, test_fuzz_reset_affinities) {
     // No ticks have been recorded.
     EXPECT_EQ(ACCEL_SUCCESS, accel_reset_affinities_for_gesture(state, gesture_id));
 
-    int gesture = 1;
+    uint16_t gesture = 1;
     int initial_distance = 1;
     int after_run_distance = 1;
     int after_reset_distance = 1;
