@@ -3,8 +3,6 @@
 
 #include <stdbool.h>
 
-#include "accel_consts.c"
-
 #define ACCEL_SUCCESS 0
 #define ACCEL_PARAM_ERROR -1
 #define ACCEL_INTERNAL_ERROR -2
