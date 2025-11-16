@@ -46,7 +46,7 @@ TEST(AccelFuzzTest, generate_state_negative_or_zero_dimensions) {
     state = NULL;
     result = accel_generate_state(&state, 1, 1);
     EXPECT_EQ(0, result);
-    // TODO: result's memory is leaked :s
+    test_burn_state(&state);
 }
 
 TEST(AccelFuzzTest, generate_state_invalid_window_size) {
@@ -65,6 +65,7 @@ TEST(AccelFuzzTest, generate_state_invalid_window_size) {
     result = accel_generate_state(&state, 1, 1);
     EXPECT_EQ(0, result);
     EXPECT_NE(void_null, state);
+    test_burn_state(&state);
 }
 
 TEST(AccelFuzzTest, accel_destroy_state_invalid_input) {
